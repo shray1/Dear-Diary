@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dear Diary — Shray's Daily Tracker</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --card: #ffffff;
+    --ink: #2d2a26;
+    --soft: #6b655d;
+    --accent: #8b6f47;
+    --accent-soft: #d4b896;
+    --good: #5a8a5a;
+    --warn: #c97a4f;
+    --line: #e6e0d6;
+    --shadow: 0 2px 12px rgba(60, 50, 35, 0.06);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Cambria', serif;
+    background: var(--bg);
+    color: var(--ink);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+  header {
+    text-align: center;
+    padding: 24px 0 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 2.4em;
+    margin: 0 0 8px;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    color: var(--soft);
+    font-style: italic;
+    margin: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--line);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 18px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--soft);
+    font-family: inherit;
+    font-size: 1em;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: bold;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: var(--card);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--line);
+  }
+  h2 {
+    font-size: 1.5em;
+    color: var(--accent);
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-weight: normal;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+  }
+  h3 {
+    font-size: 1.15em;
+    color: var(--ink);
+    margin-top: 18px;
+    margin-bottom: 10px;
+  }
+  label {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--soft);
+    font-size: 0.95em;
+  }
+  input[type="text"], input[type="date"], input[type="number"], textarea, select {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 1em;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+  .checklist {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .check-item:hover { border-color: var(--accent-soft); }
+  .check-item input[type="checkbox"] {
+    margin-right: 12px;
+    margin-top: 4px;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .check-item label {
+    margin: 0;
+    cursor: pointer;
+    color: var(--ink);
+    flex: 1;
+  }
+  .check-item .hint {
+    display: block;
+    color: var(--soft);
+    font-size: 0.85em;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .check-item.checked {
+    background: #f0f5ed;
+    border-color: var(--good);
+  }
+  .minutes-grid {
+    display: grid;
+    grid-template-columns: 1fr 100px;
+    gap: 10px;
+    align-items: center;
+  }
+  .minutes-grid label {
+    margin: 0;
+    color: var(--ink);
+  }
+  .minutes-grid input { text-align: right; }
+  .total-line {
+    grid-column: 1 / -1;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    color: var(--accent);
+  }
+  .total-warn { color: var(--warn); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  button.primary, button.secondary, button.danger {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1em;
+    transition: all 0.15s;
+  }
+  button.primary {
+    background: var(--accent);
+    color: white;
+  }
+  button.primary:hover { background: #75582f; }
+  button.secondary {
+    background: var(--card);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  button.secondary:hover { background: var(--bg); }
+  button.danger {
+    background: transparent;
+    color: var(--warn);
+    border: 1px solid var(--warn);
+  }
+  button.danger:hover { background: #fdf3ec; }
+  .button-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .status-msg {
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 12px;
+    display: none;
+  }
+  .status-msg.success {
+    background: #ecf5ec;
+    color: var(--good);
+    display: block;
+  }
+  .status-msg.warn {
+    background: #fdf3ec;
+    color: var(--warn);
+    display: block;
+  }
+  .entry-list { list-style: none; padding: 0; }
+  .entry-list li {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: var(--card);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .entry-list .date { font-weight: bold; }
+  .entry-list .score { color: var(--soft); font-size: 0.9em; }
+  .entry-list button {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .stat-box {
+    background: var(--bg);
+    padding: 14px;
+    border-radius: 6px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 1.8em;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .stat-label {
+    font-size: 0.85em;
+    color: var(--soft);
+  }
+  .progress-bar {
+    height: 10px;
+    background: var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 6px 0 14px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--good);
+    transition: width 0.3s;
+  }
+  .progress-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 60px;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 0.95em;
+  }
+  @media (max-width: 600px) {
+    .progress-row { grid-template-columns: 1fr; gap: 4px; }
+    .progress-row .pct { text-align: left; }
+  }
+  .pct { color: var(--soft); text-align: right; }
+  .quote {
+    font-style: italic;
+    color: var(--soft);
+    text-align: center;
+    margin: 16px 0;
+    padding: 12px;
+    border-left: 3px solid var(--accent-soft);
+    background: var(--bg);
+  }
+  details {
+    background: var(--bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-top: 10px;
+  }
+  details summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  details[open] summary { margin-bottom: 8px; }
+  .footer-note {
+    text-align: center;
+    color: var(--soft);
+    font-size: 0.85em;
+    margin-top: 32px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Dear Diary</h1>
+  <p class="subtitle">A daily reflection on the path to a Good Day, Good Week, Good Month</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('today')">Today's Entry</button>
+  <button class="tab" onclick="showTab('history')">History</button>
+  <button class="tab" onclick="showTab('reports')">Reports</button>
+  <button class="tab" onclick="showTab('goals')">Goals</button>
+  <button class="tab" onclick="showTab('data')">Data</button>
+</div>
+
+<!-- TODAY TAB -->
+<div id="today" class="panel active">
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="entryDate">Date</label>
+        <input type="date" id="entryDate">
+      </div>
+      <div>
+        <label for="dayMood">Overall mood (1–5)</label>
+        <select id="dayMood">
+          <option value="">— select —</option>
+          <option value="1">1 — Heavy</option>
+          <option value="2">2 — Low</option>
+          <option value="3">3 — Steady</option>
+          <option value="4">4 — Good</option>
+          <option value="5">5 — Joyful</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Morning Plan</h2>
+    <p style="color:var(--soft); margin-top:0;">Set your intention for the day. Write this in the morning.</p>
+    <label for="planText">How do I wish to spend today?</label>
+    <textarea id="planText" placeholder="Today I intend to wake before sunrise, take a morning walk, eat home-made meals, do my prayers, spend time with family..."></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Evening Reflection — Daily Practices</h2>
+    <p style="color:var(--soft); margin-top:0;">Tick what you actually did today.</p>
+    <div class="checklist" id="dailyChecklist"></div>
+  </div>
+
+  <div class="card">
+    <h2>Time Allocation (minutes)</h2>
+    <p style="color:var(--soft); margin-top:0;">Roughly how did your 1440 minutes flow today? Optional but useful over time.</p>
+    <div class="minutes-grid" id="minutesGrid"></div>
+  </div>
+
+  <div class="card">
+    <h2>This Week</h2>
+    <div class="checklist" id="weeklyChecklist"></div>
+  </div>
+
+  <div class="card">
+    <h2>This Month</h2>
+    <div class="checklist" id="monthlyChecklist"></div>
+  </div>
+
+  <div class="card">
+    <h2>Reflection</h2>
+    <label for="actualText">How did the day actually go?</label>
+    <textarea id="actualText" placeholder="The day unfolded like..."></textarea>
+
+    <label for="gratefulText" style="margin-top:12px;">Three things I'm grateful for today</label>
+    <textarea id="gratefulText" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
+
+    <label for="apologyText" style="margin-top:12px;">Mistakes I want to apologize for or learn from</label>
+    <textarea id="apologyText" placeholder="Optional"></textarea>
+
+    <label for="kindnessText" style="margin-top:12px;">Did I help or make someone happy today? How?</label>
+    <textarea id="kindnessText" placeholder="Optional"></textarea>
+
+    <label for="lessonText" style="margin-top:12px;">Something I learned today</label>
+    <textarea id="lessonText" placeholder="Optional"></textarea>
+  </div>
+
+  <div class="button-row">
+    <button class="primary" onclick="saveEntry()">Save Today's Entry</button>
+    <button class="secondary" onclick="loadEntry()">Reload from Saved</button>
+    <button class="secondary" onclick="clearForm()">Clear Form</button>
+  </div>
+  <div id="saveMsg" class="status-msg"></div>
+</div>
+
+<!-- HISTORY TAB -->
+<div id="history" class="panel">
+  <div class="card">
+    <h2>Past Entries</h2>
+    <p style="color:var(--soft); margin-top:0;">Click an entry to load it back into Today's tab for editing.</p>
+    <ul class="entry-list" id="entryList"></ul>
+  </div>
+</div>
+
+<!-- REPORTS TAB -->
+<div id="reports" class="panel">
+  <div class="card">
+    <h2>Reports</h2>
+    <div class="row">
+      <div>
+        <label for="reportType">Period</label>
+        <select id="reportType" onchange="renderReport()">
+          <option value="day">Today</option>
+          <option value="week" selected>This Week (last 7 days)</option>
+          <option value="month">This Month (last 30 days)</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
+      <div>
+        <label>&nbsp;</label>
+        <button class="secondary" onclick="renderReport()">Refresh Report</button>
+      </div>
+    </div>
+  </div>
+  <div id="reportContent"></div>
+</div>
+
+<!-- GOALS TAB -->
+<div id="goals" class="panel">
+  <div class="card">
+    <h2>A Good Day</h2>
+    <p>1440 minutes thoughtfully spent across:</p>
+    <ul>
+      <li>Adequate Rest</li>
+      <li>Healthy Meals</li>
+      <li>Physical Activity</li>
+      <li>Leisure Time</li>
+      <li>Social Interaction</li>
+      <li>Productive Work</li>
+      <li>New Learnings</li>
+      <li>Financial Growth</li>
+      <li>Family Bonding</li>
+      <li>Spiritual Growth</li>
+    </ul>
+    <h3>Daily intentions</h3>
+    <ul>
+      <li>Wake before sunrise</li>
+      <li>Morning walk or jogging</li>
+      <li>Home-made meals at proper times</li>
+      <li>Morning &amp; evening prayers (or during commute on busy days)</li>
+      <li>Help someone — money, donation, or a hand with their work</li>
+      <li>No anger today</li>
+      <li>Made someone happy (extra marks)</li>
+      <li>Spoke less — preserved energy</li>
+      <li>Time with family — grandma, parents, brother, wife</li>
+      <li>Do good, hear good, speak good, watch good</li>
+      <li>Apologize for mistakes; grateful; forgive others</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>A Good Week</h2>
+    <ul>
+      <li>Visit one relative or friend</li>
+      <li>Two high-intensity workouts</li>
+      <li>One day of food fasting</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>A Good Month</h2>
+    <ul>
+      <li>Visit Ashram / Satsang / Satguru — 2 times</li>
+    </ul>
+  </div>
+  <div class="quote">"Small disciplines done daily, with love, become a beautiful life."</div>
+</div>
+
+<!-- DATA TAB -->
+<div id="data" class="panel">
+  <div class="card">
+    <h2>Backup &amp; Restore</h2>
+    <p style="color:var(--soft); margin-top:0;">Your entries are saved in your browser. Export a JSON backup periodically (and any time before clearing browser data) so you don't lose your diary.</p>
+    <div class="button-row">
+      <button class="primary" onclick="exportJSON()">Export JSON Backup</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">Import JSON Backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importJSON(event)">
+      <button class="danger" onclick="confirmReset()">Erase All Entries</button>
+    </div>
+    <div id="dataMsg" class="status-msg"></div>
+  </div>
+  <div class="card">
+    <h2>How to use this diary</h2>
+    <ol>
+      <li><strong>Morning:</strong> Open the diary, fill in <em>Morning Plan</em> with your intention for the day.</li>
+      <li><strong>Throughout the day:</strong> No need to revisit — just live the day.</li>
+      <li><strong>Evening:</strong> Tick the practices you did, fill in reflection, save the entry.</li>
+      <li><strong>Weekly &amp; monthly:</strong> Visit Reports to see how you're tracking.</li>
+      <li><strong>Anytime:</strong> Share your entries with Claude for deeper analysis and gentle advice.</li>
+    </ol>
+  </div>
+</div>
+
+<p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
+
+</div>
+
+<script>
+/* ---------- DATA MODEL ---------- */
+const DAILY_ITEMS = [
+  { id: 'wakeSunrise', label: 'Woke up before sunrise' },
+  { id: 'morningWalk', label: 'Morning walk or jogging' },
+  { id: 'homemadeBreakfast', label: 'Healthy home-made breakfast at proper time' },
+  { id: 'homemadeLunch', label: 'Healthy home-made lunch at proper time' },
+  { id: 'homemadeDinner', label: 'Healthy home-made dinner at proper time' },
+  { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute' },
+  { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute' },
+  { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
+  { id: 'noAnger', label: 'Did not become angry at any point' },
+  { id: 'madeHappy', label: 'Made someone happy', hint: 'Extra marks for this' },
+  { id: 'spokeLess', label: 'Spoke less than usual — conserved energy' },
+  { id: 'familyTime', label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
+  { id: 'doGood', label: 'Did good / heard good / spoke good / watched good' },
+  { id: 'apologized', label: 'Apologized for my mistakes (where needed)' },
+  { id: 'grateful', label: 'Practiced gratitude' },
+  { id: 'forgave', label: 'Forgave others for their mistakes' }
+];
+
+const WEEKLY_ITEMS = [
+  { id: 'visitedRelative', label: 'Visited a relative or friend this week' },
+  { id: 'highIntensity1', label: 'High-intensity workout #1 (this week)' },
+  { id: 'highIntensity2', label: 'High-intensity workout #2 (this week)' },
+  { id: 'foodFast', label: 'Completed a food fast this week' }
+];
+
+const MONTHLY_ITEMS = [
+  { id: 'ashram1', label: 'Visit to Ashram / Satsang / Satguru #1 (this month)' },
+  { id: 'ashram2', label: 'Visit to Ashram / Satsang / Satguru #2 (this month)' }
+];
+
+const TIME_AREAS = [
+  { id: 'rest', label: 'Adequate Rest (sleep + naps)' },
+  { id: 'meals', label: 'Healthy Meals' },
+  { id: 'physical', label: 'Physical Activity' },
+  { id: 'leisure', label: 'Leisure Time' },
+  { id: 'social', label: 'Social Interaction' },
+  { id: 'work', label: 'Productive Work' },
+  { id: 'learning', label: 'New Learnings' },
+  { id: 'financial', label: 'Financial Growth' },
+  { id: 'family', label: 'Family Bonding' },
+  { id: 'spiritual', label: 'Spiritual Growth' }
+];
+
+const STORAGE_KEY = 'dearDiary_entries_v1';
+
+/* ---------- INIT ---------- */
+function init() {
+  document.getElementById('entryDate').value = todayISO();
+  buildChecklist('dailyChecklist', DAILY_ITEMS);
+  buildChecklist('weeklyChecklist', WEEKLY_ITEMS);
+  buildChecklist('monthlyChecklist', MONTHLY_ITEMS);
+  buildMinutesGrid();
+  loadEntry();
+  refreshHistoryList();
+}
+
+function todayISO() {
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  return new Date(d.getTime() - off*60*1000).toISOString().slice(0,10);
+}
+
+function buildChecklist(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'check-item';
+    const inp = document.createElement('input');
+    inp.type = 'checkbox';
+    inp.id = 'chk_' + item.id;
+    inp.dataset.itemId = item.id;
+    inp.addEventListener('change', e => {
+      e.target.parentElement.classList.toggle('checked', e.target.checked);
+    });
+    const lab = document.createElement('label');
+    lab.htmlFor = inp.id;
+    lab.textContent = item.label;
+    if (item.hint) {
+      const h = document.createElement('span');
+      h.className = 'hint';
+      h.textContent = item.hint;
+      lab.appendChild(h);
+    }
+    div.appendChild(inp);
+    div.appendChild(lab);
+    el.appendChild(div);
+  });
+}
+
+function buildMinutesGrid() {
+  const el = document.getElementById('minutesGrid');
+  el.innerHTML = '';
+  TIME_AREAS.forEach(area => {
+    const lab = document.createElement('label');
+    lab.textContent = area.label;
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.min = 0;
+    inp.max = 1440;
+    inp.id = 'min_' + area.id;
+    inp.dataset.areaId = area.id;
+    inp.placeholder = '0';
+    inp.addEventListener('input', updateTotal);
+    el.appendChild(lab);
+    el.appendChild(inp);
+  });
+  const total = document.createElement('div');
+  total.className = 'total-line';
+  total.innerHTML = '<span>Total minutes</span><span id="minTotal">0 / 1440</span>';
+  el.appendChild(total);
+}
+
+function updateTotal() {
+  let total = 0;
+  TIME_AREAS.forEach(area => {
+    const v = parseInt(document.getElementById('min_' + area.id).value) || 0;
+    total += v;
+  });
+  const el = document.getElementById('minTotal');
+  el.textContent = total + ' / 1440';
+  el.classList.toggle('total-warn', total > 1440);
+}
+
+/* ---------- ENTRY READ/WRITE ---------- */
+function getAllEntries() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+  } catch { return {}; }
+}
+function setAllEntries(obj) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+}
+
+function readForm() {
+  const entry = {
+    date: document.getElementById('entryDate').value,
+    mood: document.getElementById('dayMood').value,
+    plan: document.getElementById('planText').value,
+    actual: document.getElementById('actualText').value,
+    grateful: document.getElementById('gratefulText').value,
+    apology: document.getElementById('apologyText').value,
+    kindness: document.getElementById('kindnessText').value,
+    lesson: document.getElementById('lessonText').value,
+    daily: {},
+    weekly: {},
+    monthly: {},
+    minutes: {}
+  };
+  DAILY_ITEMS.forEach(i => entry.daily[i.id] = document.getElementById('chk_' + i.id).checked);
+  WEEKLY_ITEMS.forEach(i => entry.weekly[i.id] = document.getElementById('chk_' + i.id).checked);
+  MONTHLY_ITEMS.forEach(i => entry.monthly[i.id] = document.getElementById('chk_' + i.id).checked);
+  TIME_AREAS.forEach(a => entry.minutes[a.id] = parseInt(document.getElementById('min_' + a.id).value) || 0);
+  return entry;
+}
+
+function writeForm(entry) {
+  document.getElementById('entryDate').value = entry.date || todayISO();
+  document.getElementById('dayMood').value = entry.mood || '';
+  document.getElementById('planText').value = entry.plan || '';
+  document.getElementById('actualText').value = entry.actual || '';
+  document.getElementById('gratefulText').value = entry.grateful || '';
+  document.getElementById('apologyText').value = entry.apology || '';
+  document.getElementById('kindnessText').value = entry.kindness || '';
+  document.getElementById('lessonText').value = entry.lesson || '';
+  DAILY_ITEMS.forEach(i => {
+    const c = document.getElementById('chk_' + i.id);
+    c.checked = !!(entry.daily && entry.daily[i.id]);
+    c.parentElement.classList.toggle('checked', c.checked);
+  });
+  WEEKLY_ITEMS.forEach(i => {
+    const c = document.getElementById('chk_' + i.id);
+    c.checked = !!(entry.weekly && entry.weekly[i.id]);
+    c.parentElement.classList.toggle('checked', c.checked);
+  });
+  MONTHLY_ITEMS.forEach(i => {
+    const c = document.getElementById('chk_' + i.id);
+    c.checked = !!(entry.monthly && entry.monthly[i.id]);
+    c.parentElement.classList.toggle('checked', c.checked);
+  });
+  TIME_AREAS.forEach(a => {
+    document.getElementById('min_' + a.id).value = (entry.minutes && entry.minutes[a.id]) || '';
+  });
+  updateTotal();
+}
+
+function saveEntry() {
+  const entry = readForm();
+  if (!entry.date) {
+    showMsg('saveMsg', 'Please choose a date.', 'warn');
+    return;
+  }
+  const all = getAllEntries();
+  all[entry.date] = entry;
+  setAllEntries(all);
+  showMsg('saveMsg', 'Saved entry for ' + entry.date + '. Well done. ', 'success');
+  refreshHistoryList();
+}
+
+function loadEntry() {
+  const date = document.getElementById('entryDate').value || todayISO();
+  document.getElementById('entryDate').value = date;
+  const all = getAllEntries();
+  if (all[date]) {
+    writeForm(all[date]);
+  } else {
+    clearForm(true);
+    document.getElementById('entryDate').value = date;
+  }
+}
+
+function clearForm(keepDate) {
+  const blank = { date: keepDate ? document.getElementById('entryDate').value : todayISO(), daily:{}, weekly:{}, monthly:{}, minutes:{} };
+  writeForm(blank);
+  document.getElementById('saveMsg').className = 'status-msg';
+}
+
+function showMsg(elId, text, kind) {
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = 'status-msg ' + kind;
+  setTimeout(() => { el.className = 'status-msg'; }, 4000);
+}
+
+/* ---------- HISTORY ---------- */
+function refreshHistoryList() {
+  const all = getAllEntries();
+  const dates = Object.keys(all).sort().reverse();
+  const ul = document.getElementById('entryList');
+  ul.innerHTML = '';
+  if (dates.length === 0) {
+    ul.innerHTML = '<li style="border:none; background:transparent; color:var(--soft); font-style:italic;">No entries yet — your story starts today.</li>';
+    return;
+  }
+  dates.forEach(d => {
+    const e = all[d];
+    const checked = countDaily(e);
+    const li = document.createElement('li');
+    li.innerHTML = '<div><span class="date">' + d + '</span> <span class="score">— ' + checked + '/' + DAILY_ITEMS.length + ' practices</span></div>';
+    const btn = document.createElement('button');
+    btn.className = 'secondary';
+    btn.textContent = 'Open';
+    btn.onclick = () => {
+      document.getElementById('entryDate').value = d;
+      loadEntry();
+      showTab('today');
+      window.scrollTo({top:0, behavior:'smooth'});
+    };
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+}
+
+function countDaily(e) {
+  if (!e || !e.daily) return 0;
+  return Object.values(e.daily).filter(Boolean).length;
+}
+
+/* ---------- REPORTS ---------- */
+function renderReport() {
+  const period = document.getElementById('reportType').value;
+  const all = getAllEntries();
+  const today = new Date(todayISO());
+  let entries = Object.values(all).filter(e => {
+    if (!e.date) return false;
+    if (period === 'all') return true;
+    const d = new Date(e.date);
+    const diff = (today - d) / (1000*60*60*24);
+    if (period === 'day') return e.date === todayISO();
+    if (period === 'week') return diff >= 0 && diff < 7;
+    if (period === 'month') return diff >= 0 && diff < 30;
+    return true;
+  }).sort((a,b) => a.date.localeCompare(b.date));
+
+  const c = document.getElementById('reportContent');
+  if (entries.length === 0) {
+    c.innerHTML = '<div class="card"><p style="color:var(--soft); text-align:center;">No entries in this period yet.</p></div>';
+    return;
+  }
+
+  // Aggregate
+  const counts = {};
+  DAILY_ITEMS.forEach(i => counts[i.id] = 0);
+  let totalMinutes = {};
+  TIME_AREAS.forEach(a => totalMinutes[a.id] = 0);
+  let moodSum = 0, moodCount = 0;
+  entries.forEach(e => {
+    DAILY_ITEMS.forEach(i => { if (e.daily && e.daily[i.id]) counts[i.id]++; });
+    TIME_AREAS.forEach(a => { totalMinutes[a.id] += (e.minutes && e.minutes[a.id]) || 0; });
+    if (e.mood) { moodSum += parseInt(e.mood); moodCount++; }
+  });
+
+  const totalDaysChecked = entries.reduce((s,e) => s + countDaily(e), 0);
+  const maxPossible = entries.length * DAILY_ITEMS.length;
+  const overallPct = maxPossible ? Math.round(totalDaysChecked / maxPossible * 100) : 0;
+  const avgMood = moodCount ? (moodSum / moodCount).toFixed(1) : '—';
+
+  // Weekly-criteria checks (only for week-or-longer reports)
+  let weeklyHit = { visitedRelative:false, highIntensity1:false, highIntensity2:false, foodFast:false };
+  let monthlyHit = { ashram1:false, ashram2:false };
+  entries.forEach(e => {
+    WEEKLY_ITEMS.forEach(i => { if (e.weekly && e.weekly[i.id]) weeklyHit[i.id] = true; });
+    MONTHLY_ITEMS.forEach(i => { if (e.monthly && e.monthly[i.id]) monthlyHit[i.id] = true; });
+  });
+
+  let html = '<div class="card"><h2>Summary</h2>';
+  html += '<div class="stat-grid">';
+  html += '<div class="stat-box"><div class="stat-num">' + entries.length + '</div><div class="stat-label">Days logged</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + overallPct + '%</div><div class="stat-label">Practices completed</div></div>';
+  html += '<div class="stat-box"><div class="stat-num">' + avgMood + '</div><div class="stat-label">Avg mood</div></div>';
+  html += '</div></div>';
+
+  // Per-practice progress
+  html += '<div class="card"><h2>Daily Practices — How Often</h2>';
+  DAILY_ITEMS.forEach(i => {
+    const pct = Math.round(counts[i.id] / entries.length * 100);
+    html += '<div class="progress-row"><span>' + i.label + '</span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + counts[i.id] + '/' + entries.length + '</span></div>';
+  });
+  html += '</div>';
+
+  // Time allocation
+  const totalMin = Object.values(totalMinutes).reduce((a,b)=>a+b, 0);
+  if (totalMin > 0) {
+    html += '<div class="card"><h2>Time Allocation</h2>';
+    html += '<p style="color:var(--soft); margin-top:0;">Average minutes per day across the period</p>';
+    TIME_AREAS.forEach(a => {
+      const avg = Math.round(totalMinutes[a.id] / entries.length);
+      const pct = Math.round(totalMinutes[a.id] / totalMin * 100);
+      html += '<div class="progress-row"><span>' + a.label + '</span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+      html += '<span class="pct">' + avg + ' min</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Weekly / monthly criteria
+  if (period === 'week' || period === 'month' || period === 'all') {
+    html += '<div class="card"><h2>This Week\'s Goals</h2><ul>';
+    html += '<li>' + (weeklyHit.visitedRelative ? '✓' : '○') + ' Visit one relative or friend</li>';
+    const hi = (weeklyHit.highIntensity1?1:0) + (weeklyHit.highIntensity2?1:0);
+    html += '<li>' + (hi >= 2 ? '✓' : '○') + ' Two high-intensity workouts (' + hi + '/2)</li>';
+    html += '<li>' + (weeklyHit.foodFast ? '✓' : '○') + ' One food fast</li>';
+    html += '</ul></div>';
+  }
+  if (period === 'month' || period === 'all') {
+    const ash = (monthlyHit.ashram1?1:0) + (monthlyHit.ashram2?1:0);
+    html += '<div class="card"><h2>This Month\'s Goals</h2><ul>';
+    html += '<li>' + (ash >= 2 ? '✓' : '○') + ' Visit Ashram / Satsang / Satguru — 2 times (' + ash + '/2)</li>';
+    html += '</ul></div>';
+  }
+
+  // Reflection compilation
+  const reflections = entries.filter(e => e.actual || e.grateful || e.lesson);
+  if (reflections.length > 0) {
+    html += '<div class="card"><h2>Reflections</h2>';
+    reflections.slice(-7).reverse().forEach(e => {
+      html += '<details><summary>' + e.date + '</summary>';
+      if (e.actual) html += '<p><strong>Day:</strong> ' + esc(e.actual) + '</p>';
+      if (e.grateful) html += '<p><strong>Grateful:</strong> ' + esc(e.grateful).replace(/\n/g, '<br>') + '</p>';
+      if (e.kindness) html += '<p><strong>Kindness:</strong> ' + esc(e.kindness) + '</p>';
+      if (e.lesson) html += '<p><strong>Learned:</strong> ' + esc(e.lesson) + '</p>';
+      if (e.apology) html += '<p><strong>Apology / Lesson:</strong> ' + esc(e.apology) + '</p>';
+      html += '</details>';
+    });
+    html += '</div>';
+  }
+
+  c.innerHTML = html;
+}
+function esc(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ---------- DATA TAB ---------- */
+function exportJSON() {
+  const all = getAllEntries();
+  const blob = new Blob([JSON.stringify(all, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'dear-diary-backup-' + todayISO() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showMsg('dataMsg', 'Backup downloaded.', 'success');
+}
+
+function importJSON(ev) {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (typeof data !== 'object') throw new Error('bad format');
+      const merged = Object.assign({}, getAllEntries(), data);
+      setAllEntries(merged);
+      refreshHistoryList();
+      loadEntry();
+      showMsg('dataMsg', 'Imported ' + Object.keys(data).length + ' entries.', 'success');
+    } catch (e) {
+      showMsg('dataMsg', 'Import failed: ' + e.message, 'warn');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function confirmReset() {
+  if (confirm('This will erase ALL diary entries from this browser. Did you export a backup? Continue?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    refreshHistoryList();
+    clearForm();
+    showMsg('dataMsg', 'All entries erased.', 'warn');
+  }
+}
+
+/* ---------- TABS ---------- */
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  event && event.target && event.target.classList.add('active');
+  // fallback: re-find by onclick
+  document.querySelectorAll('.tab').forEach(t => {
+    if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + name + "'")) t.classList.add('active');
+  });
+  document.getElementById(name).classList.add('active');
+  if (name === 'reports') renderReport();
+  if (name === 'history') refreshHistoryList();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  document.getElementById('entryDate').addEventListener('change', loadEntry);
+});
+</script>
+
+</body>
+</html>
