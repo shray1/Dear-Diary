@@ -408,6 +408,7 @@
     <button class="primary" onclick="saveEntry()">Save Today's Entry</button>
     <button class="secondary" onclick="loadEntry()">Reload from Saved</button>
     <button class="secondary" onclick="clearForm()">Clear Form</button>
+    <span id="autosaveIndicator" style="color:var(--soft); font-size:0.85em; font-style:italic; align-self:center; opacity:0; transition:opacity 0.5s;"></span>
   </div>
   <div id="saveMsg" class="status-msg"></div>
 </div>
@@ -556,8 +557,8 @@ const MONTHLY_ITEMS = [
 ];
 
 const TIME_AREAS = [
-  { id: 'rest', label: 'Adequate Rest (sleep + naps)' },
-  { id: 'meals', label: 'Healthy Meals' },
+  { id: 'rest', label: 'Adequate Rest (sleep + naps)', default: 480 },
+  { id: 'meals', label: 'Healthy Meals', default: 120 },
   { id: 'physical', label: 'Physical Activity' },
   { id: 'leisure', label: 'Leisure Time' },
   { id: 'social', label: 'Social Interaction' },
@@ -565,7 +566,8 @@ const TIME_AREAS = [
   { id: 'learning', label: 'New Learnings' },
   { id: 'financial', label: 'Financial Growth' },
   { id: 'family', label: 'Family Bonding' },
-  { id: 'spiritual', label: 'Spiritual Growth' }
+  { id: 'spiritual', label: 'Spiritual Growth' },
+  { id: 'selfCare', label: 'Self Care', default: 60 }
 ];
 
 const STORAGE_KEY = 'dearDiary_entries_v1';
@@ -706,7 +708,8 @@ function writeForm(entry) {
     c.parentElement.classList.toggle('checked', c.checked);
   });
   TIME_AREAS.forEach(a => {
-    document.getElementById('min_' + a.id).value = (entry.minutes && entry.minutes[a.id]) || '';
+    const val = entry.minutes ? entry.minutes[a.id] : undefined;
+    document.getElementById('min_' + a.id).value = val !== undefined ? (val || '') : (a.default !== undefined ? a.default : '');
   });
   updateTotal();
 }
@@ -954,9 +957,40 @@ function showTab(name) {
   if (name === 'history') refreshHistoryList();
 }
 
+/* ---------- AUTOSAVE ---------- */
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), delay); };
+}
+
+function autosave() {
+  const entry = readForm();
+  if (!entry.date) return;
+  const all = getAllEntries();
+  all[entry.date] = entry;
+  setAllEntries(all);
+  refreshHistoryList();
+  const ind = document.getElementById('autosaveIndicator');
+  const t = new Date();
+  const hhmm = t.getHours().toString().padStart(2,'0') + ':' + t.getMinutes().toString().padStart(2,'0');
+  ind.textContent = '✓ Autosaved at ' + hhmm;
+  ind.style.opacity = '1';
+  setTimeout(() => { ind.style.opacity = '0'; }, 3000);
+}
+
+function setupAutosave() {
+  const debouncedSave = debounce(autosave, 1500);
+  const ids = ['dayMood','planText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
+  ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
+  ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
+    document.getElementById(cId).addEventListener('change', debouncedSave);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   init();
   document.getElementById('entryDate').addEventListener('change', loadEntry);
+  setupAutosave();
 });
 </script>
 
