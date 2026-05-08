@@ -159,6 +159,30 @@
     background: #f0f5ed;
     border-color: var(--good);
   }
+  .star-rating {
+    display: none;
+    align-items: center;
+    gap: 3px;
+    margin-top: 7px;
+  }
+  .check-item.checked .star-rating {
+    display: flex;
+  }
+  .star {
+    cursor: pointer;
+    font-size: 1.35em;
+    color: var(--line);
+    transition: color 0.1s;
+    line-height: 1;
+    user-select: none;
+  }
+  .star.lit { color: #e6b84a; }
+  .star-intensity {
+    font-size: 0.8em;
+    color: var(--soft);
+    font-style: italic;
+    margin-left: 8px;
+  }
   .minutes-grid {
     display: grid;
     grid-template-columns: 1fr 100px;
@@ -531,8 +555,8 @@ const DAILY_ITEMS = [
   { id: 'homemadeBreakfast', label: 'Healthy home-made breakfast at proper time' },
   { id: 'homemadeLunch', label: 'Healthy home-made lunch at proper time' },
   { id: 'homemadeDinner', label: 'Healthy home-made dinner at proper time' },
-  { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute' },
-  { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute' },
+  { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
+  { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
   { id: 'noAnger', label: 'Did not become angry at any point' },
   { id: 'madeHappy', label: 'Made someone happy', hint: 'Extra marks for this' },
@@ -559,15 +583,16 @@ const MONTHLY_ITEMS = [
 const TIME_AREAS = [
   { id: 'rest', label: 'Adequate Rest (sleep + naps)', default: 480 },
   { id: 'meals', label: 'Healthy Meals', default: 120 },
-  { id: 'physical', label: 'Physical Activity' },
-  { id: 'leisure', label: 'Leisure Time' },
-  { id: 'social', label: 'Social Interaction' },
-  { id: 'work', label: 'Productive Work' },
+  { id: 'physical', label: 'Physical Activity', default: 60 },
+  { id: 'leisure', label: 'Leisure Time', default: 90 },
+  { id: 'social', label: 'Social Interaction (meetings/news/youtube/chatting/talking)', default: 120 },
+  { id: 'work', label: 'Productive Work', default: 180 },
   { id: 'learning', label: 'New Learnings' },
   { id: 'financial', label: 'Financial Growth' },
-  { id: 'family', label: 'Family Bonding' },
-  { id: 'spiritual', label: 'Spiritual Growth' },
-  { id: 'selfCare', label: 'Self Care', default: 60 }
+  { id: 'family', label: 'Family Bonding', default: 90 },
+  { id: 'spiritual', label: 'Spiritual Growth', default: 30 },
+  { id: 'selfCare', label: 'Self Care', default: 60 },
+  { id: 'travel', label: 'Travel Time', default: 120 }
 ];
 
 const STORAGE_KEY = 'dearDiary_entries_v1';
@@ -611,10 +636,69 @@ function buildChecklist(containerId, items) {
       h.textContent = item.hint;
       lab.appendChild(h);
     }
+    if (item.stars) {
+      lab.appendChild(buildStarWidget(item.id));
+    }
     div.appendChild(inp);
     div.appendChild(lab);
     el.appendChild(div);
   });
+}
+
+const STAR_INTENSITY = ['', 'Rushed', 'Distracted', 'Sincere', 'Focused', 'Deep & Devoted'];
+
+function buildStarWidget(itemId) {
+  const wrap = document.createElement('div');
+  wrap.className = 'star-rating';
+  wrap.id = 'stars_' + itemId;
+  wrap.dataset.rating = '0';
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('span');
+    s.className = 'star';
+    s.textContent = '★';
+    s.dataset.val = i;
+    s.addEventListener('mouseenter', () => highlightStars(itemId, i));
+    s.addEventListener('mouseleave', () => highlightStars(itemId, parseInt(wrap.dataset.rating)));
+    s.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wrap.dataset.rating = i;
+      highlightStars(itemId, i);
+      updateStarIntensity(itemId, i);
+    });
+    wrap.appendChild(s);
+  }
+  const lbl = document.createElement('span');
+  lbl.className = 'star-intensity';
+  lbl.id = 'starintensity_' + itemId;
+  lbl.textContent = 'Rate intensity';
+  wrap.appendChild(lbl);
+  return wrap;
+}
+
+function highlightStars(itemId, upTo) {
+  const wrap = document.getElementById('stars_' + itemId);
+  if (!wrap) return;
+  wrap.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('lit', parseInt(s.dataset.val) <= upTo);
+  });
+}
+
+function updateStarIntensity(itemId, val) {
+  const lbl = document.getElementById('starintensity_' + itemId);
+  if (lbl) lbl.textContent = val ? STAR_INTENSITY[val] : 'Rate intensity';
+}
+
+function setStarRating(itemId, val) {
+  const wrap = document.getElementById('stars_' + itemId);
+  if (!wrap) return;
+  wrap.dataset.rating = val || 0;
+  highlightStars(itemId, val || 0);
+  updateStarIntensity(itemId, val || 0);
+}
+
+function getStarRating(itemId) {
+  const wrap = document.getElementById('stars_' + itemId);
+  return wrap ? parseInt(wrap.dataset.rating) || 0 : 0;
 }
 
 function buildMinutesGrid() {
@@ -676,7 +760,10 @@ function readForm() {
     monthly: {},
     minutes: {}
   };
-  DAILY_ITEMS.forEach(i => entry.daily[i.id] = document.getElementById('chk_' + i.id).checked);
+  DAILY_ITEMS.forEach(i => {
+    entry.daily[i.id] = document.getElementById('chk_' + i.id).checked;
+    if (i.stars) entry.daily[i.id + 'Rating'] = getStarRating(i.id);
+  });
   WEEKLY_ITEMS.forEach(i => entry.weekly[i.id] = document.getElementById('chk_' + i.id).checked);
   MONTHLY_ITEMS.forEach(i => entry.monthly[i.id] = document.getElementById('chk_' + i.id).checked);
   TIME_AREAS.forEach(a => entry.minutes[a.id] = parseInt(document.getElementById('min_' + a.id).value) || 0);
@@ -696,6 +783,7 @@ function writeForm(entry) {
     const c = document.getElementById('chk_' + i.id);
     c.checked = !!(entry.daily && entry.daily[i.id]);
     c.parentElement.classList.toggle('checked', c.checked);
+    if (i.stars) setStarRating(i.id, (entry.daily && entry.daily[i.id + 'Rating']) || 0);
   });
   WEEKLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
