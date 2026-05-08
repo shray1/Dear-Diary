@@ -332,6 +332,42 @@
     .progress-row .pct { text-align: left; }
   }
   .pct { color: var(--soft); text-align: right; }
+  .score-display {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 0 4px;
+  }
+  .score-num-big {
+    font-size: 3.4em;
+    color: var(--accent);
+    font-weight: bold;
+    line-height: 1;
+  }
+  .score-max-label {
+    font-size: 1.4em;
+    color: var(--soft);
+  }
+  .score-bar {
+    height: 14px;
+    background: var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+    margin: 8px 0 4px;
+  }
+  .score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--good), var(--accent));
+    transition: width 0.4s;
+  }
+  .score-grade {
+    text-align: center;
+    color: var(--soft);
+    font-style: italic;
+    font-size: 0.95em;
+    margin-top: 4px;
+  }
   .quote {
     font-style: italic;
     color: var(--soft);
@@ -469,22 +505,38 @@
 <!-- REPORTS TAB -->
 <div id="reports" class="panel">
   <div class="card">
-    <h2>Reports</h2>
+    <h2>Reports &amp; Scoring</h2>
     <div class="row">
       <div>
-        <label for="reportType">Period</label>
-        <select id="reportType" onchange="renderReport()">
-          <option value="day">Today</option>
-          <option value="week" selected>This Week (last 7 days)</option>
-          <option value="month">This Month (last 30 days)</option>
-          <option value="all">All time</option>
+        <label for="reportPeriod">Period</label>
+        <select id="reportPeriod" onchange="onPeriodChange()">
+          <option value="day">Day</option>
+          <option value="week">Week</option>
+          <option value="month" selected>Month</option>
+          <option value="year">Year</option>
         </select>
       </div>
-      <div>
-        <label>&nbsp;</label>
-        <button class="secondary" onclick="renderReport()">Refresh Report</button>
+      <div id="dayPicker" class="period-picker">
+        <label for="reportDay">Date</label>
+        <input type="date" id="reportDay" onchange="renderReport()">
+      </div>
+      <div id="weekPicker" class="period-picker" style="display:none">
+        <label for="reportWeekDay">Any day in the week</label>
+        <input type="date" id="reportWeekDay" onchange="renderReport()">
+      </div>
+      <div id="monthPicker" class="period-picker" style="display:none">
+        <label>Month / Year</label>
+        <div style="display:flex; gap:6px;">
+          <select id="reportMonthName" onchange="renderReport()" style="flex:1;"></select>
+          <input type="number" id="reportMonthYear" min="2020" max="2100" onchange="renderReport()" style="width:90px;">
+        </div>
+      </div>
+      <div id="yearPicker" class="period-picker" style="display:none">
+        <label for="reportYear">Year</label>
+        <input type="number" id="reportYear" min="2020" max="2100" onchange="renderReport()">
       </div>
     </div>
+    <button class="secondary" onclick="renderReport()" style="margin-top:8px;">Refresh Report</button>
   </div>
   <div id="reportContent"></div>
 </div>
@@ -620,6 +672,35 @@ const TIME_AREAS = [
 
 const STORAGE_KEY = 'dearDiary_entries_v1';
 
+/* ---------- SCORING ---------- */
+// Daily practice weights — sum to 100
+const DAILY_SCORING = {
+  wakeSunrise:        { weight: 6 },
+  morningWalk:        { weight: 6, subratings: { suryanamaskar: 3, pranayam: 3 } },
+  homemadeBreakfast:  { weight: 5 },
+  homemadeLunch:      { weight: 5 },
+  homemadeDinner:     { weight: 5 },
+  morningPrayer:      { weight: 3, starsWeight: 5 },
+  eveningPrayer:      { weight: 3, starsWeight: 5 },
+  helpedSomeone:      { weight: 8 },
+  noAnger:            { weight: 8 },
+  madeHappy:          { weight: 5 },
+  spokeLess:          { weight: 4 },
+  familyTime:         { weight: 7 },
+  doGood:             { weight: 6 },
+  apologized:         { weight: 4 },
+  grateful:           { weight: 5 },
+  forgave:            { weight: 4 }
+};
+// Weekly tasks — sum to 20
+const WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5 };
+// Monthly tasks — sum to 20
+const MONTHLY_SCORING = { ashram1: 10, ashram2: 10 };
+
+const MONTH_NAMES_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAY_NAMES_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
 /* ---------- INIT ---------- */
 function init() {
   document.getElementById('entryDate').value = todayISO();
@@ -629,6 +710,7 @@ function init() {
   buildMinutesGrid();
   loadEntry();
   refreshHistoryList();
+  initReportSelectors();
 }
 
 function todayISO() {
@@ -932,119 +1014,371 @@ function countDaily(e) {
   return Object.values(e.daily).filter(Boolean).length;
 }
 
-/* ---------- REPORTS ---------- */
-function renderReport() {
-  const period = document.getElementById('reportType').value;
-  const all = getAllEntries();
-  const today = new Date(todayISO());
-  let entries = Object.values(all).filter(e => {
-    if (!e.date) return false;
-    if (period === 'all') return true;
-    const d = new Date(e.date);
-    const diff = (today - d) / (1000*60*60*24);
-    if (period === 'day') return e.date === todayISO();
-    if (period === 'week') return diff >= 0 && diff < 7;
-    if (period === 'month') return diff >= 0 && diff < 30;
-    return true;
-  }).sort((a,b) => a.date.localeCompare(b.date));
+/* ---------- REPORTS — DATE HELPERS ---------- */
+function parseISODate(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+function isoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+function addDays(d, n) {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
+}
+function startOfWeekMonday(d) {
+  const r = new Date(d);
+  const day = r.getDay(); // 0=Sun..6=Sat
+  const offset = day === 0 ? -6 : 1 - day;
+  r.setDate(r.getDate() + offset);
+  r.setHours(0, 0, 0, 0);
+  return r;
+}
+function firstMondayOfMonth(year, month) {
+  const d = new Date(year, month, 1);
+  while (d.getDay() !== 1) d.setDate(d.getDate() + 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function getMonthWeeks(year, month) {
+  // Returns Mondays whose week belongs to this month (week starts in this month).
+  const start = firstMondayOfMonth(year, month);
+  const nextStart = month === 11 ? firstMondayOfMonth(year + 1, 0) : firstMondayOfMonth(year, month + 1);
+  const weeks = [];
+  let cur = new Date(start);
+  while (cur < nextStart) {
+    weeks.push(new Date(cur));
+    cur = addDays(cur, 7);
+  }
+  return weeks;
+}
 
+/* ---------- SCORING FUNCTIONS ---------- */
+function getDailyItemLabel(id) {
+  const it = DAILY_ITEMS.find(x => x.id === id);
+  return it ? it.label : id;
+}
+
+function scoreDay(entry) {
+  const breakdown = [];
+  let total = 0;
+  if (!entry || !entry.daily) {
+    Object.keys(DAILY_SCORING).forEach(id => {
+      const cfg = DAILY_SCORING[id];
+      let max = cfg.weight + (cfg.starsWeight || 0);
+      if (cfg.subratings) Object.values(cfg.subratings).forEach(v => max += v);
+      breakdown.push({ id, label: getDailyItemLabel(id), points: 0, max });
+    });
+    return { total: 0, max: 100, breakdown, hasEntry: false };
+  }
+  Object.keys(DAILY_SCORING).forEach(id => {
+    const cfg = DAILY_SCORING[id];
+    const checked = !!entry.daily[id];
+    let max = cfg.weight;
+    let pts = checked ? cfg.weight : 0;
+    if (cfg.starsWeight) {
+      max += cfg.starsWeight;
+      if (checked) {
+        const r = entry.daily[id + 'Rating'] || 0;
+        pts += (r / 5) * cfg.starsWeight;
+      }
+    }
+    if (cfg.subratings) {
+      Object.keys(cfg.subratings).forEach(subId => {
+        const subW = cfg.subratings[subId];
+        max += subW;
+        if (checked) {
+          const r = entry.daily[id + '_' + subId] || 0;
+          pts += (r / 5) * subW;
+        }
+      });
+    }
+    breakdown.push({ id, label: getDailyItemLabel(id), points: pts, max });
+    total += pts;
+  });
+  return { total, max: 100, breakdown, hasEntry: true };
+}
+
+function scoreWeek(weekStart) {
+  const all = getAllEntries();
+  const dayResults = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(weekStart, i);
+    const iso = isoDate(d);
+    const entry = all[iso];
+    const r = entry ? scoreDay(entry) : { total: 0, max: 100, breakdown: [], hasEntry: false };
+    dayResults.push({ date: iso, dayName: DAY_NAMES_SHORT[i], ...r });
+  }
+  // Daily portion (80 pts): sum of day scores out of 700 → 80
+  const sumDays = dayResults.reduce((s, d) => s + d.total, 0);
+  const dailyPart = (sumDays / 700) * 80;
+  // Weekly tasks (20 pts): if any day in the week ticked it, the task is hit
+  const weeklyHits = {};
+  Object.keys(WEEKLY_SCORING).forEach(k => weeklyHits[k] = false);
+  dayResults.forEach(d => {
+    const e = all[d.date];
+    if (e && e.weekly) Object.keys(weeklyHits).forEach(k => { if (e.weekly[k]) weeklyHits[k] = true; });
+  });
+  let weeklyPart = 0;
+  Object.keys(WEEKLY_SCORING).forEach(k => { if (weeklyHits[k]) weeklyPart += WEEKLY_SCORING[k]; });
+  return {
+    total: dailyPart + weeklyPart,
+    max: 100,
+    dailyPart, dailyMax: 80,
+    weeklyPart, weeklyMax: 20,
+    weeklyHits,
+    weekStart: isoDate(weekStart),
+    weekEnd: isoDate(addDays(weekStart, 6)),
+    dayResults
+  };
+}
+
+function scoreMonth(year, month) {
+  const weeks = getMonthWeeks(year, month);
+  const weekResults = weeks.map(w => scoreWeek(w));
+  const sumWeeks = weekResults.reduce((s, w) => s + w.total, 0);
+  const weeklyPart = weeks.length > 0 ? (sumWeeks / (weeks.length * 100)) * 80 : 0;
+  // Monthly tasks across entire month range
+  const all = getAllEntries();
+  const monthStart = weeks.length > 0 ? weeks[0] : firstMondayOfMonth(year, month);
+  const monthEnd = weeks.length > 0 ? addDays(weeks[weeks.length - 1], 6) : monthStart;
+  const monthlyHits = {};
+  Object.keys(MONTHLY_SCORING).forEach(k => monthlyHits[k] = false);
+  Object.keys(all).forEach(dateStr => {
+    const d = parseISODate(dateStr);
+    if (d >= monthStart && d <= monthEnd) {
+      const e = all[dateStr];
+      if (e && e.monthly) Object.keys(monthlyHits).forEach(k => { if (e.monthly[k]) monthlyHits[k] = true; });
+    }
+  });
+  let monthlyPart = 0;
+  Object.keys(MONTHLY_SCORING).forEach(k => { if (monthlyHits[k]) monthlyPart += MONTHLY_SCORING[k]; });
+  return {
+    total: weeklyPart + monthlyPart,
+    max: 100,
+    weeklyPart, weeklyMax: 80,
+    monthlyPart, monthlyMax: 20,
+    monthlyHits,
+    weekResults,
+    year, month,
+    monthStart: isoDate(monthStart),
+    monthEnd: isoDate(monthEnd)
+  };
+}
+
+function scoreYear(year) {
+  const monthResults = [];
+  for (let m = 0; m < 12; m++) monthResults.push(scoreMonth(year, m));
+  const total = monthResults.reduce((s, m) => s + m.total, 0) / 12;
+  return { total, max: 100, monthResults, year };
+}
+
+/* ---------- REPORTS — UI HELPERS ---------- */
+function gradeFor(score) {
+  if (score >= 90) return 'Excellent — a beautiful day';
+  if (score >= 75) return 'Strong — keep going';
+  if (score >= 60) return 'Steady — good base';
+  if (score >= 40) return 'Mixed — room to grow';
+  if (score >= 20) return 'Low — gentle reset tomorrow';
+  return 'Very low — be kind to yourself';
+}
+function scoreDisplayHtml(value, max) {
+  const v = Math.round(value);
+  const pct = Math.max(0, Math.min(100, (value / max) * 100));
+  return '<div class="score-display">' +
+         '<span class="score-num-big">' + v + '</span>' +
+         '<span class="score-max-label">/ ' + max + '</span></div>' +
+         '<div class="score-bar"><div class="score-bar-fill" style="width:' + pct + '%"></div></div>' +
+         '<div class="score-grade">' + gradeFor(v) + '</div>';
+}
+function statBoxHtml(num, label) {
+  return '<div class="stat-box"><div class="stat-num">' + num + '</div><div class="stat-label">' + label + '</div></div>';
+}
+
+/* ---------- REPORTS — RENDERING ---------- */
+function onPeriodChange() {
+  const p = document.getElementById('reportPeriod').value;
+  ['day','week','month','year'].forEach(k => {
+    document.getElementById(k + 'Picker').style.display = (k === p) ? '' : 'none';
+  });
+  renderReport();
+}
+
+function initReportSelectors() {
+  document.getElementById('reportDay').value = todayISO();
+  document.getElementById('reportWeekDay').value = todayISO();
+  const monthSel = document.getElementById('reportMonthName');
+  if (!monthSel.options.length) {
+    MONTH_NAMES_FULL.forEach((name, i) => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = name;
+      monthSel.appendChild(opt);
+    });
+  }
+  const now = new Date();
+  monthSel.value = now.getMonth();
+  document.getElementById('reportMonthYear').value = now.getFullYear();
+  document.getElementById('reportYear').value = now.getFullYear();
+  // Sync picker visibility to match the default period (Month)
+  const p = document.getElementById('reportPeriod').value;
+  ['day','week','month','year'].forEach(k => {
+    document.getElementById(k + 'Picker').style.display = (k === p) ? '' : 'none';
+  });
+}
+
+function renderReport() {
+  const period = document.getElementById('reportPeriod').value;
   const c = document.getElementById('reportContent');
-  if (entries.length === 0) {
-    c.innerHTML = '<div class="card"><p style="color:var(--soft); text-align:center;">No entries in this period yet.</p></div>';
+  if (period === 'day')   return renderDayReport(c);
+  if (period === 'week')  return renderWeekReport(c);
+  if (period === 'month') return renderMonthReport(c);
+  if (period === 'year')  return renderYearReport(c);
+}
+
+function renderDayReport(c) {
+  const dateStr = document.getElementById('reportDay').value;
+  if (!dateStr) { c.innerHTML = '<div class="card"><p>Pick a date.</p></div>'; return; }
+  const all = getAllEntries();
+  const entry = all[dateStr];
+  let html = '<div class="card"><h2>Day Score — ' + dateStr + '</h2>';
+  if (!entry) {
+    html += '<p style="color:var(--soft); text-align:center; padding:20px 0;">No entry for this day yet.</p>';
+    html += '</div>';
+    c.innerHTML = html;
     return;
   }
-
-  // Aggregate
-  const counts = {};
-  DAILY_ITEMS.forEach(i => counts[i.id] = 0);
-  let totalMinutes = {};
-  TIME_AREAS.forEach(a => totalMinutes[a.id] = 0);
-  let moodSum = 0, moodCount = 0;
-  entries.forEach(e => {
-    DAILY_ITEMS.forEach(i => { if (e.daily && e.daily[i.id]) counts[i.id]++; });
-    TIME_AREAS.forEach(a => { totalMinutes[a.id] += (e.minutes && e.minutes[a.id]) || 0; });
-    if (e.mood) { moodSum += parseInt(e.mood); moodCount++; }
-  });
-
-  const totalDaysChecked = entries.reduce((s,e) => s + countDaily(e), 0);
-  const maxPossible = entries.length * DAILY_ITEMS.length;
-  const overallPct = maxPossible ? Math.round(totalDaysChecked / maxPossible * 100) : 0;
-  const avgMood = moodCount ? (moodSum / moodCount).toFixed(1) : '—';
-
-  // Weekly-criteria checks (only for week-or-longer reports)
-  let weeklyHit = { visitedRelative:false, highIntensity1:false, highIntensity2:false, foodFast:false };
-  let monthlyHit = { ashram1:false, ashram2:false };
-  entries.forEach(e => {
-    WEEKLY_ITEMS.forEach(i => { if (e.weekly && e.weekly[i.id]) weeklyHit[i.id] = true; });
-    MONTHLY_ITEMS.forEach(i => { if (e.monthly && e.monthly[i.id]) monthlyHit[i.id] = true; });
-  });
-
-  let html = '<div class="card"><h2>Summary</h2>';
-  html += '<div class="stat-grid">';
-  html += '<div class="stat-box"><div class="stat-num">' + entries.length + '</div><div class="stat-label">Days logged</div></div>';
-  html += '<div class="stat-box"><div class="stat-num">' + overallPct + '%</div><div class="stat-label">Practices completed</div></div>';
-  html += '<div class="stat-box"><div class="stat-num">' + avgMood + '</div><div class="stat-label">Avg mood</div></div>';
-  html += '</div></div>';
-
-  // Per-practice progress
-  html += '<div class="card"><h2>Daily Practices — How Often</h2>';
-  DAILY_ITEMS.forEach(i => {
-    const pct = Math.round(counts[i.id] / entries.length * 100);
-    html += '<div class="progress-row"><span>' + i.label + '</span>';
+  const r = scoreDay(entry);
+  html += scoreDisplayHtml(r.total, 100);
+  html += '<h3 style="margin-top:18px;">Practice breakdown</h3>';
+  r.breakdown.forEach(b => {
+    const pct = b.max > 0 ? Math.round((b.points / b.max) * 100) : 0;
+    html += '<div class="progress-row"><span>' + b.label + '</span>';
     html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
-    html += '<span class="pct">' + counts[i.id] + '/' + entries.length + '</span></div>';
+    html += '<span class="pct">' + b.points.toFixed(1) + ' / ' + b.max + '</span></div>';
   });
   html += '</div>';
 
-  // Time allocation
-  const totalMin = Object.values(totalMinutes).reduce((a,b)=>a+b, 0);
-  if (totalMin > 0) {
-    html += '<div class="card"><h2>Time Allocation</h2>';
-    html += '<p style="color:var(--soft); margin-top:0;">Average minutes per day across the period</p>';
-    TIME_AREAS.forEach(a => {
-      const avg = Math.round(totalMinutes[a.id] / entries.length);
-      const pct = Math.round(totalMinutes[a.id] / totalMin * 100);
-      html += '<div class="progress-row"><span>' + a.label + '</span>';
-      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
-      html += '<span class="pct">' + avg + ' min</span></div>';
-    });
+  // Time allocation for the day
+  if (entry.minutes) {
+    const totalMin = TIME_AREAS.reduce((s,a) => s + (entry.minutes[a.id] || 0), 0);
+    if (totalMin > 0) {
+      html += '<div class="card"><h2>Time Allocation</h2>';
+      TIME_AREAS.forEach(a => {
+        const m = entry.minutes[a.id] || 0;
+        if (m > 0) {
+          const pct = Math.round(m / totalMin * 100);
+          html += '<div class="progress-row"><span>' + a.label + '</span>';
+          html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+          html += '<span class="pct">' + m + ' min</span></div>';
+        }
+      });
+      html += '<p style="color:var(--soft); text-align:right; margin-top:8px;">Total: ' + totalMin + ' / 1440 min</p>';
+      html += '</div>';
+    }
+  }
+
+  // Reflection
+  if (entry.actual || entry.grateful || entry.lesson || entry.kindness || entry.apology) {
+    html += '<div class="card"><h2>Reflection</h2>';
+    if (entry.actual)   html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
+    if (entry.grateful) html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
+    if (entry.kindness) html += '<p><strong>Kindness:</strong> ' + esc(entry.kindness) + '</p>';
+    if (entry.lesson)   html += '<p><strong>Learned:</strong> ' + esc(entry.lesson) + '</p>';
+    if (entry.apology)  html += '<p><strong>Apology:</strong> ' + esc(entry.apology) + '</p>';
     html += '</div>';
   }
-
-  // Weekly / monthly criteria
-  if (period === 'week' || period === 'month' || period === 'all') {
-    html += '<div class="card"><h2>This Week\'s Goals</h2><ul>';
-    html += '<li>' + (weeklyHit.visitedRelative ? '✓' : '○') + ' Visit one relative or friend</li>';
-    const hi = (weeklyHit.highIntensity1?1:0) + (weeklyHit.highIntensity2?1:0);
-    html += '<li>' + (hi >= 2 ? '✓' : '○') + ' Two high-intensity workouts (' + hi + '/2)</li>';
-    html += '<li>' + (weeklyHit.foodFast ? '✓' : '○') + ' One food fast</li>';
-    html += '</ul></div>';
-  }
-  if (period === 'month' || period === 'all') {
-    const ash = (monthlyHit.ashram1?1:0) + (monthlyHit.ashram2?1:0);
-    html += '<div class="card"><h2>This Month\'s Goals</h2><ul>';
-    html += '<li>' + (ash >= 2 ? '✓' : '○') + ' Visit Ashram / Satsang / Satguru — 2 times (' + ash + '/2)</li>';
-    html += '</ul></div>';
-  }
-
-  // Reflection compilation
-  const reflections = entries.filter(e => e.actual || e.grateful || e.lesson);
-  if (reflections.length > 0) {
-    html += '<div class="card"><h2>Reflections</h2>';
-    reflections.slice(-7).reverse().forEach(e => {
-      html += '<details><summary>' + e.date + '</summary>';
-      if (e.actual) html += '<p><strong>Day:</strong> ' + esc(e.actual) + '</p>';
-      if (e.grateful) html += '<p><strong>Grateful:</strong> ' + esc(e.grateful).replace(/\n/g, '<br>') + '</p>';
-      if (e.kindness) html += '<p><strong>Kindness:</strong> ' + esc(e.kindness) + '</p>';
-      if (e.lesson) html += '<p><strong>Learned:</strong> ' + esc(e.lesson) + '</p>';
-      if (e.apology) html += '<p><strong>Apology / Lesson:</strong> ' + esc(e.apology) + '</p>';
-      html += '</details>';
-    });
-    html += '</div>';
-  }
-
   c.innerHTML = html;
 }
+
+function renderWeekReport(c) {
+  const pickStr = document.getElementById('reportWeekDay').value;
+  if (!pickStr) { c.innerHTML = '<div class="card"><p>Pick a date.</p></div>'; return; }
+  const monday = startOfWeekMonday(parseISODate(pickStr));
+  const r = scoreWeek(monday);
+
+  let html = '<div class="card">';
+  html += '<h2>Week Score — ' + r.weekStart + ' to ' + r.weekEnd + '</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Monday → Sunday</p>';
+  html += scoreDisplayHtml(r.total, 100);
+  html += '<div class="stat-grid" style="margin-top:18px;">';
+  html += statBoxHtml(r.dailyPart.toFixed(1) + '/' + r.dailyMax, 'Daily portion');
+  html += statBoxHtml(r.weeklyPart.toFixed(0) + '/' + r.weeklyMax, 'Weekly tasks');
+  html += '</div>';
+
+  html += '<h3 style="margin-top:18px;">Daily scores</h3>';
+  r.dayResults.forEach(d => {
+    const pct = Math.round(d.total);
+    html += '<div class="progress-row"><span>' + d.dayName + ' ' + d.date + '</span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + (d.hasEntry ? d.total.toFixed(0) + '/100' : '— no entry') + '</span></div>';
+  });
+
+  html += '<h3 style="margin-top:18px;">Weekly tasks (20 pts)</h3><ul>';
+  WEEKLY_ITEMS.forEach(i => {
+    const w = WEEKLY_SCORING[i.id] || 0;
+    html += '<li>' + (r.weeklyHits[i.id] ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span></li>';
+  });
+  html += '</ul></div>';
+  c.innerHTML = html;
+}
+
+function renderMonthReport(c) {
+  const month = parseInt(document.getElementById('reportMonthName').value);
+  const year  = parseInt(document.getElementById('reportMonthYear').value);
+  if (isNaN(month) || isNaN(year)) { c.innerHTML = '<div class="card"><p>Pick a month and year.</p></div>'; return; }
+  const r = scoreMonth(year, month);
+
+  let html = '<div class="card">';
+  html += '<h2>Month Score — ' + MONTH_NAMES_FULL[month] + ' ' + year + '</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Range: ' + r.monthStart + ' → ' + r.monthEnd + ' (' + r.weekResults.length + ' weeks)</p>';
+  html += scoreDisplayHtml(r.total, 100);
+  html += '<div class="stat-grid" style="margin-top:18px;">';
+  html += statBoxHtml(r.weeklyPart.toFixed(1) + '/' + r.weeklyMax, 'From weekly scores');
+  html += statBoxHtml(r.monthlyPart.toFixed(0) + '/' + r.monthlyMax, 'Monthly tasks');
+  html += '</div>';
+
+  html += '<h3 style="margin-top:18px;">Weekly scores</h3>';
+  r.weekResults.forEach((w, i) => {
+    const pct = Math.round(w.total);
+    html += '<div class="progress-row"><span>Week ' + (i+1) + ' (' + w.weekStart + ' → ' + w.weekEnd + ')</span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + w.total.toFixed(0) + '/100</span></div>';
+  });
+
+  html += '<h3 style="margin-top:18px;">Monthly tasks (20 pts)</h3><ul>';
+  MONTHLY_ITEMS.forEach(i => {
+    const w = MONTHLY_SCORING[i.id] || 0;
+    html += '<li>' + (r.monthlyHits[i.id] ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span></li>';
+  });
+  html += '</ul></div>';
+  c.innerHTML = html;
+}
+
+function renderYearReport(c) {
+  const year = parseInt(document.getElementById('reportYear').value);
+  if (isNaN(year)) { c.innerHTML = '<div class="card"><p>Pick a year.</p></div>'; return; }
+  const r = scoreYear(year);
+
+  let html = '<div class="card">';
+  html += '<h2>Year Score — ' + year + '</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Average of 12 monthly scores</p>';
+  html += scoreDisplayHtml(r.total, 100);
+
+  html += '<h3 style="margin-top:18px;">Monthly scores</h3>';
+  r.monthResults.forEach((m, i) => {
+    const pct = Math.round(m.total);
+    html += '<div class="progress-row"><span>' + MONTH_NAMES_SHORT[i] + ' ' + year + '</span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + m.total.toFixed(0) + '/100</span></div>';
+  });
+  html += '</div>';
+  c.innerHTML = html;
+}
+
 function esc(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
 /* ---------- DATA TAB ---------- */
