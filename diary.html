@@ -168,6 +168,26 @@
   .check-item.checked .star-rating {
     display: flex;
   }
+  .subratings-wrap {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .check-item.checked .subratings-wrap {
+    display: flex;
+  }
+  .subrating-widget {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .subrating-label {
+    font-size: 0.82em;
+    color: var(--soft);
+    min-width: 115px;
+    font-style: normal;
+  }
   .star {
     cursor: pointer;
     font-size: 1.35em;
@@ -551,7 +571,10 @@
 /* ---------- DATA MODEL ---------- */
 const DAILY_ITEMS = [
   { id: 'wakeSunrise', label: 'Woke up before sunrise' },
-  { id: 'morningWalk', label: 'Morning walk or jogging' },
+  { id: 'morningWalk', label: 'Morning walk or jogging', subratings: [
+    { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
+    { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
+  ]},
   { id: 'homemadeBreakfast', label: 'Healthy home-made breakfast at proper time' },
   { id: 'homemadeLunch', label: 'Healthy home-made lunch at proper time' },
   { id: 'homemadeDinner', label: 'Healthy home-made dinner at proper time' },
@@ -639,6 +662,18 @@ function buildChecklist(containerId, items) {
     if (item.stars) {
       lab.appendChild(buildStarWidget(item.id));
     }
+    if (item.subratings) {
+      const subWrap = document.createElement('div');
+      subWrap.className = 'subratings-wrap';
+      item.subratings.forEach(sub => {
+        subWrap.appendChild(buildStarWidget(item.id + '_' + sub.id, {
+          title: sub.title,
+          starLabels: sub.starLabels,
+          className: 'subrating-widget'
+        }));
+      });
+      lab.appendChild(subWrap);
+    }
     div.appendChild(inp);
     div.appendChild(lab);
     el.appendChild(div);
@@ -647,57 +682,74 @@ function buildChecklist(containerId, items) {
 
 const STAR_INTENSITY = ['', 'Rushed', 'Distracted', 'Sincere', 'Focused', 'Deep & Devoted'];
 
-function buildStarWidget(itemId) {
+function buildStarWidget(widgetId, options = {}) {
+  const { title, starLabels, className } = options;
+  const effectiveLabels = starLabels || STAR_INTENSITY;
   const wrap = document.createElement('div');
-  wrap.className = 'star-rating';
-  wrap.id = 'stars_' + itemId;
+  wrap.className = className || 'star-rating';
+  wrap.id = 'stars_' + widgetId;
   wrap.dataset.rating = '0';
+  wrap.dataset.labels = JSON.stringify(effectiveLabels);
+  if (title) {
+    const t = document.createElement('span');
+    t.className = 'subrating-label';
+    t.textContent = title + ':';
+    wrap.appendChild(t);
+  }
   for (let i = 1; i <= 5; i++) {
     const s = document.createElement('span');
     s.className = 'star';
     s.textContent = '★';
     s.dataset.val = i;
-    s.addEventListener('mouseenter', () => highlightStars(itemId, i));
-    s.addEventListener('mouseleave', () => highlightStars(itemId, parseInt(wrap.dataset.rating)));
+    s.addEventListener('mouseenter', () => highlightStars(widgetId, i));
+    s.addEventListener('mouseleave', () => highlightStars(widgetId, parseInt(wrap.dataset.rating)));
     s.addEventListener('click', (e) => {
       e.stopPropagation();
       wrap.dataset.rating = i;
-      highlightStars(itemId, i);
-      updateStarIntensity(itemId, i);
+      highlightStars(widgetId, i);
+      updateStarIntensity(widgetId, i);
     });
     wrap.appendChild(s);
   }
   const lbl = document.createElement('span');
   lbl.className = 'star-intensity';
-  lbl.id = 'starintensity_' + itemId;
-  lbl.textContent = 'Rate intensity';
+  lbl.id = 'starintensity_' + widgetId;
+  lbl.textContent = title ? '' : 'Rate intensity';
   wrap.appendChild(lbl);
   return wrap;
 }
 
-function highlightStars(itemId, upTo) {
-  const wrap = document.getElementById('stars_' + itemId);
+function highlightStars(widgetId, upTo) {
+  const wrap = document.getElementById('stars_' + widgetId);
   if (!wrap) return;
   wrap.querySelectorAll('.star').forEach(s => {
     s.classList.toggle('lit', parseInt(s.dataset.val) <= upTo);
   });
 }
 
-function updateStarIntensity(itemId, val) {
-  const lbl = document.getElementById('starintensity_' + itemId);
-  if (lbl) lbl.textContent = val ? STAR_INTENSITY[val] : 'Rate intensity';
+function updateStarIntensity(widgetId, val) {
+  const wrap = document.getElementById('stars_' + widgetId);
+  const lbl = document.getElementById('starintensity_' + widgetId);
+  if (!wrap || !lbl) return;
+  try {
+    const labels = JSON.parse(wrap.dataset.labels) || STAR_INTENSITY;
+    const hasTitle = wrap.querySelector('.subrating-label');
+    lbl.textContent = val ? (labels[val] || '') : (hasTitle ? '' : 'Rate intensity');
+  } catch(e) {
+    lbl.textContent = val ? (STAR_INTENSITY[val] || '') : 'Rate intensity';
+  }
 }
 
-function setStarRating(itemId, val) {
-  const wrap = document.getElementById('stars_' + itemId);
+function setStarRating(widgetId, val) {
+  const wrap = document.getElementById('stars_' + widgetId);
   if (!wrap) return;
   wrap.dataset.rating = val || 0;
-  highlightStars(itemId, val || 0);
-  updateStarIntensity(itemId, val || 0);
+  highlightStars(widgetId, val || 0);
+  updateStarIntensity(widgetId, val || 0);
 }
 
-function getStarRating(itemId) {
-  const wrap = document.getElementById('stars_' + itemId);
+function getStarRating(widgetId) {
+  const wrap = document.getElementById('stars_' + widgetId);
   return wrap ? parseInt(wrap.dataset.rating) || 0 : 0;
 }
 
@@ -763,6 +815,9 @@ function readForm() {
   DAILY_ITEMS.forEach(i => {
     entry.daily[i.id] = document.getElementById('chk_' + i.id).checked;
     if (i.stars) entry.daily[i.id + 'Rating'] = getStarRating(i.id);
+    if (i.subratings) i.subratings.forEach(sub => {
+      entry.daily[i.id + '_' + sub.id] = getStarRating(i.id + '_' + sub.id);
+    });
   });
   WEEKLY_ITEMS.forEach(i => entry.weekly[i.id] = document.getElementById('chk_' + i.id).checked);
   MONTHLY_ITEMS.forEach(i => entry.monthly[i.id] = document.getElementById('chk_' + i.id).checked);
@@ -784,6 +839,9 @@ function writeForm(entry) {
     c.checked = !!(entry.daily && entry.daily[i.id]);
     c.parentElement.classList.toggle('checked', c.checked);
     if (i.stars) setStarRating(i.id, (entry.daily && entry.daily[i.id + 'Rating']) || 0);
+    if (i.subratings) i.subratings.forEach(sub => {
+      setStarRating(i.id + '_' + sub.id, (entry.daily && entry.daily[i.id + '_' + sub.id]) || 0);
+    });
   });
   WEEKLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
