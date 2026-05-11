@@ -155,6 +155,14 @@
     font-style: italic;
     margin-top: 2px;
   }
+  .performed-on {
+    display: block;
+    color: var(--good);
+    font-size: 0.82em;
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .performed-on:empty { display: none; }
   .check-item.checked {
     background: #f0f5ed;
     border-color: var(--good);
@@ -485,6 +493,16 @@
         </select>
       </div>
     </div>
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label for="wakeTime">Wake-up time</label>
+        <select id="wakeTime"></select>
+      </div>
+      <div>
+        <label for="bedTime">Bedtime</label>
+        <select id="bedTime"></select>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -571,8 +589,12 @@
         <input type="date" id="reportDay" onchange="renderReport()">
       </div>
       <div id="weekPicker" class="period-picker" style="display:none">
-        <label for="reportWeekDay">Any day in the week</label>
-        <input type="date" id="reportWeekDay" onchange="renderReport()">
+        <label>Month / Year / Week</label>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <select id="reportWeekMonth" onchange="rebuildWeekOptions(); renderReport();" style="flex:1; min-width:100px;"></select>
+          <input type="number" id="reportWeekYear" min="2020" max="2100" onchange="rebuildWeekOptions(); renderReport();" style="width:80px;">
+          <select id="reportWeekNum" onchange="renderReport()" style="flex:1; min-width:160px;"></select>
+        </div>
       </div>
       <div id="monthPicker" class="period-picker" style="display:none">
         <label>Month / Year</label>
@@ -727,6 +749,20 @@ const TIME_AREAS = [
 
 const STORAGE_KEY = 'dearDiary_entries_v1';
 
+// 96 fifteen-minute slots across the day, e.g. {value:"06:00", label:"6 AM"}
+function formatTime12h(hh, mm) {
+  const period = hh >= 12 ? 'PM' : 'AM';
+  let h = hh % 12; if (h === 0) h = 12;
+  return mm === 0 ? (h + ' ' + period) : (h + ':' + String(mm).padStart(2,'0') + ' ' + period);
+}
+const TIME_SLOTS = (() => {
+  const slots = [];
+  for (let h = 0; h < 24; h++) for (let m = 0; m < 60; m += 15) {
+    slots.push({ value: String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0'), label: formatTime12h(h, m) });
+  }
+  return slots;
+})();
+
 /* ---------- SCORING ---------- */
 // Default daily practice weights — sum to 100
 const DEFAULT_DAILY_SCORING = {
@@ -789,13 +825,51 @@ const DAY_NAMES_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 function init() {
   loadCustomWeights();
   document.getElementById('entryDate').value = todayISO();
-  buildChecklist('dailyChecklist', DAILY_ITEMS);
-  buildChecklist('weeklyChecklist', WEEKLY_ITEMS);
-  buildChecklist('monthlyChecklist', MONTHLY_ITEMS);
+  buildChecklist('dailyChecklist', DAILY_ITEMS, 'daily');
+  buildChecklist('weeklyChecklist', WEEKLY_ITEMS, 'weekly');
+  buildChecklist('monthlyChecklist', MONTHLY_ITEMS, 'monthly');
   buildMinutesGrid();
+  buildTimeSelects();
   loadEntry();
   refreshHistoryList();
   initReportSelectors();
+}
+
+function buildTimeSelects() {
+  ['wakeTime', 'bedTime'].forEach(id => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">— select —</option>';
+    TIME_SLOTS.forEach(slot => {
+      const opt = document.createElement('option');
+      opt.value = slot.value;
+      opt.textContent = slot.label;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', autofillRestFromSleepTimes);
+  });
+}
+
+// Compute sleep duration in minutes between bedtime and wake time, handling
+// overnight wrap (bedtime > waketime → bed was the previous evening).
+function computeSleepMinutes(bedHHMM, wakeHHMM) {
+  if (!bedHHMM || !wakeHHMM) return 0;
+  const [bh, bm] = bedHHMM.split(':').map(Number);
+  const [wh, wm] = wakeHHMM.split(':').map(Number);
+  if ([bh,bm,wh,wm].some(isNaN)) return 0;
+  const bed = bh*60 + bm, wake = wh*60 + wm;
+  return bed > wake ? (1440 - bed) + wake : wake - bed;
+}
+
+function autofillRestFromSleepTimes() {
+  const wake = document.getElementById('wakeTime').value;
+  const bed  = document.getElementById('bedTime').value;
+  if (!wake || !bed) return;
+  const mins = computeSleepMinutes(bed, wake);
+  const restInp = document.getElementById('min_rest');
+  if (restInp) {
+    restInp.value = mins;
+    updateTotal();
+  }
 }
 
 function todayISO() {
@@ -804,9 +878,10 @@ function todayISO() {
   return new Date(d.getTime() - off*60*1000).toISOString().slice(0,10);
 }
 
-function buildChecklist(containerId, items) {
+function buildChecklist(containerId, items, kind) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
+  const isPeriodKind = (kind === 'weekly' || kind === 'monthly');
   items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'check-item';
@@ -816,6 +891,15 @@ function buildChecklist(containerId, items) {
     inp.dataset.itemId = item.id;
     inp.addEventListener('change', e => {
       e.target.parentElement.classList.toggle('checked', e.target.checked);
+      if (isPeriodKind) {
+        const entryDate = document.getElementById('entryDate').value || todayISO();
+        if (e.target.checked) {
+          if (!e.target.dataset.performedOn) e.target.dataset.performedOn = entryDate;
+        } else {
+          e.target.dataset.performedOn = '';
+        }
+        updatePerformedOnLabel(item.id, e.target.dataset.performedOn);
+      }
     });
     const lab = document.createElement('label');
     lab.htmlFor = inp.id;
@@ -840,6 +924,12 @@ function buildChecklist(containerId, items) {
         }));
       });
       lab.appendChild(subWrap);
+    }
+    if (isPeriodKind) {
+      const perfSpan = document.createElement('span');
+      perfSpan.className = 'performed-on';
+      perfSpan.id = 'perfon_' + item.id;
+      lab.appendChild(perfSpan);
     }
     div.appendChild(inp);
     div.appendChild(lab);
@@ -968,6 +1058,8 @@ function readForm() {
   const entry = {
     date: document.getElementById('entryDate').value,
     mood: document.getElementById('dayMood').value,
+    wakeTime: document.getElementById('wakeTime').value,
+    bedTime: document.getElementById('bedTime').value,
     plan: document.getElementById('planText').value,
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
@@ -976,7 +1068,9 @@ function readForm() {
     lesson: document.getElementById('lessonText').value,
     daily: {},
     weekly: {},
+    weeklyOn: {},
     monthly: {},
+    monthlyOn: {},
     minutes: {}
   };
   DAILY_ITEMS.forEach(i => {
@@ -986,8 +1080,16 @@ function readForm() {
       entry.daily[i.id + '_' + sub.id] = getStarRating(i.id + '_' + sub.id);
     });
   });
-  WEEKLY_ITEMS.forEach(i => entry.weekly[i.id] = document.getElementById('chk_' + i.id).checked);
-  MONTHLY_ITEMS.forEach(i => entry.monthly[i.id] = document.getElementById('chk_' + i.id).checked);
+  WEEKLY_ITEMS.forEach(i => {
+    const c = document.getElementById('chk_' + i.id);
+    entry.weekly[i.id] = c.checked;
+    entry.weeklyOn[i.id] = c.checked ? (c.dataset.performedOn || entry.date) : '';
+  });
+  MONTHLY_ITEMS.forEach(i => {
+    const c = document.getElementById('chk_' + i.id);
+    entry.monthly[i.id] = c.checked;
+    entry.monthlyOn[i.id] = c.checked ? (c.dataset.performedOn || entry.date) : '';
+  });
   TIME_AREAS.forEach(a => entry.minutes[a.id] = parseInt(document.getElementById('min_' + a.id).value) || 0);
   return entry;
 }
@@ -995,6 +1097,8 @@ function readForm() {
 function writeForm(entry) {
   document.getElementById('entryDate').value = entry.date || todayISO();
   document.getElementById('dayMood').value = entry.mood || '';
+  document.getElementById('wakeTime').value = entry.wakeTime || '';
+  document.getElementById('bedTime').value = entry.bedTime || '';
   document.getElementById('planText').value = entry.plan || '';
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
@@ -1010,15 +1114,37 @@ function writeForm(entry) {
       setStarRating(i.id + '_' + sub.id, (entry.daily && entry.daily[i.id + '_' + sub.id]) || 0);
     });
   });
+  // Weekly / Monthly checkboxes reflect the UNION across the whole week / month
+  // (a task done on any day counts as done for every day of that period).
+  const _date = entry.date || todayISO();
+  const _all = getAllEntries();
+  const _weeklyUnion  = unionWeeklyFromSiblings(_date, _all);
+  const _monthlyUnion = unionMonthlyFromSiblings(_date, _all);
+  const _weeklyDates  = unionWeeklyDateFromSiblings(_date, _all);
+  const _monthlyDates = unionMonthlyDateFromSiblings(_date, _all);
+  WEEKLY_ITEMS.forEach(i => {
+    if (entry.weekly && entry.weekly[i.id]) _weeklyUnion[i.id] = true;
+    if (entry.weeklyOn && entry.weeklyOn[i.id] && !_weeklyDates[i.id]) _weeklyDates[i.id] = entry.weeklyOn[i.id];
+  });
+  MONTHLY_ITEMS.forEach(i => {
+    if (entry.monthly && entry.monthly[i.id]) _monthlyUnion[i.id] = true;
+    if (entry.monthlyOn && entry.monthlyOn[i.id] && !_monthlyDates[i.id]) _monthlyDates[i.id] = entry.monthlyOn[i.id];
+  });
   WEEKLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
-    c.checked = !!(entry.weekly && entry.weekly[i.id]);
+    c.checked = !!_weeklyUnion[i.id];
     c.parentElement.classList.toggle('checked', c.checked);
+    const d = c.checked ? (_weeklyDates[i.id] || _date) : '';
+    c.dataset.performedOn = d;
+    updatePerformedOnLabel(i.id, d);
   });
   MONTHLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
-    c.checked = !!(entry.monthly && entry.monthly[i.id]);
+    c.checked = !!_monthlyUnion[i.id];
     c.parentElement.classList.toggle('checked', c.checked);
+    const d = c.checked ? (_monthlyDates[i.id] || _date) : '';
+    c.dataset.performedOn = d;
+    updatePerformedOnLabel(i.id, d);
   });
   TIME_AREAS.forEach(a => {
     const val = entry.minutes ? entry.minutes[a.id] : undefined;
@@ -1035,6 +1161,8 @@ function saveEntry() {
   }
   const all = getAllEntries();
   all[entry.date] = entry;
+  propagateWeekly(entry, all);
+  propagateMonthly(entry, all);
   setAllEntries(all);
   showMsg('saveMsg', 'Saved entry for ' + entry.date + '. Well done. ', 'success');
   refreshHistoryList();
@@ -1140,6 +1268,119 @@ function getMonthWeeks(year, month) {
     cur = addDays(cur, 7);
   }
   return weeks;
+}
+
+/* ---------- WEEKLY / MONTHLY SIBLING SYNC ---------- */
+// Weekly and monthly tasks describe the week / month as a whole, not a single
+// day. The helpers below let writeForm() show the union across the week/month
+// and let saveEntry()/autosave() propagate changes to all sibling entries.
+
+function entriesInSameWeek(dateStr, all) {
+  const start = startOfWeekMonday(parseISODate(dateStr));
+  const dates = [];
+  for (let i = 0; i < 7; i++) dates.push(isoDate(addDays(start, i)));
+  return dates.filter(d => all[d]).map(d => ({ date: d, entry: all[d] }));
+}
+
+function entriesInSameMonth(dateStr, all) {
+  // Uses the same first-Monday-based "scoring month" as scoreMonth().
+  const d = parseISODate(dateStr);
+  let y = d.getFullYear(), m = d.getMonth();
+  let monthStart = firstMondayOfMonth(y, m);
+  if (d < monthStart) {
+    if (m === 0) { y--; m = 11; } else { m--; }
+    monthStart = firstMondayOfMonth(y, m);
+  }
+  const nextStart = m === 11 ? firstMondayOfMonth(y + 1, 0) : firstMondayOfMonth(y, m + 1);
+  return Object.keys(all).filter(s => {
+    const dt = parseISODate(s);
+    return dt >= monthStart && dt < nextStart;
+  }).map(s => ({ date: s, entry: all[s] }));
+}
+
+function unionWeeklyFromSiblings(dateStr, all) {
+  const u = {};
+  WEEKLY_ITEMS.forEach(i => u[i.id] = false);
+  entriesInSameWeek(dateStr, all).forEach(s => {
+    if (s.entry.weekly) WEEKLY_ITEMS.forEach(i => { if (s.entry.weekly[i.id]) u[i.id] = true; });
+  });
+  return u;
+}
+
+function unionMonthlyFromSiblings(dateStr, all) {
+  const u = {};
+  MONTHLY_ITEMS.forEach(i => u[i.id] = false);
+  entriesInSameMonth(dateStr, all).forEach(s => {
+    if (s.entry.monthly) MONTHLY_ITEMS.forEach(i => { if (s.entry.monthly[i.id]) u[i.id] = true; });
+  });
+  return u;
+}
+
+// Date the task was actually performed on (preferring explicit weeklyOn/monthlyOn,
+// falling back to the sibling entry's own date for legacy data).
+function unionWeeklyDateFromSiblings(dateStr, all) {
+  const u = {};
+  WEEKLY_ITEMS.forEach(i => u[i.id] = '');
+  entriesInSameWeek(dateStr, all).forEach(s => {
+    WEEKLY_ITEMS.forEach(i => {
+      if (u[i.id]) return;
+      if (s.entry.weeklyOn && s.entry.weeklyOn[i.id]) u[i.id] = s.entry.weeklyOn[i.id];
+      else if (s.entry.weekly && s.entry.weekly[i.id]) u[i.id] = s.date; // legacy fallback
+    });
+  });
+  return u;
+}
+function unionMonthlyDateFromSiblings(dateStr, all) {
+  const u = {};
+  MONTHLY_ITEMS.forEach(i => u[i.id] = '');
+  entriesInSameMonth(dateStr, all).forEach(s => {
+    MONTHLY_ITEMS.forEach(i => {
+      if (u[i.id]) return;
+      if (s.entry.monthlyOn && s.entry.monthlyOn[i.id]) u[i.id] = s.entry.monthlyOn[i.id];
+      else if (s.entry.monthly && s.entry.monthly[i.id]) u[i.id] = s.date;
+    });
+  });
+  return u;
+}
+
+function propagateWeekly(entry, all) {
+  if (!entry || !entry.date) return;
+  entriesInSameWeek(entry.date, all).forEach(s => {
+    if (s.date === entry.date) return;
+    if (!s.entry.weekly)   s.entry.weekly   = {};
+    if (!s.entry.weeklyOn) s.entry.weeklyOn = {};
+    WEEKLY_ITEMS.forEach(i => {
+      s.entry.weekly[i.id]   = !!(entry.weekly   && entry.weekly[i.id]);
+      s.entry.weeklyOn[i.id] = (entry.weeklyOn && entry.weeklyOn[i.id]) || '';
+    });
+  });
+}
+
+function propagateMonthly(entry, all) {
+  if (!entry || !entry.date) return;
+  entriesInSameMonth(entry.date, all).forEach(s => {
+    if (s.date === entry.date) return;
+    if (!s.entry.monthly)   s.entry.monthly   = {};
+    if (!s.entry.monthlyOn) s.entry.monthlyOn = {};
+    MONTHLY_ITEMS.forEach(i => {
+      s.entry.monthly[i.id]   = !!(entry.monthly   && entry.monthly[i.id]);
+      s.entry.monthlyOn[i.id] = (entry.monthlyOn && entry.monthlyOn[i.id]) || '';
+    });
+  });
+}
+
+function formatPerformedDate(isoStr) {
+  if (!isoStr) return '';
+  const d = parseISODate(isoStr);
+  if (isNaN(d.getTime())) return isoStr;
+  const dow = DAY_NAMES_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1];
+  return dow + ', ' + MONTH_NAMES_SHORT[d.getMonth()] + ' ' + d.getDate();
+}
+
+function updatePerformedOnLabel(itemId, isoStr) {
+  const el = document.getElementById('perfon_' + itemId);
+  if (!el) return;
+  el.textContent = isoStr ? '✓ done ' + formatPerformedDate(isoStr) : '';
 }
 
 /* ---------- SCORING FUNCTIONS ---------- */
@@ -1295,7 +1536,9 @@ function onPeriodChange() {
 
 function initReportSelectors() {
   document.getElementById('reportDay').value = todayISO();
-  document.getElementById('reportWeekDay').value = todayISO();
+  const now = new Date();
+
+  // Month picker (for Month period)
   const monthSel = document.getElementById('reportMonthName');
   if (!monthSel.options.length) {
     MONTH_NAMES_FULL.forEach((name, i) => {
@@ -1304,15 +1547,64 @@ function initReportSelectors() {
       monthSel.appendChild(opt);
     });
   }
-  const now = new Date();
   monthSel.value = now.getMonth();
   document.getElementById('reportMonthYear').value = now.getFullYear();
+
+  // Week picker (for Week period)
+  const weekMonthSel = document.getElementById('reportWeekMonth');
+  if (!weekMonthSel.options.length) {
+    MONTH_NAMES_FULL.forEach((name, i) => {
+      const opt = document.createElement('option');
+      opt.value = i; opt.textContent = name;
+      weekMonthSel.appendChild(opt);
+    });
+  }
+  weekMonthSel.value = now.getMonth();
+  document.getElementById('reportWeekYear').value = now.getFullYear();
+  rebuildWeekOptions();
+
   document.getElementById('reportYear').value = now.getFullYear();
+
   // Sync picker visibility to match the default period (Month)
   const p = document.getElementById('reportPeriod').value;
   ['day','week','month','year'].forEach(k => {
     document.getElementById(k + 'Picker').style.display = (k === p) ? '' : 'none';
   });
+}
+
+function formatShortDateRange(start, end) {
+  const sm = MONTH_NAMES_SHORT[start.getMonth()];
+  const em = MONTH_NAMES_SHORT[end.getMonth()];
+  if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+    return sm + ' ' + start.getDate() + ' – ' + end.getDate();
+  }
+  return sm + ' ' + start.getDate() + ' – ' + em + ' ' + end.getDate();
+}
+
+function rebuildWeekOptions() {
+  const month = parseInt(document.getElementById('reportWeekMonth').value);
+  const year  = parseInt(document.getElementById('reportWeekYear').value);
+  const sel = document.getElementById('reportWeekNum');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  if (isNaN(month) || isNaN(year)) return;
+  const weeks = getMonthWeeks(year, month);
+  weeks.forEach((monday, i) => {
+    const end = addDays(monday, 6);
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = 'Week ' + (i + 1) + ' (' + formatShortDateRange(monday, end) + ')';
+    sel.appendChild(opt);
+  });
+  // Prefer previous index if still valid; otherwise default to the week containing today
+  const prevIdx = parseInt(prev);
+  if (!isNaN(prevIdx) && prevIdx >= 0 && prevIdx < weeks.length) {
+    sel.value = prevIdx;
+  } else {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const idx = weeks.findIndex(m => today >= m && today < addDays(m, 7));
+    sel.value = idx >= 0 ? idx : 0;
+  }
 }
 
 function renderReport() {
@@ -1338,6 +1630,17 @@ function renderDayReport(c) {
   }
   const r = scoreDay(entry);
   html += scoreDisplayHtml(r.total, 100);
+
+  // Sleep schedule
+  if (entry.wakeTime || entry.bedTime) {
+    const wakeLbl = entry.wakeTime ? formatTime12hFromHHMM(entry.wakeTime) : '—';
+    const bedLbl  = entry.bedTime  ? formatTime12hFromHHMM(entry.bedTime)  : '—';
+    html += '<div class="stat-grid" style="margin-top:14px;">';
+    html += '<div class="stat-box"><div class="stat-num" style="font-size:1.4em;">' + wakeLbl + '</div><div class="stat-label">Wake-up</div></div>';
+    html += '<div class="stat-box"><div class="stat-num" style="font-size:1.4em;">' + bedLbl  + '</div><div class="stat-label">Bedtime</div></div>';
+    html += '</div>';
+  }
+
   html += '<h3 style="margin-top:18px;">Practice breakdown</h3>';
   r.breakdown.forEach(b => {
     const pct = b.max > 0 ? Math.round((b.points / b.max) * 100) : 0;
@@ -1380,14 +1683,22 @@ function renderDayReport(c) {
 }
 
 function renderWeekReport(c) {
-  const pickStr = document.getElementById('reportWeekDay').value;
-  if (!pickStr) { c.innerHTML = '<div class="card"><p>Pick a date.</p></div>'; return; }
-  const monday = startOfWeekMonday(parseISODate(pickStr));
+  const month = parseInt(document.getElementById('reportWeekMonth').value);
+  const year  = parseInt(document.getElementById('reportWeekYear').value);
+  const idx   = parseInt(document.getElementById('reportWeekNum').value);
+  if (isNaN(month) || isNaN(year) || isNaN(idx)) {
+    c.innerHTML = '<div class="card"><p>Pick a month, year, and week.</p></div>'; return;
+  }
+  const weeks = getMonthWeeks(year, month);
+  if (idx < 0 || idx >= weeks.length) {
+    c.innerHTML = '<div class="card"><p>This month doesn\'t have a Week ' + (idx+1) + '.</p></div>'; return;
+  }
+  const monday = weeks[idx];
   const r = scoreWeek(monday);
 
   let html = '<div class="card">';
-  html += '<h2>Week Score — ' + r.weekStart + ' to ' + r.weekEnd + '</h2>';
-  html += '<p style="color:var(--soft); margin-top:0;">Monday → Sunday</p>';
+  html += '<h2>Week Score — Week ' + (idx+1) + ' of ' + MONTH_NAMES_FULL[month] + ' ' + year + '</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Monday → Sunday &middot; ' + r.weekStart + ' to ' + r.weekEnd + '</p>';
   html += scoreDisplayHtml(r.total, 100);
   html += '<div class="stat-grid" style="margin-top:18px;">';
   html += statBoxHtml(r.dailyPart.toFixed(1) + '/' + r.dailyMax, 'Daily portion');
@@ -1403,9 +1714,14 @@ function renderWeekReport(c) {
   });
 
   html += '<h3 style="margin-top:18px;">Weekly tasks (20 pts)</h3><ul>';
+  // Look up performed-on dates from any entry in this week
+  const _allW = getAllEntries();
+  const _wDates = unionWeeklyDateFromSiblings(r.weekStart, _allW);
   WEEKLY_ITEMS.forEach(i => {
     const w = WEEKLY_SCORING[i.id] || 0;
-    html += '<li>' + (r.weeklyHits[i.id] ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span></li>';
+    const done = r.weeklyHits[i.id];
+    const dStr = done && _wDates[i.id] ? ' <span style="color:var(--good); font-style:italic;">— done ' + formatPerformedDate(_wDates[i.id]) + '</span>' : '';
+    html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
   });
   html += '</ul></div>';
   c.innerHTML = html;
@@ -1435,9 +1751,13 @@ function renderMonthReport(c) {
   });
 
   html += '<h3 style="margin-top:18px;">Monthly tasks (20 pts)</h3><ul>';
+  const _allM = getAllEntries();
+  const _mDates = unionMonthlyDateFromSiblings(r.monthStart, _allM);
   MONTHLY_ITEMS.forEach(i => {
     const w = MONTHLY_SCORING[i.id] || 0;
-    html += '<li>' + (r.monthlyHits[i.id] ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span></li>';
+    const done = r.monthlyHits[i.id];
+    const dStr = done && _mDates[i.id] ? ' <span style="color:var(--good); font-style:italic;">— done ' + formatPerformedDate(_mDates[i.id]) + '</span>' : '';
+    html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
   });
   html += '</ul></div>';
   c.innerHTML = html;
@@ -1465,6 +1785,12 @@ function renderYearReport(c) {
 }
 
 function esc(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function formatTime12hFromHHMM(s) {
+  if (!s || !s.includes(':')) return s || '';
+  const [hh, mm] = s.split(':').map(Number);
+  if (isNaN(hh) || isNaN(mm)) return s;
+  return formatTime12h(hh, mm);
+}
 
 /* ---------- SCORING TAB ---------- */
 function renderScoringTab() {
@@ -1757,6 +2083,8 @@ function autosave() {
   if (!entry.date) return;
   const all = getAllEntries();
   all[entry.date] = entry;
+  propagateWeekly(entry, all);
+  propagateMonthly(entry, all);
   setAllEntries(all);
   refreshHistoryList();
   const ind = document.getElementById('autosaveIndicator');
@@ -1769,7 +2097,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','planText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
+  const ids = ['dayMood','wakeTime','bedTime','planText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
