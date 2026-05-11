@@ -389,6 +389,55 @@
     font-weight: bold;
   }
   details[open] summary { margin-bottom: 8px; }
+  .weight-row {
+    display: grid;
+    grid-template-columns: 1fr 90px;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .weight-row:last-child { border-bottom: none; }
+  .weight-row.weight-sub {
+    padding-left: 24px;
+    background: rgba(139, 111, 71, 0.04);
+  }
+  .weight-label { color: var(--ink); font-size: 0.97em; }
+  .weight-row.weight-sub .weight-label {
+    color: var(--soft);
+    font-size: 0.9em;
+    font-style: italic;
+  }
+  .weight-input {
+    text-align: right;
+    padding: 6px 10px !important;
+    font-size: 0.95em !important;
+  }
+  .weight-total {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: right;
+  }
+  .weight-total.ok {
+    background: #ecf5ec;
+    color: var(--good);
+  }
+  .weight-total.bad {
+    background: #fdf3ec;
+    color: var(--warn);
+  }
+  .scoring-formula {
+    background: var(--bg);
+    border-left: 3px solid var(--accent-soft);
+    padding: 12px 16px;
+    margin: 12px 0;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.92em;
+    color: var(--ink);
+  }
   .footer-note {
     text-align: center;
     color: var(--soft);
@@ -411,6 +460,7 @@
   <button class="tab" onclick="showTab('history')">History</button>
   <button class="tab" onclick="showTab('reports')">Reports</button>
   <button class="tab" onclick="showTab('goals')">Goals</button>
+  <button class="tab" onclick="showTab('scoring')">Scoring</button>
   <button class="tab" onclick="showTab('data')">Data</button>
 </div>
 
@@ -590,6 +640,11 @@
   <div class="quote">"Small disciplines done daily, with love, become a beautiful life."</div>
 </div>
 
+<!-- SCORING TAB -->
+<div id="scoring" class="panel">
+  <div id="scoringContent"></div>
+</div>
+
 <!-- DATA TAB -->
 <div id="data" class="panel">
   <div class="card">
@@ -673,8 +728,8 @@ const TIME_AREAS = [
 const STORAGE_KEY = 'dearDiary_entries_v1';
 
 /* ---------- SCORING ---------- */
-// Daily practice weights — sum to 100
-const DAILY_SCORING = {
+// Default daily practice weights — sum to 100
+const DEFAULT_DAILY_SCORING = {
   wakeSunrise:        { weight: 6 },
   morningWalk:        { weight: 6, subratings: { suryanamaskar: 3, pranayam: 3 } },
   homemadeBreakfast:  { weight: 5 },
@@ -692,10 +747,39 @@ const DAILY_SCORING = {
   grateful:           { weight: 5 },
   forgave:            { weight: 4 }
 };
-// Weekly tasks — sum to 20
-const WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5 };
-// Monthly tasks — sum to 20
-const MONTHLY_SCORING = { ashram1: 10, ashram2: 10 };
+// Default weekly tasks — sum to 20
+const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5 };
+// Default monthly tasks — sum to 20
+const DEFAULT_MONTHLY_SCORING = { ashram1: 10, ashram2: 10 };
+
+// Active (mutable) weights — initialized from defaults, may be overridden by saved custom weights
+const WEIGHTS_STORAGE_KEY = 'dearDiary_weights_v1';
+function deepCloneWeights(o) { return JSON.parse(JSON.stringify(o)); }
+let DAILY_SCORING   = deepCloneWeights(DEFAULT_DAILY_SCORING);
+let WEEKLY_SCORING  = deepCloneWeights(DEFAULT_WEEKLY_SCORING);
+let MONTHLY_SCORING = deepCloneWeights(DEFAULT_MONTHLY_SCORING);
+
+function loadCustomWeights() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(WEIGHTS_STORAGE_KEY));
+    if (saved && typeof saved === 'object') {
+      if (saved.daily)   DAILY_SCORING   = saved.daily;
+      if (saved.weekly)  WEEKLY_SCORING  = saved.weekly;
+      if (saved.monthly) MONTHLY_SCORING = saved.monthly;
+    }
+  } catch (e) { /* ignore */ }
+}
+function persistCustomWeights() {
+  localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify({
+    daily: DAILY_SCORING, weekly: WEEKLY_SCORING, monthly: MONTHLY_SCORING
+  }));
+}
+function resetWeightsToDefaults() {
+  DAILY_SCORING   = deepCloneWeights(DEFAULT_DAILY_SCORING);
+  WEEKLY_SCORING  = deepCloneWeights(DEFAULT_WEEKLY_SCORING);
+  MONTHLY_SCORING = deepCloneWeights(DEFAULT_MONTHLY_SCORING);
+  localStorage.removeItem(WEIGHTS_STORAGE_KEY);
+}
 
 const MONTH_NAMES_FULL  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -703,6 +787,7 @@ const DAY_NAMES_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 /* ---------- INIT ---------- */
 function init() {
+  loadCustomWeights();
   document.getElementById('entryDate').value = todayISO();
   buildChecklist('dailyChecklist', DAILY_ITEMS);
   buildChecklist('weeklyChecklist', WEEKLY_ITEMS);
@@ -1381,6 +1466,229 @@ function renderYearReport(c) {
 
 function esc(s) { return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
+/* ---------- SCORING TAB ---------- */
+function renderScoringTab() {
+  const c = document.getElementById('scoringContent');
+  let html = '';
+
+  // 1. Explanation card
+  html += '<div class="card"><h2>How Scoring Works</h2>';
+  html += '<p>Each <strong>day</strong> is scored out of <strong>100</strong>. Each daily practice contributes a fixed weight (configurable below). Practices with stars or sub-ratings give <em>proportional</em> partial credit — e.g. 3 / 5 stars = 60% of that portion.</p>';
+  html += '<div class="scoring-formula">day_score = Σ (practice_weight × completion)</div>';
+
+  html += '<p>Each <strong>week</strong> is scored out of <strong>100</strong>: <strong>80</strong> from daily scores + <strong>20</strong> from weekly tasks.</p>';
+  html += '<div class="scoring-formula">week_score = (Σ day_scores ÷ 700) × 80 &nbsp; + &nbsp; Σ weekly_task_weights</div>';
+
+  html += '<p>Each <strong>month</strong> is scored out of <strong>100</strong>: <strong>80</strong> from the weekly scores + <strong>20</strong> from monthly tasks.</p>';
+  html += '<div class="scoring-formula">month_score = (Σ week_scores ÷ (#weeks × 100)) × 80 &nbsp; + &nbsp; Σ monthly_task_weights</div>';
+
+  html += '<p>The <strong>year</strong> score is the average of the 12 monthly scores.</p>';
+  html += '<p style="color:var(--soft); font-style:italic; margin-top:12px;">Weeks run Monday → Sunday. A calendar month\'s weeks start at its first Monday — so months always have 4 or 5 complete weeks.</p>';
+  html += '</div>';
+
+  // 2. Daily weights
+  html += '<div class="card"><h2>Daily Practice Weights</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">All weights below must total <strong>100</strong>. Sub-rows (stars / Suryanamaskar / Pranayam) are partial-credit portions earned via the rating widgets.</p>';
+  html += '<div id="dailyWeightsForm"></div>';
+  html += '<div class="weight-total" id="dailyWeightTotal"></div>';
+  html += '</div>';
+
+  // 3. Weekly weights
+  html += '<div class="card"><h2>Weekly Task Weights</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Must total <strong>20</strong>. These add directly to your weekly score if any day in the week has the task ticked.</p>';
+  html += '<div id="weeklyWeightsForm"></div>';
+  html += '<div class="weight-total" id="weeklyWeightTotal"></div>';
+  html += '</div>';
+
+  // 4. Monthly weights
+  html += '<div class="card"><h2>Monthly Task Weights</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Must total <strong>20</strong>. These add directly to your monthly score if any day in the month has the task ticked.</p>';
+  html += '<div id="monthlyWeightsForm"></div>';
+  html += '<div class="weight-total" id="monthlyWeightTotal"></div>';
+  html += '</div>';
+
+  // 5. Save / reset
+  html += '<div class="card">';
+  html += '<div class="button-row">';
+  html += '<button class="primary" onclick="saveWeights()">Save Weights</button>';
+  html += '<button class="secondary" onclick="confirmResetWeights()">Reset to Defaults</button>';
+  html += '</div>';
+  html += '<div id="weightsMsg" class="status-msg"></div>';
+  html += '</div>';
+
+  c.innerHTML = html;
+
+  buildDailyWeightsForm();
+  buildWeeklyWeightsForm();
+  buildMonthlyWeightsForm();
+  updateAllWeightTotals();
+}
+
+function makeWeightInput(id, value, onChange) {
+  const inp = document.createElement('input');
+  inp.type = 'number';
+  inp.min = 0;
+  inp.step = 0.5;
+  inp.id = id;
+  inp.value = value;
+  inp.className = 'weight-input';
+  inp.addEventListener('input', () => {
+    const v = parseFloat(inp.value);
+    onChange(isNaN(v) ? 0 : v);
+  });
+  return inp;
+}
+
+function buildDailyWeightsForm() {
+  const el = document.getElementById('dailyWeightsForm');
+  el.innerHTML = '';
+  Object.keys(DAILY_SCORING).forEach(id => {
+    const cfg = DAILY_SCORING[id];
+    const item = DAILY_ITEMS.find(i => i.id === id);
+    const label = item ? item.label : id;
+
+    const row = document.createElement('div');
+    row.className = 'weight-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'weight-label';
+    lbl.textContent = label;
+    row.appendChild(lbl);
+    row.appendChild(makeWeightInput('w_d_' + id, cfg.weight, v => {
+      DAILY_SCORING[id].weight = v;
+      updateAllWeightTotals();
+    }));
+    el.appendChild(row);
+
+    if (cfg.starsWeight !== undefined) {
+      const sr = document.createElement('div');
+      sr.className = 'weight-row weight-sub';
+      const sl = document.createElement('span');
+      sl.className = 'weight-label';
+      sl.textContent = '↳ Stars (intensity rating)';
+      sr.appendChild(sl);
+      sr.appendChild(makeWeightInput('w_d_' + id + '_stars', cfg.starsWeight, v => {
+        DAILY_SCORING[id].starsWeight = v;
+        updateAllWeightTotals();
+      }));
+      el.appendChild(sr);
+    }
+
+    if (cfg.subratings) {
+      Object.keys(cfg.subratings).forEach(subId => {
+        const sr = document.createElement('div');
+        sr.className = 'weight-row weight-sub';
+        let subLabel = subId;
+        if (item && item.subratings) {
+          const sub = item.subratings.find(s => s.id === subId);
+          if (sub) subLabel = sub.title;
+        }
+        const sl = document.createElement('span');
+        sl.className = 'weight-label';
+        sl.textContent = '↳ ' + subLabel;
+        sr.appendChild(sl);
+        sr.appendChild(makeWeightInput('w_d_' + id + '_' + subId, cfg.subratings[subId], v => {
+          DAILY_SCORING[id].subratings[subId] = v;
+          updateAllWeightTotals();
+        }));
+        el.appendChild(sr);
+      });
+    }
+  });
+}
+
+function buildWeeklyWeightsForm() {
+  const el = document.getElementById('weeklyWeightsForm');
+  el.innerHTML = '';
+  Object.keys(WEEKLY_SCORING).forEach(id => {
+    const item = WEEKLY_ITEMS.find(i => i.id === id);
+    const label = item ? item.label : id;
+    const row = document.createElement('div');
+    row.className = 'weight-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'weight-label';
+    lbl.textContent = label;
+    row.appendChild(lbl);
+    row.appendChild(makeWeightInput('w_w_' + id, WEEKLY_SCORING[id], v => {
+      WEEKLY_SCORING[id] = v;
+      updateAllWeightTotals();
+    }));
+    el.appendChild(row);
+  });
+}
+
+function buildMonthlyWeightsForm() {
+  const el = document.getElementById('monthlyWeightsForm');
+  el.innerHTML = '';
+  Object.keys(MONTHLY_SCORING).forEach(id => {
+    const item = MONTHLY_ITEMS.find(i => i.id === id);
+    const label = item ? item.label : id;
+    const row = document.createElement('div');
+    row.className = 'weight-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'weight-label';
+    lbl.textContent = label;
+    row.appendChild(lbl);
+    row.appendChild(makeWeightInput('w_m_' + id, MONTHLY_SCORING[id], v => {
+      MONTHLY_SCORING[id] = v;
+      updateAllWeightTotals();
+    }));
+    el.appendChild(row);
+  });
+}
+
+function computeDailyWeightTotal() {
+  let t = 0;
+  Object.values(DAILY_SCORING).forEach(cfg => {
+    t += cfg.weight || 0;
+    if (cfg.starsWeight) t += cfg.starsWeight;
+    if (cfg.subratings) Object.values(cfg.subratings).forEach(v => t += v);
+  });
+  return Math.round(t * 100) / 100;
+}
+function computeWeeklyWeightTotal() {
+  return Math.round(Object.values(WEEKLY_SCORING).reduce((s, v) => s + (v || 0), 0) * 100) / 100;
+}
+function computeMonthlyWeightTotal() {
+  return Math.round(Object.values(MONTHLY_SCORING).reduce((s, v) => s + (v || 0), 0) * 100) / 100;
+}
+
+function updateAllWeightTotals() {
+  setWeightTotal('dailyWeightTotal',   computeDailyWeightTotal(),   100);
+  setWeightTotal('weeklyWeightTotal',  computeWeeklyWeightTotal(),  20);
+  setWeightTotal('monthlyWeightTotal', computeMonthlyWeightTotal(), 20);
+}
+function setWeightTotal(elId, total, target) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const ok = Math.abs(total - target) < 0.001;
+  el.textContent = (ok ? '✓ ' : '⚠ ') + 'Total: ' + total + ' / ' + target;
+  el.className = 'weight-total ' + (ok ? 'ok' : 'bad');
+}
+
+function saveWeights() {
+  const dt = computeDailyWeightTotal();
+  const wt = computeWeeklyWeightTotal();
+  const mt = computeMonthlyWeightTotal();
+  const issues = [];
+  if (Math.abs(dt - 100) > 0.001) issues.push('Daily must total 100 (now ' + dt + ')');
+  if (Math.abs(wt - 20)  > 0.001) issues.push('Weekly must total 20 (now ' + wt + ')');
+  if (Math.abs(mt - 20)  > 0.001) issues.push('Monthly must total 20 (now ' + mt + ')');
+  if (issues.length > 0) {
+    showMsg('weightsMsg', 'Cannot save — ' + issues.join('; '), 'warn');
+    return;
+  }
+  persistCustomWeights();
+  showMsg('weightsMsg', 'Weights saved. Reports will use these values from now on.', 'success');
+}
+
+function confirmResetWeights() {
+  if (confirm('Reset all weights to default values? Your saved customizations will be lost.')) {
+    resetWeightsToDefaults();
+    renderScoringTab();
+    showMsg('weightsMsg', 'Weights reset to defaults.', 'success');
+  }
+}
+
 /* ---------- DATA TAB ---------- */
 function exportJSON() {
   const all = getAllEntries();
@@ -1435,6 +1743,7 @@ function showTab(name) {
   document.getElementById(name).classList.add('active');
   if (name === 'reports') renderReport();
   if (name === 'history') refreshHistoryList();
+  if (name === 'scoring') renderScoringTab();
 }
 
 /* ---------- AUTOSAVE ---------- */
