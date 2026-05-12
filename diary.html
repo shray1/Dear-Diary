@@ -163,6 +163,65 @@
     margin-top: 4px;
   }
   .performed-on:empty { display: none; }
+  .check-item.rate-only {
+    padding-left: 12px;
+  }
+  .check-item.rate-only label {
+    cursor: default !important;
+  }
+  .check-item.rate-only .star-rating { display: flex; }
+  .sleep-chart {
+    margin-top: 12px;
+  }
+  .sleep-chart-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 170px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: 0.92em;
+  }
+  .sleep-chart-row.sleep-chart-header {
+    margin-bottom: 8px;
+    font-size: 0.75em;
+    color: var(--soft);
+  }
+  .sleep-chart-day { color: var(--ink); font-weight: bold; }
+  .sleep-chart-track {
+    position: relative;
+    height: 16px;
+    background: var(--bg);
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .sleep-chart-bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, #5a6db8, var(--accent-soft));
+    border-radius: 3px;
+  }
+  .sleep-chart-axis {
+    background: transparent;
+    border: none;
+    height: 14px;
+  }
+  .sleep-chart-tick {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .sleep-chart-times {
+    color: var(--soft);
+    font-style: italic;
+    text-align: right;
+  }
+  @media (max-width: 600px) {
+    .sleep-chart-row { grid-template-columns: 60px 1fr; }
+    .sleep-chart-times { grid-column: 1 / -1; padding-left: 70px; text-align: left; font-size: 0.85em; }
+    .sleep-chart-row.sleep-chart-header .sleep-chart-times { display: none; }
+  }
   .check-item.checked {
     background: #f0f5ed;
     border-color: var(--good);
@@ -710,7 +769,7 @@ const DAILY_ITEMS = [
   { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
-  { id: 'noAnger', label: 'Did not become angry at any point' },
+  { id: 'noAnger', label: 'Anger Management', hint: '0 stars = got angry at some point · 5 stars = stayed peaceful all day', rateOnly: true, starLabels: ["Couldn't manage anger", 'Often angry', 'Sometimes angry', 'Mostly calm', 'Very calm', 'Fully peaceful'] },
   { id: 'madeHappy', label: 'Made someone happy', hint: 'Extra marks for this' },
   { id: 'spokeLess', label: 'Spoke less than usual — conserved energy' },
   { id: 'familyTime', label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
@@ -774,7 +833,7 @@ const DEFAULT_DAILY_SCORING = {
   morningPrayer:      { weight: 3, starsWeight: 5 },
   eveningPrayer:      { weight: 3, starsWeight: 5 },
   helpedSomeone:      { weight: 8 },
-  noAnger:            { weight: 8 },
+  noAnger:            { rateOnly: true, ratingWeight: 8 },
   madeHappy:          { weight: 5 },
   spokeLess:          { weight: 4 },
   familyTime:         { weight: 7 },
@@ -799,7 +858,18 @@ function loadCustomWeights() {
   try {
     const saved = JSON.parse(localStorage.getItem(WEIGHTS_STORAGE_KEY));
     if (saved && typeof saved === 'object') {
-      if (saved.daily)   DAILY_SCORING   = saved.daily;
+      if (saved.daily) {
+        // Migration: if a default entry switched structure (e.g., to rateOnly),
+        // any saved version that's missing the new shape falls back to default.
+        Object.keys(DEFAULT_DAILY_SCORING).forEach(id => {
+          const def = DEFAULT_DAILY_SCORING[id];
+          const sv = saved.daily[id];
+          if (!sv || (def.rateOnly && !sv.rateOnly)) {
+            saved.daily[id] = deepCloneWeights(def);
+          }
+        });
+        DAILY_SCORING = saved.daily;
+      }
       if (saved.weekly)  WEEKLY_SCORING  = saved.weekly;
       if (saved.monthly) MONTHLY_SCORING = saved.monthly;
     }
@@ -885,6 +955,23 @@ function buildChecklist(containerId, items, kind) {
   items.forEach(item => {
     const div = document.createElement('div');
     div.className = 'check-item';
+    // rate-only items have no checkbox — just label + always-visible stars
+    if (item.rateOnly) {
+      div.classList.add('rate-only');
+      const lab = document.createElement('label');
+      lab.textContent = item.label;
+      lab.style.cursor = 'default';
+      if (item.hint) {
+        const h = document.createElement('span');
+        h.className = 'hint';
+        h.textContent = item.hint;
+        lab.appendChild(h);
+      }
+      lab.appendChild(buildStarWidget(item.id, { starLabels: item.starLabels }));
+      div.appendChild(lab);
+      el.appendChild(div);
+      return;
+    }
     const inp = document.createElement('input');
     inp.type = 'checkbox';
     inp.id = 'chk_' + item.id;
@@ -965,6 +1052,8 @@ function buildStarWidget(widgetId, options = {}) {
       wrap.dataset.rating = i;
       highlightStars(widgetId, i);
       updateStarIntensity(widgetId, i);
+      // Bubble a change event so the dailyChecklist autosave handler fires
+      wrap.dispatchEvent(new Event('change', { bubbles: true }));
     });
     wrap.appendChild(s);
   }
@@ -991,7 +1080,12 @@ function updateStarIntensity(widgetId, val) {
   try {
     const labels = JSON.parse(wrap.dataset.labels) || STAR_INTENSITY;
     const hasTitle = wrap.querySelector('.subrating-label');
-    lbl.textContent = val ? (labels[val] || '') : (hasTitle ? '' : 'Rate intensity');
+    // If a label is defined for this rating (including 0), use it
+    if (labels[val] !== undefined && labels[val] !== '') {
+      lbl.textContent = labels[val];
+    } else {
+      lbl.textContent = val ? '' : (hasTitle ? '' : 'Rate intensity');
+    }
   } catch(e) {
     lbl.textContent = val ? (STAR_INTENSITY[val] || '') : 'Rate intensity';
   }
@@ -1074,6 +1168,10 @@ function readForm() {
     minutes: {}
   };
   DAILY_ITEMS.forEach(i => {
+    if (i.rateOnly) {
+      entry.daily[i.id + 'Rating'] = getStarRating(i.id);
+      return;
+    }
     entry.daily[i.id] = document.getElementById('chk_' + i.id).checked;
     if (i.stars) entry.daily[i.id + 'Rating'] = getStarRating(i.id);
     if (i.subratings) i.subratings.forEach(sub => {
@@ -1106,6 +1204,15 @@ function writeForm(entry) {
   document.getElementById('kindnessText').value = entry.kindness || '';
   document.getElementById('lessonText').value = entry.lesson || '';
   DAILY_ITEMS.forEach(i => {
+    if (i.rateOnly) {
+      let rating = (entry.daily && entry.daily[i.id + 'Rating']);
+      // Backward-compat: legacy boolean → 5 stars if true, 0 if false/missing
+      if (rating === undefined || rating === null) {
+        rating = (entry.daily && entry.daily[i.id] === true) ? 5 : 0;
+      }
+      setStarRating(i.id, rating);
+      return;
+    }
     const c = document.getElementById('chk_' + i.id);
     c.checked = !!(entry.daily && entry.daily[i.id]);
     c.parentElement.classList.toggle('checked', c.checked);
@@ -1395,14 +1502,28 @@ function scoreDay(entry) {
   if (!entry || !entry.daily) {
     Object.keys(DAILY_SCORING).forEach(id => {
       const cfg = DAILY_SCORING[id];
-      let max = cfg.weight + (cfg.starsWeight || 0);
-      if (cfg.subratings) Object.values(cfg.subratings).forEach(v => max += v);
+      let max;
+      if (cfg.rateOnly) max = cfg.ratingWeight || 0;
+      else {
+        max = (cfg.weight || 0) + (cfg.starsWeight || 0);
+        if (cfg.subratings) Object.values(cfg.subratings).forEach(v => max += v);
+      }
       breakdown.push({ id, label: getDailyItemLabel(id), points: 0, max });
     });
     return { total: 0, max: 100, breakdown, hasEntry: false };
   }
   Object.keys(DAILY_SCORING).forEach(id => {
     const cfg = DAILY_SCORING[id];
+    if (cfg.rateOnly) {
+      const max = cfg.ratingWeight || 0;
+      let r = entry.daily[id + 'Rating'];
+      // Backward-compat: legacy boolean → 5 if true, else 0
+      if (r === undefined || r === null) r = entry.daily[id] === true ? 5 : 0;
+      const pts = (r / 5) * max;
+      breakdown.push({ id, label: getDailyItemLabel(id), points: pts, max });
+      total += pts;
+      return;
+    }
     const checked = !!entry.daily[id];
     let max = cfg.weight;
     let pts = checked ? cfg.weight : 0;
@@ -1724,6 +1845,28 @@ function renderWeekReport(c) {
     html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
   });
   html += '</ul></div>';
+
+  // Sleep schedule card
+  const _allEntries = getAllEntries();
+  const wakeTimes = [], bedTimes = [];
+  const chartRows = r.dayResults.map(d => {
+    const e = _allEntries[d.date] || {};
+    if (e.wakeTime) wakeTimes.push(e.wakeTime);
+    if (e.bedTime)  bedTimes.push(e.bedTime);
+    return { label: d.dayName + ' ' + d.date.slice(5), bedTime: e.bedTime || '', wakeTime: e.wakeTime || '' };
+  });
+  const avgWake = avgWakeTime(wakeTimes);
+  const avgBed  = avgBedTime(bedTimes);
+  if (avgWake || avgBed || chartRows.some(x => x.bedTime || x.wakeTime)) {
+    html += '<div class="card"><h2>Sleep Schedule</h2>';
+    html += '<div class="stat-grid">';
+    html += statBoxHtml(avgWake ? formatTime12hFromHHMM(avgWake) : '—', 'Avg wake-up');
+    html += statBoxHtml(avgBed  ? formatTime12hFromHHMM(avgBed)  : '—', 'Avg bedtime');
+    html += '</div>';
+    html += renderSleepChartHtml(chartRows);
+    html += '</div>';
+  }
+
   c.innerHTML = html;
 }
 
@@ -1760,6 +1903,35 @@ function renderMonthReport(c) {
     html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
   });
   html += '</ul></div>';
+
+  // Sleep schedule card — all logged days in the month range
+  const monthStart = parseISODate(r.monthStart);
+  const monthEnd   = parseISODate(r.monthEnd);
+  const wakeTimes = [], bedTimes = [];
+  const chartRows = [];
+  Object.keys(_allM).sort().forEach(dateStr => {
+    const d = parseISODate(dateStr);
+    if (d < monthStart || d > monthEnd) return;
+    const e = _allM[dateStr];
+    if (!e.wakeTime && !e.bedTime) return;
+    if (e.wakeTime) wakeTimes.push(e.wakeTime);
+    if (e.bedTime)  bedTimes.push(e.bedTime);
+    const dow = DAY_NAMES_SHORT[d.getDay() === 0 ? 6 : d.getDay() - 1];
+    chartRows.push({ label: dow + ' ' + dateStr.slice(5), bedTime: e.bedTime || '', wakeTime: e.wakeTime || '' });
+  });
+  const avgWake = avgWakeTime(wakeTimes);
+  const avgBed  = avgBedTime(bedTimes);
+  if (avgWake || avgBed || chartRows.length > 0) {
+    html += '<div class="card"><h2>Sleep Schedule</h2>';
+    html += '<div class="stat-grid">';
+    html += statBoxHtml(avgWake ? formatTime12hFromHHMM(avgWake) : '—', 'Avg wake-up');
+    html += statBoxHtml(avgBed  ? formatTime12hFromHHMM(avgBed)  : '—', 'Avg bedtime');
+    html += statBoxHtml(chartRows.length, 'Days logged');
+    html += '</div>';
+    html += renderSleepChartHtml(chartRows);
+    html += '</div>';
+  }
+
   c.innerHTML = html;
 }
 
@@ -1781,6 +1953,28 @@ function renderYearReport(c) {
     html += '<span class="pct">' + m.total.toFixed(0) + '/100</span></div>';
   });
   html += '</div>';
+
+  // Year-wide sleep averages
+  const _allY = getAllEntries();
+  const yWake = [], yBed = [];
+  Object.keys(_allY).forEach(dateStr => {
+    if (dateStr.slice(0, 4) !== String(year)) return;
+    const e = _allY[dateStr];
+    if (e.wakeTime) yWake.push(e.wakeTime);
+    if (e.bedTime)  yBed.push(e.bedTime);
+  });
+  const yAvgWake = avgWakeTime(yWake);
+  const yAvgBed  = avgBedTime(yBed);
+  if (yAvgWake || yAvgBed) {
+    html += '<div class="card"><h2>Sleep Schedule — Annual Averages</h2>';
+    html += '<div class="stat-grid">';
+    html += statBoxHtml(yAvgWake ? formatTime12hFromHHMM(yAvgWake) : '—', 'Avg wake-up');
+    html += statBoxHtml(yAvgBed  ? formatTime12hFromHHMM(yAvgBed)  : '—', 'Avg bedtime');
+    html += statBoxHtml(yWake.length, 'Days with wake-up');
+    html += statBoxHtml(yBed.length,  'Days with bedtime');
+    html += '</div></div>';
+  }
+
   c.innerHTML = html;
 }
 
@@ -1790,6 +1984,91 @@ function formatTime12hFromHHMM(s) {
   const [hh, mm] = s.split(':').map(Number);
   if (isNaN(hh) || isNaN(mm)) return s;
   return formatTime12h(hh, mm);
+}
+
+function minutesToHHMM(mins) {
+  mins = ((mins % 1440) + 1440) % 1440;
+  const h = Math.floor(mins / 60);
+  const m = Math.round(mins % 60);
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+// Average wake times: simple linear average (typically all morning, no wrap)
+function avgWakeTime(timeStrs) {
+  const valid = (timeStrs || []).filter(Boolean);
+  if (!valid.length) return null;
+  let sum = 0;
+  valid.forEach(t => { const [h, m] = t.split(':').map(Number); sum += h * 60 + m; });
+  return minutesToHHMM(Math.round(sum / valid.length));
+}
+
+// Average bedtimes: offset by 24h for early-morning ones so the average
+// across midnight is correct (11 PM + 1 AM → 12 AM, not noon).
+function avgBedTime(timeStrs) {
+  const valid = (timeStrs || []).filter(Boolean);
+  if (!valid.length) return null;
+  let sum = 0;
+  valid.forEach(t => {
+    const [h, m] = t.split(':').map(Number);
+    let mins = h * 60 + m;
+    if (mins < 12 * 60) mins += 1440;
+    sum += mins;
+  });
+  return minutesToHHMM(Math.round(sum / valid.length));
+}
+
+// Position on a 6 PM → 12 PM (next day) timeline (0–100%).
+// Returns null if time falls in the unsupported afternoon window (12 PM – 6 PM).
+function sleepChartPercent(timeHHMM) {
+  if (!timeHHMM) return null;
+  const [h, m] = timeHHMM.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return null;
+  const T = h * 60 + m;
+  let shifted;
+  if (T >= 18 * 60) shifted = T - 18 * 60;        // 6 PM onwards same day
+  else if (T < 12 * 60) shifted = T + (24-18) * 60; // before noon (next-day morning, offset by 6h)
+  else return null;
+  return (shifted / (18 * 60)) * 100;
+}
+
+function renderSleepChartHtml(rows) {
+  // rows: [{ label, bedTime, wakeTime }]
+  if (!rows.some(r => r.bedTime || r.wakeTime)) return '';
+  let html = '<div class="sleep-chart">';
+  // Header axis
+  html += '<div class="sleep-chart-row sleep-chart-header">';
+  html += '<div class="sleep-chart-day"></div>';
+  html += '<div class="sleep-chart-track sleep-chart-axis">';
+  ['6 PM','9 PM','12 AM','3 AM','6 AM','9 AM','12 PM'].forEach((lbl, i) => {
+    const pct = (i / 6) * 100;
+    html += '<div class="sleep-chart-tick" style="left:' + pct + '%;">' + lbl + '</div>';
+  });
+  html += '</div>';
+  html += '<div class="sleep-chart-times">bedtime → wake-up</div>';
+  html += '</div>';
+  // Rows
+  rows.forEach(r => {
+    html += '<div class="sleep-chart-row">';
+    html += '<div class="sleep-chart-day">' + esc(r.label) + '</div>';
+    html += '<div class="sleep-chart-track">';
+    if (r.bedTime && r.wakeTime) {
+      const bp = sleepChartPercent(r.bedTime);
+      const wp = sleepChartPercent(r.wakeTime);
+      if (bp != null && wp != null && wp > bp) {
+        html += '<div class="sleep-chart-bar" style="left:' + bp.toFixed(2) + '%; width:' + (wp - bp).toFixed(2) + '%;" title="' + formatTime12hFromHHMM(r.bedTime) + ' → ' + formatTime12hFromHHMM(r.wakeTime) + '"></div>';
+      }
+    }
+    html += '</div>';
+    let timeText = '';
+    if (r.bedTime)  timeText += formatTime12hFromHHMM(r.bedTime);
+    if (r.bedTime && r.wakeTime) timeText += ' → ';
+    if (r.wakeTime) timeText += formatTime12hFromHHMM(r.wakeTime);
+    if (!timeText) timeText = '—';
+    html += '<div class="sleep-chart-times">' + timeText + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 /* ---------- SCORING TAB ---------- */
@@ -1879,6 +2158,14 @@ function buildDailyWeightsForm() {
     lbl.className = 'weight-label';
     lbl.textContent = label;
     row.appendChild(lbl);
+    if (cfg.rateOnly) {
+      row.appendChild(makeWeightInput('w_d_' + id, cfg.ratingWeight, v => {
+        DAILY_SCORING[id].ratingWeight = v;
+        updateAllWeightTotals();
+      }));
+      el.appendChild(row);
+      return;
+    }
     row.appendChild(makeWeightInput('w_d_' + id, cfg.weight, v => {
       DAILY_SCORING[id].weight = v;
       updateAllWeightTotals();
@@ -1965,6 +2252,7 @@ function buildMonthlyWeightsForm() {
 function computeDailyWeightTotal() {
   let t = 0;
   Object.values(DAILY_SCORING).forEach(cfg => {
+    if (cfg.rateOnly) { t += cfg.ratingWeight || 0; return; }
     t += cfg.weight || 0;
     if (cfg.starsWeight) t += cfg.starsWeight;
     if (cfg.subratings) Object.values(cfg.subratings).forEach(v => t += v);
