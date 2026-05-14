@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Dear Diary",
+    "slug": "dear-diary",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#faf7f2"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.shray.deardiary"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#faf7f2"
+      },
+      "package": "com.shray.deardiary"
+    },
+    "plugins": [
+      "expo-document-picker"
+    ]
+  }
+}

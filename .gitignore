@@ -1,0 +1,51 @@
+# ───────────────────────────────────────────
+#  Iphone-App  (React Native / Expo project)
+# ───────────────────────────────────────────
+
+# Dependencies
+Iphone-App/node_modules/
+
+# Expo generated files
+Iphone-App/.expo/
+Iphone-App/dist/
+Iphone-App/web-build/
+
+# EAS Build
+Iphone-App/.eas/
+
+# Native build output (if you ever eject from Expo)
+Iphone-App/ios/
+Iphone-App/android/
+
+# Build artefacts
+Iphone-App/*.ipa
+Iphone-App/*.apk
+Iphone-App/*.aab
+
+# Metro bundler cache
+Iphone-App/.metro-health-check*
+
+# Lock files (keep package-lock.json — remove this line if you prefer to commit it)
+# Iphone-App/package-lock.json
+
+# ───────────────────────────────────────────
+#  Web app / general project
+# ───────────────────────────────────────────
+
+# Diary backup exports (personal data — never commit)
+Data/dear-diary-backup-*.json
+Data/dear-diary-merged.json
+*.json.bak
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
