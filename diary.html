@@ -512,6 +512,300 @@
     margin-top: 32px;
     font-style: italic;
   }
+
+  /* ── Daily Goals ── */
+  .goals-section {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+  .goals-section h3 {
+    margin: 0 0 3px;
+    font-size: 1.05em;
+    color: var(--accent);
+  }
+  .goals-hint {
+    color: var(--soft);
+    font-size: 0.87em;
+    font-style: italic;
+    margin: 0 0 12px;
+  }
+  .goals-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .goals-input-row input[type="text"] {
+    flex: 1;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 0.97em;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--ink);
+    width: auto;
+  }
+  .goals-input-row input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent-soft);
+    box-shadow: 0 0 0 3px rgba(139,111,71,0.1);
+  }
+  .goal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg);
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    margin-bottom: 7px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .goal-item.done {
+    background: #f0f5ed;
+    border-color: #b8d4b8;
+  }
+  .goal-item input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--good);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+  }
+  .goal-text {
+    flex: 1;
+    font-size: 0.97em;
+    color: var(--ink);
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .goal-item.done .goal-text {
+    text-decoration: line-through;
+    color: var(--soft);
+  }
+  .goal-edit-input {
+    flex: 1;
+    padding: 5px 9px;
+    font-family: inherit;
+    font-size: 0.97em;
+    border: 1.5px solid var(--accent-soft);
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    width: auto;
+  }
+  .goal-edit-input:focus { outline: none; border-color: var(--accent); }
+  .goal-actions {
+    display: flex;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .goal-btn {
+    padding: 4px 9px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.82em;
+    font-family: inherit;
+    background: var(--card);
+    color: var(--soft);
+    transition: all 0.12s;
+    line-height: 1.4;
+  }
+  .goal-btn:hover { border-color: var(--accent-soft); color: var(--accent); background: var(--bg); }
+  .goal-btn.goal-save { background: var(--good); color: #fff; border-color: var(--good); }
+  .goal-btn.goal-save:hover { background: #4a7a4a; }
+  .goal-btn.goal-danger:hover { border-color: var(--warn); color: var(--warn); }
+  .goals-empty {
+    color: var(--soft);
+    font-style: italic;
+    font-size: 0.9em;
+    padding: 6px 0 2px;
+  }
+  .goals-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+    font-size: 0.84em;
+    color: var(--soft);
+  }
+  .goals-progress-bar {
+    height: 5px;
+    background: var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+    flex: 1;
+    margin: 0 10px;
+  }
+  .goals-progress-fill {
+    height: 100%;
+    background: var(--good);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+
+  /* ── Activity Graph ── */
+  .graph-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .graph-header h2 { margin: 0; border: none; padding: 0; }
+  .graph-year-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .graph-year-nav button {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 4px 11px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1em;
+    color: var(--accent);
+    line-height: 1.5;
+  }
+  .graph-year-nav button:hover { background: var(--accent-soft); }
+  .graph-year-label {
+    font-size: 1.05em;
+    font-weight: bold;
+    color: var(--ink);
+    min-width: 44px;
+    text-align: center;
+  }
+  .graph-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .graph-stat {
+    background: var(--bg);
+    border-radius: 7px;
+    padding: 12px 14px;
+    text-align: center;
+    border: 1px solid var(--line);
+  }
+  .graph-stat-num {
+    font-size: 1.7em;
+    font-weight: bold;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .graph-stat-lbl {
+    font-size: 0.8em;
+    color: var(--soft);
+    margin-top: 3px;
+  }
+  .graph-scroll {
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .graph-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    min-width: 100%;
+  }
+  .graph-month-labels {
+    display: flex;
+    margin-left: 26px;
+    margin-bottom: 4px;
+    font-size: 0.78em;
+    color: var(--soft);
+    position: relative;
+    height: 16px;
+  }
+  .graph-month-label {
+    position: absolute;
+    white-space: nowrap;
+  }
+  .graph-body {
+    display: flex;
+    gap: 0;
+  }
+  .graph-day-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-right: 4px;
+    padding-top: 1px;
+  }
+  .graph-day-label {
+    font-size: 0.72em;
+    color: var(--soft);
+    height: 13px;
+    line-height: 13px;
+    text-align: right;
+    width: 22px;
+  }
+  .graph-columns {
+    display: flex;
+    gap: 3px;
+  }
+  .graph-col {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .graph-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    background: var(--line);
+    cursor: default;
+    transition: transform 0.1s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .graph-cell.has-entry { cursor: pointer; }
+  .graph-cell.has-entry:hover { transform: scale(1.35); z-index: 10; }
+  .graph-cell.future { background: transparent; border: 1px dashed var(--line); opacity: 0.4; }
+  .graph-cell[data-score="0"]  { background: #e8e0d4; }
+  .graph-cell[data-score="1"]  { background: #f5c9a0; }
+  .graph-cell[data-score="2"]  { background: #e8a96a; }
+  .graph-cell[data-score="3"]  { background: #c97a4f; }
+  .graph-cell[data-score="4"]  { background: #8aba8a; }
+  .graph-cell[data-score="5"]  { background: #5a8a5a; }
+  .graph-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    font-size: 0.78em;
+    color: var(--soft);
+    flex-wrap: wrap;
+  }
+  .graph-legend-cell {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  /* Tooltip */
+  .graph-tooltip {
+    position: fixed;
+    background: var(--ink);
+    color: #fff;
+    padding: 7px 11px;
+    border-radius: 7px;
+    font-size: 0.82em;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1.6;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+  }
+  .graph-tooltip.visible { opacity: 1; }
 </style>
 </head>
 <body>
@@ -569,6 +863,23 @@
     <p style="color:var(--soft); margin-top:0;">Set your intention for the day. Write this in the morning.</p>
     <label for="planText">How do I wish to spend today?</label>
     <textarea id="planText" placeholder="Today I intend to wake before sunrise, take a morning walk, eat home-made meals, do my prayers, spend time with family..."></textarea>
+
+    <!-- Small Goals -->
+    <div class="goals-section">
+      <h3>⏱ Small Goals for Today</h3>
+      <p class="goals-hint">Each goal should take roughly 1 hour. Tick them off this evening.</p>
+      <div class="goals-input-row">
+        <input type="text" id="goalInput" placeholder="e.g. Finish chapter 3 of the book…"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addGoal();}">
+        <button class="secondary" onclick="addGoal()" style="white-space:nowrap;">+ Add Goal</button>
+      </div>
+      <div id="goalsList"></div>
+      <div class="goals-footer" id="goalsFooter" style="display:none;">
+        <span id="goalsProgressText"></span>
+        <div class="goals-progress-bar"><div class="goals-progress-fill" id="goalsProgressFill"></div></div>
+        <span id="goalsProgressPct"></span>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -622,12 +933,44 @@
 
 <!-- HISTORY TAB -->
 <div id="history" class="panel">
+
+  <!-- Activity Graph -->
+  <div class="card">
+    <div class="graph-header">
+      <h2>Activity Graph</h2>
+      <div class="graph-year-nav">
+        <button onclick="graphShiftYear(-1)" title="Previous year">‹</button>
+        <span class="graph-year-label" id="graphYearLabel">—</span>
+        <button onclick="graphShiftYear(1)" title="Next year">›</button>
+      </div>
+    </div>
+    <div class="graph-stats" id="graphStats"></div>
+    <div class="graph-scroll">
+      <div class="graph-wrap" id="graphWrap"></div>
+    </div>
+    <div class="graph-legend">
+      <span>Less</span>
+      <span class="graph-legend-cell" style="background:#e8e0d4;" title="No entry"></span>
+      <span class="graph-legend-cell" style="background:#f5c9a0;" title="Score 1–19"></span>
+      <span class="graph-legend-cell" style="background:#e8a96a;" title="Score 20–39"></span>
+      <span class="graph-legend-cell" style="background:#c97a4f;" title="Score 40–59"></span>
+      <span class="graph-legend-cell" style="background:#8aba8a;" title="Score 60–74"></span>
+      <span class="graph-legend-cell" style="background:#5a8a5a;" title="Score 75+"></span>
+      <span>More</span>
+      <span style="margin-left:8px; color:var(--soft);">· Click any cell to open that entry</span>
+    </div>
+  </div>
+
+  <!-- Entry List -->
   <div class="card">
     <h2>Past Entries</h2>
     <p style="color:var(--soft); margin-top:0;">Click an entry to load it back into Today's tab for editing.</p>
     <ul class="entry-list" id="entryList"></ul>
   </div>
 </div>
+
+<!-- Tooltip (shared, lives outside the card to avoid clipping) -->
+<div class="graph-tooltip" id="graphTooltip"></div>
 
 <!-- REPORTS TAB -->
 <div id="reports" class="panel">
@@ -1157,6 +1500,7 @@ function readForm() {
     wakeTime: document.getElementById('wakeTime').value,
     bedTime: document.getElementById('bedTime').value,
     plan: document.getElementById('planText').value,
+    goals: currentGoals.map(g => ({ id: g.id, text: g.text, done: !!g.done })),
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
     apology: document.getElementById('apologyText').value,
@@ -1200,6 +1544,8 @@ function writeForm(entry) {
   document.getElementById('wakeTime').value = entry.wakeTime || '';
   document.getElementById('bedTime').value = entry.bedTime || '';
   document.getElementById('planText').value = entry.plan || '';
+  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', done: !!g.done, _editing: false }));
+  renderGoalsList();
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
   document.getElementById('apologyText').value = entry.apology || '';
@@ -1290,9 +1636,115 @@ function loadEntry() {
 }
 
 function clearForm(keepDate) {
-  const blank = { date: keepDate ? document.getElementById('entryDate').value : todayISO(), daily:{}, weekly:{}, monthly:{}, minutes:{} };
+  const blank = { date: keepDate ? document.getElementById('entryDate').value : todayISO(), daily:{}, weekly:{}, monthly:{}, minutes:{}, goals:[] };
   writeForm(blank);
   document.getElementById('saveMsg').className = 'status-msg';
+}
+
+/* ---------- DAILY GOALS ---------- */
+let currentGoals = [];
+
+function renderGoalsList() {
+  const list     = document.getElementById('goalsList');
+  const footer   = document.getElementById('goalsFooter');
+  const progText = document.getElementById('goalsProgressText');
+  const progFill = document.getElementById('goalsProgressFill');
+  const progPct  = document.getElementById('goalsProgressPct');
+  if (!list) return;
+
+  if (currentGoals.length === 0) {
+    list.innerHTML = '<div class="goals-empty">No goals yet — add one above.</div>';
+    footer.style.display = 'none';
+    return;
+  }
+
+  const done  = currentGoals.filter(g => g.done).length;
+  const total = currentGoals.length;
+  const pct   = Math.round((done / total) * 100);
+
+  list.innerHTML = currentGoals.map((goal, idx) => {
+    if (goal._editing) {
+      return `<div class="goal-item">
+        <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})">
+        <input class="goal-edit-input" id="goalEdit_${idx}"
+          value="${esc(goal.text)}"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();saveGoalEdit(${idx});}
+                     if(event.key==='Escape') cancelGoalEdit(${idx});">
+        <div class="goal-actions">
+          <button class="goal-btn goal-save" onclick="saveGoalEdit(${idx})">Save</button>
+          <button class="goal-btn" onclick="cancelGoalEdit(${idx})">Cancel</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="goal-item ${goal.done ? 'done' : ''}">
+      <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})"
+        title="${goal.done ? 'Mark as not done' : 'Mark as done'}">
+      <span class="goal-text">${esc(goal.text)}</span>
+      <div class="goal-actions">
+        <button class="goal-btn" onclick="editGoal(${idx})" title="Edit goal">✎</button>
+        <button class="goal-btn goal-danger" onclick="removeGoal(${idx})" title="Remove goal">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Focus edit input if one is open
+  const editIdx = currentGoals.findIndex(g => g._editing);
+  if (editIdx >= 0) {
+    const el = document.getElementById('goalEdit_' + editIdx);
+    if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
+
+  // Progress bar
+  footer.style.display = 'flex';
+  progText.textContent = done + ' of ' + total + ' done';
+  progFill.style.width = pct + '%';
+  progPct.textContent  = pct + '%';
+}
+
+function addGoal() {
+  const input = document.getElementById('goalInput');
+  const text  = (input.value || '').trim();
+  if (!text) { input.focus(); return; }
+  currentGoals.push({ id: Date.now(), text, done: false, _editing: false });
+  input.value = '';
+  input.focus();
+  renderGoalsList();
+  autosave();
+}
+
+function removeGoal(idx) {
+  if (!confirm('Remove this goal?')) return;
+  currentGoals.splice(idx, 1);
+  renderGoalsList();
+  autosave();
+}
+
+function toggleGoal(idx) {
+  currentGoals[idx].done = !currentGoals[idx].done;
+  renderGoalsList();
+  autosave();
+}
+
+function editGoal(idx) {
+  currentGoals.forEach(g => { g._editing = false; });
+  currentGoals[idx]._editing = true;
+  renderGoalsList();
+}
+
+function saveGoalEdit(idx) {
+  const input = document.getElementById('goalEdit_' + idx);
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  currentGoals[idx].text     = text;
+  currentGoals[idx]._editing = false;
+  renderGoalsList();
+  autosave();
+}
+
+function cancelGoalEdit(idx) {
+  currentGoals[idx]._editing = false;
+  renderGoalsList();
 }
 
 function showMsg(elId, text, kind) {
@@ -1310,6 +1762,7 @@ function refreshHistoryList() {
   ul.innerHTML = '';
   if (dates.length === 0) {
     ul.innerHTML = '<li style="border:none; background:transparent; color:var(--soft); font-style:italic;">No entries yet — your story starts today.</li>';
+    renderActivityGraph();
     return;
   }
   dates.forEach(d => {
@@ -1329,6 +1782,219 @@ function refreshHistoryList() {
     li.appendChild(btn);
     ul.appendChild(li);
   });
+  renderActivityGraph();
+}
+
+/* ---------- ACTIVITY GRAPH ---------- */
+let graphYear = new Date().getFullYear();
+
+function graphShiftYear(delta) {
+  graphYear += delta;
+  renderActivityGraph();
+}
+
+function scoreForGraph(entry) {
+  // reuse existing scoreDay if available, else return 0
+  if (!entry) return -1; // -1 = no entry
+  try { return scoreDay(entry).total; } catch(e) { return 0; }
+}
+
+function graphScoreBucket(score) {
+  // returns data-score attribute 0–5
+  if (score < 0)  return '0'; // no entry → lightest grey
+  if (score < 20) return '1';
+  if (score < 40) return '2';
+  if (score < 60) return '3';
+  if (score < 75) return '4';
+  return '5';
+}
+
+function renderActivityGraph() {
+  const all = getAllEntries();
+  const todayStr = isoDate(new Date());
+  const yr = graphYear;
+
+  document.getElementById('graphYearLabel').textContent = yr;
+
+  // ── Stats ──────────────────────────────────────────────
+  const allDatesThisYear = Object.keys(all).filter(d => d.startsWith(yr + '-'));
+  const totalEntries = allDatesThisYear.length;
+
+  // streak calculation (calendar days, not just logged days)
+  let currentStreak = 0, longestStreak = 0, streak = 0;
+  // walk from today backwards for current streak
+  let check = new Date();
+  while (true) {
+    const s = isoDate(check);
+    if (all[s]) { currentStreak++; check.setDate(check.getDate() - 1); }
+    else break;
+  }
+  // longest streak over entire history
+  const allSorted = Object.keys(all).sort();
+  let prev = null, run = 0;
+  for (const d of allSorted) {
+    if (prev) {
+      const diff = (parseISODate(d) - parseISODate(prev)) / 86400000;
+      run = diff === 1 ? run + 1 : 1;
+    } else { run = 1; }
+    if (run > longestStreak) longestStreak = run;
+    prev = d;
+  }
+
+  // average score this year
+  let scoreSum = 0, scoreCnt = 0;
+  for (const d of allDatesThisYear) {
+    const s = scoreForGraph(all[d]);
+    if (s >= 0) { scoreSum += s; scoreCnt++; }
+  }
+  const avgScore = scoreCnt > 0 ? Math.round(scoreSum / scoreCnt) : '—';
+
+  document.getElementById('graphStats').innerHTML =
+    statBox(totalEntries, 'Entries in ' + yr) +
+    statBox(currentStreak, 'Day streak now') +
+    statBox(longestStreak, 'Longest streak') +
+    statBox(avgScore, 'Avg score ' + yr);
+
+  // ── Build the 52-week grid ──────────────────────────────
+  // Start from the Monday of the first week that contains Jan 1
+  const jan1 = new Date(yr, 0, 1);
+  const jan1dow = jan1.getDay(); // 0=Sun
+  const daysToMon = jan1dow === 0 ? -6 : 1 - jan1dow;
+  const gridStart = new Date(yr, 0, 1 + daysToMon);
+
+  // End: last Sunday on or after Dec 31
+  const dec31 = new Date(yr, 11, 31);
+  const dec31dow = dec31.getDay();
+  const daysToSun = dec31dow === 0 ? 0 : 7 - dec31dow;
+  const gridEnd = new Date(yr, 11, 31 + daysToSun);
+
+  // Build columns (each column = one Mon–Sun week)
+  const columns = [];
+  let cur = new Date(gridStart);
+  while (cur <= gridEnd) {
+    const col = [];
+    for (let dow = 0; dow < 7; dow++) {
+      col.push(new Date(cur));
+      cur.setDate(cur.getDate() + 1);
+    }
+    columns.push(col);
+  }
+
+  // Month label positions
+  const monthLabels = [];
+  let lastMonth = -1;
+  columns.forEach((col, ci) => {
+    const firstDay = col[0];
+    const m = firstDay.getMonth();
+    if (m !== lastMonth) {
+      monthLabels.push({ ci, name: firstDay.toLocaleString('default', { month: 'short' }) });
+      lastMonth = m;
+    }
+  });
+
+  const CELL = 13, GAP = 3;
+  const colW = CELL + GAP;
+
+  // Month label row
+  let monthHtml = '';
+  monthLabels.forEach(ml => {
+    monthHtml += '<span class="graph-month-label" style="left:' + (ml.ci * colW) + 'px">' + ml.name + '</span>';
+  });
+
+  // Day label column (Mon/Wed/Fri)
+  const dayNames = ['Mon','','Wed','','Fri','','Sun'];
+  let dayLabelHtml = '';
+  dayNames.forEach(dn => {
+    dayLabelHtml += '<div class="graph-day-label">' + dn + '</div>';
+  });
+
+  // Cells
+  const tooltip = document.getElementById('graphTooltip');
+  let colsHtml = '';
+  columns.forEach(col => {
+    let colHtml = '<div class="graph-col">';
+    col.forEach(day => {
+      const ds = isoDate(day);
+      const inYear = day.getFullYear() === yr;
+      const isFuture = ds > todayStr;
+      const entry = all[ds];
+      const score = scoreForGraph(entry || null);
+      const bucket = inYear ? graphScoreBucket(score) : '0';
+      const hasEntry = !!entry && inYear;
+      const checked = hasEntry ? countDaily(entry) : 0;
+      const scoreLabel = hasEntry ? score : '—';
+
+      let cls = 'graph-cell';
+      if (isFuture && inYear) cls += ' future';
+      else if (hasEntry) cls += ' has-entry';
+
+      const title = ds + (hasEntry ? ' · Score ' + scoreLabel + ' · ' + checked + '/' + DAILY_ITEMS.length + ' practices' : ' · No entry');
+
+      colHtml += '<div class="' + cls + '" data-score="' + (inYear && !isFuture ? bucket : '0') + '"'
+        + ' data-date="' + ds + '"'
+        + ' data-title="' + title + '"'
+        + '></div>';
+    });
+    colHtml += '</div>';
+    colsHtml += colHtml;
+  });
+
+  document.getElementById('graphWrap').innerHTML =
+    '<div class="graph-month-labels" style="width:' + (columns.length * colW + 26) + 'px">' + monthHtml + '</div>' +
+    '<div class="graph-body">' +
+      '<div class="graph-day-labels">' + dayLabelHtml + '</div>' +
+      '<div class="graph-columns">' + colsHtml + '</div>' +
+    '</div>';
+
+  // ── Cell interactions ──────────────────────────────────
+  document.querySelectorAll('.graph-cell').forEach(cell => {
+    cell.addEventListener('mouseenter', function(e) {
+      const t = this.dataset.title;
+      if (!t) return;
+      tooltip.textContent = t;
+      tooltip.classList.add('visible');
+      positionTooltip(e);
+    });
+    cell.addEventListener('mousemove', positionTooltip);
+    cell.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+    if (this && cell.classList.contains('has-entry')) {
+      cell.addEventListener('click', function() {
+        const d = this.dataset.date;
+        if (!d) return;
+        document.getElementById('entryDate').value = d;
+        loadEntry();
+        showTab('today');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+  });
+
+  // re-attach click separately (arrow fn above won't capture 'this')
+  document.querySelectorAll('.graph-cell.has-entry').forEach(cell => {
+    cell.style.cursor = 'pointer';
+    cell.addEventListener('click', function() {
+      const d = this.dataset.date;
+      if (!d) return;
+      document.getElementById('entryDate').value = d;
+      loadEntry();
+      showTab('today');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+}
+
+function positionTooltip(e) {
+  const tip = document.getElementById('graphTooltip');
+  const x = e.clientX, y = e.clientY;
+  const tw = tip.offsetWidth || 200;
+  const th = tip.offsetHeight || 40;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  tip.style.left = (x + 14 + tw > vw ? x - tw - 6 : x + 14) + 'px';
+  tip.style.top  = (y - 10 + th > vh ? y - th - 6 : y - 10) + 'px';
+}
+
+function statBox(num, lbl) {
+  return '<div class="graph-stat"><div class="graph-stat-num">' + num + '</div><div class="graph-stat-lbl">' + lbl + '</div></div>';
 }
 
 function countDaily(e) {
@@ -1761,6 +2427,26 @@ function renderDayReport(c) {
     html += '<div class="stat-grid" style="margin-top:14px;">';
     html += '<div class="stat-box"><div class="stat-num" style="font-size:1.4em;">' + wakeLbl + '</div><div class="stat-label">Wake-up</div></div>';
     html += '<div class="stat-box"><div class="stat-num" style="font-size:1.4em;">' + bedLbl  + '</div><div class="stat-label">Bedtime</div></div>';
+    html += '</div>';
+  }
+
+  // Goals summary
+  if (entry.goals && entry.goals.length > 0) {
+    const doneCount  = entry.goals.filter(g => g.done).length;
+    const totalCount = entry.goals.length;
+    const pct = Math.round((doneCount / totalCount) * 100);
+    html += '<div style="margin-top:16px; padding:14px 16px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">';
+    html += '<strong style="color:var(--accent);">⏱ Daily Goals</strong>';
+    html += '<span style="color:var(--soft); font-size:0.88em;">' + doneCount + ' / ' + totalCount + ' completed (' + pct + '%)</span>';
+    html += '</div>';
+    entry.goals.forEach(g => {
+      const style = g.done ? 'text-decoration:line-through; color:var(--soft);' : 'color:var(--ink);';
+      html += '<div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); font-size:0.95em;">';
+      html += '<span style="color:' + (g.done ? 'var(--good)' : 'var(--line)') + '; font-size:1.1em;">' + (g.done ? '✓' : '○') + '</span>';
+      html += '<span style="' + style + '">' + esc(g.text) + '</span>';
+      html += '</div>';
+    });
     html += '</div>';
   }
 
@@ -2358,7 +3044,7 @@ function showTab(name) {
   });
   document.getElementById(name).classList.add('active');
   if (name === 'reports') renderReport();
-  if (name === 'history') refreshHistoryList();
+  if (name === 'history') { graphYear = new Date().getFullYear(); refreshHistoryList(); }
   if (name === 'scoring') renderScoringTab();
 }
 
