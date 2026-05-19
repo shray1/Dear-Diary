@@ -226,6 +226,38 @@
     background: #f0f5ed;
     border-color: var(--good);
   }
+  .check-item.marked-no {
+    background: #fdf0ec;
+    border-color: #d98060;
+  }
+  /* Tri-state Yes / No toggle buttons (daily practices only) */
+  .ptog-wrap {
+    display: flex;
+    gap: 6px;
+    margin-right: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .ptog-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    color: var(--soft);
+    font-family: inherit;
+    padding: 0;
+  }
+  .ptog-btn:hover { border-color: var(--accent-soft); color: var(--ink); }
+  .ptog-yes.active  { background: var(--good);  border-color: var(--good);  color: #fff; }
+  .ptog-no.active   { background: #c0552a;      border-color: #c0552a;      color: #fff; }
   .star-rating {
     display: none;
     align-items: center;
@@ -1317,21 +1349,67 @@ function buildChecklist(containerId, items, kind) {
       el.appendChild(div);
       return;
     }
+    if (!isPeriodKind) {
+      // Daily practices: tri-state Yes / No / Unfilled toggle buttons
+      div.id = 'pitem_' + item.id;
+      const togWrap = document.createElement('div');
+      togWrap.className = 'ptog-wrap';
+      const yesBtn = document.createElement('button');
+      yesBtn.type = 'button';
+      yesBtn.className = 'ptog-btn ptog-yes';
+      yesBtn.id = 'ptog_yes_' + item.id;
+      yesBtn.title = 'Yes — done';
+      yesBtn.textContent = '✓';
+      const noBtn = document.createElement('button');
+      noBtn.type = 'button';
+      noBtn.className = 'ptog-btn ptog-no';
+      noBtn.id = 'ptog_no_' + item.id;
+      noBtn.title = 'No — not done';
+      noBtn.textContent = '✗';
+      yesBtn.addEventListener('click', () => setPracticeState(item.id, yesBtn.classList.contains('active') ? null : 'yes'));
+      noBtn.addEventListener('click',  () => setPracticeState(item.id, noBtn.classList.contains('active')  ? null : 'no'));
+      togWrap.appendChild(yesBtn);
+      togWrap.appendChild(noBtn);
+      const lab = document.createElement('label');
+      lab.textContent = item.label;
+      if (item.hint) {
+        const h = document.createElement('span');
+        h.className = 'hint';
+        h.textContent = item.hint;
+        lab.appendChild(h);
+      }
+      if (item.stars)     lab.appendChild(buildStarWidget(item.id));
+      if (item.subratings) {
+        const subWrap = document.createElement('div');
+        subWrap.className = 'subratings-wrap';
+        item.subratings.forEach(sub => {
+          subWrap.appendChild(buildStarWidget(item.id + '_' + sub.id, {
+            title: sub.title,
+            starLabels: sub.starLabels,
+            className: 'subrating-widget'
+          }));
+        });
+        lab.appendChild(subWrap);
+      }
+      div.appendChild(togWrap);
+      div.appendChild(lab);
+      el.appendChild(div);
+      return;
+    }
+    // Weekly / Monthly: keep original checkbox behaviour
     const inp = document.createElement('input');
     inp.type = 'checkbox';
     inp.id = 'chk_' + item.id;
     inp.dataset.itemId = item.id;
     inp.addEventListener('change', e => {
       e.target.parentElement.classList.toggle('checked', e.target.checked);
-      if (isPeriodKind) {
-        const entryDate = document.getElementById('entryDate').value || todayISO();
-        if (e.target.checked) {
-          if (!e.target.dataset.performedOn) e.target.dataset.performedOn = entryDate;
-        } else {
-          e.target.dataset.performedOn = '';
-        }
-        updatePerformedOnLabel(item.id, e.target.dataset.performedOn);
+      const entryDate = document.getElementById('entryDate').value || todayISO();
+      if (e.target.checked) {
+        if (!e.target.dataset.performedOn) e.target.dataset.performedOn = entryDate;
+      } else {
+        e.target.dataset.performedOn = '';
       }
+      updatePerformedOnLabel(item.id, e.target.dataset.performedOn);
     });
     const lab = document.createElement('label');
     lab.htmlFor = inp.id;
@@ -1342,31 +1420,33 @@ function buildChecklist(containerId, items, kind) {
       h.textContent = item.hint;
       lab.appendChild(h);
     }
-    if (item.stars) {
-      lab.appendChild(buildStarWidget(item.id));
-    }
-    if (item.subratings) {
-      const subWrap = document.createElement('div');
-      subWrap.className = 'subratings-wrap';
-      item.subratings.forEach(sub => {
-        subWrap.appendChild(buildStarWidget(item.id + '_' + sub.id, {
-          title: sub.title,
-          starLabels: sub.starLabels,
-          className: 'subrating-widget'
-        }));
-      });
-      lab.appendChild(subWrap);
-    }
-    if (isPeriodKind) {
-      const perfSpan = document.createElement('span');
-      perfSpan.className = 'performed-on';
-      perfSpan.id = 'perfon_' + item.id;
-      lab.appendChild(perfSpan);
-    }
+    const perfSpan = document.createElement('span');
+    perfSpan.className = 'performed-on';
+    perfSpan.id = 'perfon_' + item.id;
+    lab.appendChild(perfSpan);
     div.appendChild(inp);
     div.appendChild(lab);
     el.appendChild(div);
   });
+}
+
+function setPracticeState(id, state) {
+  // state: 'yes' | 'no' | null (unfilled)
+  const div   = document.getElementById('pitem_' + id);
+  const yBtn  = document.getElementById('ptog_yes_' + id);
+  const nBtn  = document.getElementById('ptog_no_' + id);
+  if (!div || !yBtn || !nBtn) return;
+  yBtn.classList.toggle('active', state === 'yes');
+  nBtn.classList.toggle('active', state === 'no');
+  div.classList.toggle('checked',    state === 'yes');
+  div.classList.toggle('marked-no',  state === 'no');
+  // stars/subratings only visible when yes
+  const starEl = div.querySelector('.star-rating');
+  if (starEl) starEl.style.display = state === 'yes' ? 'flex' : 'none';
+  const subEl = div.querySelector('.subratings-wrap');
+  if (subEl) subEl.style.display = state === 'yes' ? 'flex' : 'none';
+  // fire change event so autosave picks it up
+  div.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 const STAR_INTENSITY = ['', 'Rushed', 'Distracted', 'Sincere', 'Focused', 'Deep & Devoted'];
@@ -1513,12 +1593,18 @@ function readForm() {
     monthlyOn: {},
     minutes: {}
   };
+  entry.dailyNo = {};
   DAILY_ITEMS.forEach(i => {
     if (i.rateOnly) {
       entry.daily[i.id + 'Rating'] = getStarRating(i.id);
       return;
     }
-    entry.daily[i.id] = document.getElementById('chk_' + i.id).checked;
+    const yBtn = document.getElementById('ptog_yes_' + i.id);
+    const nBtn = document.getElementById('ptog_no_' + i.id);
+    const isYes = yBtn && yBtn.classList.contains('active');
+    const isNo  = nBtn && nBtn.classList.contains('active');
+    entry.daily[i.id] = isYes ? true : false;
+    if (isNo) entry.dailyNo[i.id] = true;
     if (i.stars) entry.daily[i.id + 'Rating'] = getStarRating(i.id);
     if (i.subratings) i.subratings.forEach(sub => {
       entry.daily[i.id + '_' + sub.id] = getStarRating(i.id + '_' + sub.id);
@@ -1561,9 +1647,14 @@ function writeForm(entry) {
       setStarRating(i.id, rating);
       return;
     }
-    const c = document.getElementById('chk_' + i.id);
-    c.checked = !!(entry.daily && entry.daily[i.id]);
-    c.parentElement.classList.toggle('checked', c.checked);
+    const val    = entry.daily && entry.daily[i.id];
+    const isNo   = !!(entry.dailyNo && entry.dailyNo[i.id]);
+    // Backward-compat: old entries store false without dailyNo → treat as unfilled
+    let state = null;
+    if (val === true)      state = 'yes';
+    else if (isNo)         state = 'no';
+    // val===false with no dailyNo entry → unfilled (null)
+    setPracticeState(i.id, state);
     if (i.stars) setStarRating(i.id, (entry.daily && entry.daily[i.id + 'Rating']) || 0);
     if (i.subratings) i.subratings.forEach(sub => {
       setStarRating(i.id + '_' + sub.id, (entry.daily && entry.daily[i.id + '_' + sub.id]) || 0);
@@ -2451,9 +2542,18 @@ function renderDayReport(c) {
   }
 
   html += '<h3 style="margin-top:18px;">Practice breakdown</h3>';
+  const dailyIds = new Set(DAILY_ITEMS.filter(i => !i.rateOnly).map(i => i.id));
   r.breakdown.forEach(b => {
     const pct = b.max > 0 ? Math.round((b.points / b.max) * 100) : 0;
-    html += '<div class="progress-row"><span>' + b.label + '</span>';
+    let stateIcon = '';
+    if (dailyIds.has(b.id)) {
+      const isYes = entry.daily && entry.daily[b.id] === true;
+      const isNo  = entry.dailyNo && entry.dailyNo[b.id];
+      if (isYes)      stateIcon = '<span title="Done" style="color:var(--good);font-size:1em;margin-right:6px;">✓</span>';
+      else if (isNo)  stateIcon = '<span title="Not done" style="color:#c0552a;font-size:1em;margin-right:6px;">✗</span>';
+      else            stateIcon = '<span title="Not filled" style="color:var(--soft);font-size:1em;margin-right:6px;">?</span>';
+    }
+    html += '<div class="progress-row"><span>' + stateIcon + b.label + '</span>';
     html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
     html += '<span class="pct">' + b.points.toFixed(1) + ' / ' + b.max + '</span></div>';
   });
