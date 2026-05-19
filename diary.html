@@ -838,6 +838,112 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.22);
   }
   .graph-tooltip.visible { opacity: 1; }
+
+  /* ========== MEDICINES ========== */
+  .med-course {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .med-course-archived { opacity: 0.75; }
+  .med-course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .med-course-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .med-course-notes {
+    font-size: 0.88em;
+    color: var(--soft);
+    font-style: italic;
+    margin-bottom: 10px;
+    white-space: pre-line;
+  }
+  .med-date-range {
+    font-size: 0.82em;
+    color: var(--soft);
+    font-style: italic;
+    margin-left: 6px;
+  }
+  .med-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .med-item {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .med-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .med-badge {
+    display: inline-block;
+    font-size: 0.72em;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-style: normal;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+  }
+  .med-badge-active   { background: #d4edda; color: #2d6a3f; }
+  .med-badge-done     { background: #e2e3e5; color: #5a5a5a; }
+  .med-badge-upcoming { background: #fff3cd; color: #856404; }
+  .med-slots { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+  .med-slot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.88em;
+    color: var(--ink);
+    padding: 3px 0;
+  }
+  .med-slot-label { color: var(--soft); }
+  .med-slot-form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .med-slot-form-row > div { flex: 1; min-width: 110px; }
+  /* Today's Medicines card */
+  .med-log-group {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .med-log-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .med-log-course {
+    font-size: 0.82em;
+    color: var(--soft);
+    font-style: italic;
+  }
+  .med-log-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    border-top: 1px solid var(--line);
+  }
+  .med-log-slot-label { font-size: 0.9em; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -855,6 +961,7 @@
   <button class="tab" onclick="showTab('goals')">Goals</button>
   <button class="tab" onclick="showTab('scoring')">Scoring</button>
   <button class="tab" onclick="showTab('data')">Data</button>
+  <button class="tab" onclick="showTab('medicines')">Medicines</button>
 </div>
 
 <!-- TODAY TAB -->
@@ -913,6 +1020,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Today's Medicines — rendered dynamically when medicines are active -->
+  <div id="todayMedicinesCard"></div>
 
   <div class="card">
     <h2>Evening Reflection — Daily Practices</h2>
@@ -1126,6 +1236,11 @@
   </div>
 </div>
 
+<!-- MEDICINES TAB -->
+<div id="medicines" class="panel">
+  <div id="medicinesContent"></div>
+</div>
+
 <p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
 
 </div>
@@ -1280,6 +1395,7 @@ function init() {
   loadEntry();
   refreshHistoryList();
   initReportSelectors();
+  renderTodayMedicines(todayISO());
 }
 
 function buildTimeSelects() {
@@ -1697,6 +1813,7 @@ function writeForm(entry) {
     document.getElementById('min_' + a.id).value = val !== undefined ? (val || '') : (a.default !== undefined ? a.default : '');
   });
   updateTotal();
+  renderTodayMedicines(entry.date || todayISO());
 }
 
 function saveEntry() {
@@ -2541,6 +2658,8 @@ function renderDayReport(c) {
     html += '</div>';
   }
 
+  html += medAdherenceHtml(dateStr);
+
   html += '<h3 style="margin-top:18px;">Practice breakdown</h3>';
   const dailyIds = new Set(DAILY_ITEMS.filter(i => !i.rateOnly).map(i => i.id));
   r.breakdown.forEach(b => {
@@ -3093,10 +3212,12 @@ function confirmResetWeights() {
 
 /* ---------- DATA TAB ---------- */
 function exportJSON() {
-  const all = getAllEntries();
-  const blob = new Blob([JSON.stringify(all, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const payload = Object.assign({}, getAllEntries(), {
+    __meta: { courses: getCourses(), medlogs: getMedLogs() }
+  });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
   a.href = url;
   a.download = 'dear-diary-backup-' + todayISO() + '.json';
   a.click();
@@ -3112,11 +3233,19 @@ function importJSON(ev) {
     try {
       const data = JSON.parse(reader.result);
       if (typeof data !== 'object') throw new Error('bad format');
-      const merged = Object.assign({}, getAllEntries(), data);
-      setAllEntries(merged);
+      // Restore medicines data if present
+      if (data.__meta) {
+        if (data.__meta.courses) setCourses(data.__meta.courses);
+        if (data.__meta.medlogs) setMedLogs(data.__meta.medlogs);
+      }
+      // Import diary entries (skip __meta key)
+      const entries = Object.assign({}, getAllEntries());
+      let count = 0;
+      Object.keys(data).forEach(k => { if (k !== '__meta') { entries[k] = data[k]; count++; } });
+      setAllEntries(entries);
       refreshHistoryList();
       loadEntry();
-      showMsg('dataMsg', 'Imported ' + Object.keys(data).length + ' entries.', 'success');
+      showMsg('dataMsg', 'Imported ' + count + ' entries.' + (data.__meta ? ' Medicines data restored.' : ''), 'success');
     } catch (e) {
       showMsg('dataMsg', 'Import failed: ' + e.message, 'warn');
     }
@@ -3126,10 +3255,15 @@ function importJSON(ev) {
 
 function confirmReset() {
   if (confirm('This will erase ALL diary entries from this browser. Did you export a backup? Continue?')) {
+    const keepMeds = confirm('Also erase your medicine courses and dose logs?\n(Cancel to keep medicine data.)');
     localStorage.removeItem(STORAGE_KEY);
+    if (keepMeds) {
+      localStorage.removeItem(MED_COURSES_KEY);
+      localStorage.removeItem(MED_LOG_KEY);
+    }
     refreshHistoryList();
     clearForm();
-    showMsg('dataMsg', 'All entries erased.', 'warn');
+    showMsg('dataMsg', 'All entries erased.' + (keepMeds ? ' Medicine data erased.' : ''), 'warn');
   }
 }
 
@@ -3143,9 +3277,10 @@ function showTab(name) {
     if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'" + name + "'")) t.classList.add('active');
   });
   document.getElementById(name).classList.add('active');
-  if (name === 'reports') renderReport();
-  if (name === 'history') { graphYear = new Date().getFullYear(); refreshHistoryList(); }
-  if (name === 'scoring') renderScoringTab();
+  if (name === 'reports')   renderReport();
+  if (name === 'history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); }
+  if (name === 'scoring')   renderScoringTab();
+  if (name === 'medicines') renderMedicinesTab();
 }
 
 /* ---------- AUTOSAVE ---------- */
@@ -3178,6 +3313,510 @@ function setupAutosave() {
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
   });
+}
+
+/* ========== MEDICINES ========== */
+
+const MED_COURSES_KEY = 'dear-diary-courses';
+const MED_LOG_KEY     = 'dear-diary-medlog';
+
+// --- Storage helpers ---
+function getCourses() {
+  try { return JSON.parse(localStorage.getItem(MED_COURSES_KEY) || '[]'); } catch { return []; }
+}
+function setCourses(courses) {
+  localStorage.setItem(MED_COURSES_KEY, JSON.stringify(courses));
+}
+function getMedLogs() {
+  try { return JSON.parse(localStorage.getItem(MED_LOG_KEY) || '{}'); } catch { return {}; }
+}
+function setMedLogs(logs) {
+  localStorage.setItem(MED_LOG_KEY, JSON.stringify(logs));
+}
+function getMedLogForDate(dateStr) {
+  return getMedLogs()[dateStr] || {};
+}
+
+// --- ID generator ---
+function medGenId(prefix) {
+  return prefix + '_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+// --- Date helpers ---
+function getMedEndDate(med) {
+  if (!med.startDate || !med.durationDays) return null;
+  const d = new Date(med.startDate + 'T00:00:00');
+  d.setDate(d.getDate() + Number(med.durationDays) - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function isMedActiveOnDate(med, dateStr) {
+  if (!med.startDate) return false;
+  if (dateStr < med.startDate) return false;
+  const end = getMedEndDate(med);
+  if (end && dateStr > end) return false;
+  return true;
+}
+
+function isCourseFullyFinished(course) {
+  if (!course.medicines || course.medicines.length === 0) return false;
+  const today = todayISO();
+  return course.medicines.every(med => {
+    const end = getMedEndDate(med);
+    return end && end < today;
+  });
+}
+
+function getMedDaysLeft(med, fromDate) {
+  const end = getMedEndDate(med);
+  if (!end) return null;
+  const endMs  = new Date(end  + 'T00:00:00').getTime();
+  const fromMs = new Date(fromDate + 'T00:00:00').getTime();
+  return Math.max(0, Math.round((endMs - fromMs) / 86400000) + 1);
+}
+
+// --- Slot label ---
+function getSlotLabel(slot) {
+  let label = slot.time.charAt(0).toUpperCase() + slot.time.slice(1);
+  if (slot.relation && slot.meal) {
+    label += ' · ' + slot.relation + ' ' + slot.meal;
+  } else if (slot.relation) {
+    label += ' · ' + slot.relation;
+  }
+  return label;
+}
+
+// --- Get all active dose slots for a given date ---
+function getActiveSlotsForDate(dateStr) {
+  const courses = getCourses();
+  const result  = [];
+  const timeOrder = { morning: 0, afternoon: 1, evening: 2, night: 3 };
+  courses.forEach(course => {
+    if (course.archived) return;
+    (course.medicines || []).forEach(med => {
+      if (!isMedActiveOnDate(med, dateStr)) return;
+      (med.slots || []).forEach(slot => {
+        result.push({
+          courseId:   course.id,
+          courseName: course.name,
+          medId:      med.id,
+          medName:    med.name,
+          slotId:     slot.id,
+          slotLabel:  getSlotLabel(slot),
+          slotTime:   slot.time,
+          daysLeft:   getMedDaysLeft(med, dateStr),
+        });
+      });
+    });
+  });
+  result.sort((a, b) => (timeOrder[a.slotTime] || 0) - (timeOrder[b.slotTime] || 0));
+  return result;
+}
+
+/* ---- Today's Medicines card (shown in Today's Entry tab) ---- */
+function renderTodayMedicines(dateStr) {
+  const el = document.getElementById('todayMedicinesCard');
+  if (!el) return;
+  const slots = getActiveSlotsForDate(dateStr || todayISO());
+  const medLog = getMedLogForDate(dateStr || todayISO());
+
+  if (slots.length === 0) { el.innerHTML = ''; return; }
+
+  // Group by medicine
+  const groups = {};
+  const groupOrder = [];
+  slots.forEach(s => {
+    if (!groups[s.medId]) {
+      groups[s.medId] = { medName: s.medName, courseName: s.courseName, daysLeft: s.daysLeft, slots: [] };
+      groupOrder.push(s.medId);
+    }
+    groups[s.medId].slots.push(s);
+  });
+
+  let html = '<div class="card"><h2>💊 Today\'s Medicines</h2>';
+  groupOrder.forEach(medId => {
+    const g = groups[medId];
+    const dlText = g.daysLeft !== null
+      ? (g.daysLeft === 1 ? ' · last day' : ' · ' + g.daysLeft + ' day' + (g.daysLeft === 1 ? '' : 's') + ' left')
+      : '';
+    html += '<div class="med-log-group">';
+    html += '<div class="med-log-group-header">';
+    html += '<strong>' + esc(g.medName) + '</strong>';
+    html += '<span class="med-log-course">' + esc(g.courseName) + dlText + '</span>';
+    html += '</div>';
+    g.slots.forEach(s => {
+      const state = medLog[s.slotId];   // true=taken, false=skipped, undefined=unmarked
+      const isYes = state === true;
+      const isNo  = state === false;
+      html += '<div class="med-log-item">';
+      html += '<div class="ptog-wrap">';
+      html += '<button type="button" class="ptog-btn ptog-yes' + (isYes ? ' active' : '') + '" '
+            + 'onclick="setMedSlot(\'' + s.slotId + '\',' + (isYes ? 'null' : 'true') + ')" title="Taken">✓</button>';
+      html += '<button type="button" class="ptog-btn ptog-no' + (isNo ? ' active' : '') + '" '
+            + 'onclick="setMedSlot(\'' + s.slotId + '\',' + (isNo ? 'null' : 'false') + ')" title="Skipped">✗</button>';
+      html += '</div>';
+      html += '<span class="med-log-slot-label">' + esc(s.slotLabel) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function setMedSlot(slotId, value) {
+  // value: true=taken, false=skipped, null=clear
+  const dateStr = document.getElementById('entryDate').value || todayISO();
+  const logs = getMedLogs();
+  if (!logs[dateStr]) logs[dateStr] = {};
+  if (value === null) {
+    delete logs[dateStr][slotId];
+  } else {
+    logs[dateStr][slotId] = value;
+  }
+  setMedLogs(logs);
+  renderTodayMedicines(dateStr);
+}
+
+/* ---- Medicines Tab ---- */
+let _newCourseFormVisible = false;
+
+function renderMedicinesTab() {
+  const el = document.getElementById('medicinesContent');
+  if (!el) return;
+
+  // Auto-archive fully-finished courses
+  const courses = getCourses();
+  let changed = false;
+  courses.forEach(c => {
+    if (!c.archived && c.medicines && c.medicines.length > 0 && isCourseFullyFinished(c)) {
+      c.archived = true;
+      changed = true;
+    }
+  });
+  if (changed) setCourses(courses);
+
+  const active   = courses.filter(c => !c.archived);
+  const archived = courses.filter(c =>  c.archived);
+  const today    = todayISO();
+
+  let html = '<div class="card">';
+  html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">';
+  html += '<h2 style="margin:0;">Active Courses</h2>';
+  html += '<button class="secondary" onclick="showAddCourseForm()">+ New Course</button>';
+  html += '</div>';
+
+  // New course inline form
+  html += '<div id="newCourseForm" style="display:' + (_newCourseFormVisible ? 'block' : 'none') + '; '
+        + 'margin-top:16px; padding:16px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">';
+  html += '<h3 style="margin-top:0;">New Medication Course</h3>';
+  html += '<label>Course name <small style="color:var(--soft);">(e.g. Viral fever — Dr. Sharma, July 2025)</small></label>';
+  html += '<input type="text" id="newCourseName" placeholder="Course name" style="margin-bottom:10px;">';
+  html += '<label>Notes <small style="color:var(--soft);">(optional — doctor, diagnosis, prescription photo reference, etc.)</small></label>';
+  html += '<textarea id="newCourseNotes" placeholder="Doctor: Dr. Sharma&#10;Diagnosis: Viral fever" style="height:70px; margin-bottom:12px;"></textarea>';
+  html += '<div class="button-row"><button class="primary" onclick="saveCourse()">Save Course</button>'
+        + '<button class="secondary" onclick="hideAddCourseForm()">Cancel</button></div>';
+  html += '</div>';
+
+  if (active.length === 0 && !_newCourseFormVisible) {
+    html += '<p style="color:var(--soft); text-align:center; padding:24px 0; margin:0;">'
+          + 'No active courses yet. Click <strong>+ New Course</strong> to start tracking a medication.</p>';
+  }
+
+  active.forEach(c => { html += renderCourseBlock(c, today, false); });
+  html += '</div>'; // end Active Courses card
+
+  if (archived.length > 0) {
+    html += '<div class="card"><details>';
+    html += '<summary style="cursor:pointer; color:var(--accent); font-size:1.15em; font-family:Georgia,serif; list-style:none; display:flex; justify-content:space-between; align-items:center;">'
+          + 'Past Courses <span style="color:var(--soft); font-size:0.8em; font-weight:normal;">' + archived.length + ' course' + (archived.length === 1 ? '' : 's') + '</span></summary>';
+    html += '<div style="margin-top:16px;">';
+    archived.forEach(c => { html += renderCourseBlock(c, today, true); });
+    html += '</div></details></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderCourseBlock(course, today, isArchived) {
+  const meds = course.medicines || [];
+  let minStart = '', maxEnd = '';
+  meds.forEach(med => {
+    if (med.startDate && (!minStart || med.startDate < minStart)) minStart = med.startDate;
+    const end = getMedEndDate(med);
+    if (end && (!maxEnd || end > maxEnd)) maxEnd = end;
+  });
+  const dateRange = minStart ? (minStart + (maxEnd && maxEnd !== minStart ? ' → ' + maxEnd : '')) : '';
+
+  let html = '<div class="med-course' + (isArchived ? ' med-course-archived' : '') + '">';
+  html += '<div class="med-course-header">';
+  html += '<div><strong>' + esc(course.name) + '</strong>';
+  if (dateRange) html += '<span class="med-date-range">' + dateRange + '</span>';
+  html += '</div>';
+  html += '<div class="med-course-actions">';
+  if (!isArchived) {
+    html += '<button class="secondary" style="font-size:0.8em;padding:4px 10px;" onclick="archiveCourse(\'' + course.id + '\')">Archive</button>';
+  } else {
+    html += '<button class="secondary" style="font-size:0.8em;padding:4px 10px;" onclick="unarchiveCourse(\'' + course.id + '\')">Restore</button>';
+  }
+  html += '<button class="danger" style="font-size:0.8em;padding:4px 10px;" onclick="deleteCourse(\'' + course.id + '\')">Delete</button>';
+  html += '</div></div>';
+
+  if (course.notes) {
+    html += '<div class="med-course-notes">' + esc(course.notes).replace(/\n/g, '<br>') + '</div>';
+  }
+
+  html += '<div class="med-list">';
+  meds.forEach(med => { html += renderMedBlock(course.id, med, today, isArchived); });
+  html += '</div>';
+
+  if (!isArchived) {
+    html += '<div id="addMedForm_' + course.id + '" style="display:none; margin-top:12px; padding:14px; background:var(--bg); border-radius:6px; border:1px solid var(--line);">';
+    html += '<h3 style="margin-top:0; font-size:1em;">Add Medicine to this Course</h3>';
+    html += '<label>Medicine name <small style="color:var(--soft);">(include strength, e.g. Paracetamol 500mg)</small></label>';
+    html += '<input type="text" id="newMedName_' + course.id + '" placeholder="Medicine name" style="margin-bottom:10px;">';
+    html += '<div class="row">';
+    html += '<div><label>Start date</label><input type="date" id="newMedStart_' + course.id + '" value="' + today + '"></div>';
+    html += '<div><label>Duration (days)</label><input type="number" id="newMedDays_' + course.id + '" placeholder="e.g. 7" min="1" style="width:100%;"></div>';
+    html += '</div>';
+    html += '<div class="button-row" style="margin-top:10px;">';
+    html += '<button class="primary" onclick="saveMedicine(\'' + course.id + '\')">Add Medicine</button>';
+    html += '<button class="secondary" onclick="hideAddMedForm(\'' + course.id + '\')">Cancel</button>';
+    html += '</div></div>';
+    html += '<div style="margin-top:12px;"><button class="secondary" onclick="showAddMedForm(\'' + course.id + '\')">+ Add Medicine</button></div>';
+  }
+
+  html += '</div>'; // end med-course
+  return html;
+}
+
+function renderMedBlock(courseId, med, today, isArchived) {
+  const end        = getMedEndDate(med);
+  const isActive   = isMedActiveOnDate(med, today);
+  const isFinished = end && end < today;
+  const isFuture   = med.startDate > today;
+  let badge = '';
+  if (isActive)        badge = '<span class="med-badge med-badge-active">active</span>';
+  else if (isFinished) badge = '<span class="med-badge med-badge-done">done</span>';
+  else if (isFuture)   badge = '<span class="med-badge med-badge-upcoming">upcoming</span>';
+
+  const durLabel = (med.durationDays || '?') + ' day' + (med.durationDays !== 1 ? 's' : '');
+  const endLabel = end ? 'until ' + end : '';
+
+  let html = '<div class="med-item">';
+  html += '<div class="med-item-header">';
+  html += '<div><strong>' + esc(med.name) + '</strong> ' + badge;
+  html += '<span class="med-date-range">' + (med.startDate || '') + ' · ' + durLabel + (endLabel ? ' (' + endLabel + ')' : '') + '</span></div>';
+  if (!isArchived) {
+    html += '<div><button class="danger" style="font-size:0.78em;padding:3px 8px;" onclick="deleteMedicine(\'' + courseId + '\',\'' + med.id + '\')">Remove</button></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="med-slots">';
+  if (!med.slots || med.slots.length === 0) {
+    html += '<span style="color:var(--soft); font-size:0.85em; font-style:italic;">No dose times added yet — click + Add Dose Time below.</span>';
+  } else {
+    med.slots.forEach((slot, si) => {
+      html += '<div class="med-slot-row">';
+      html += '<span class="med-slot-label">🕐 ' + esc(getSlotLabel(slot)) + '</span>';
+      if (!isArchived) {
+        html += '<button class="danger" style="font-size:0.75em;padding:2px 7px;" onclick="deleteSlot(\'' + courseId + '\',\'' + med.id + '\',' + si + ')">×</button>';
+      }
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
+  if (!isArchived) {
+    html += '<div id="addSlotForm_' + med.id + '" style="display:none; margin-top:8px; padding:12px; background:var(--bg); border-radius:6px; border:1px solid var(--line);">';
+    html += '<div class="med-slot-form-row">';
+    // Time of day
+    html += '<div><label style="font-size:0.85em; margin-bottom:4px; display:block;">Time of day</label>';
+    html += '<select id="slotTime_' + med.id + '">';
+    ['morning','afternoon','evening','night'].forEach(t => {
+      html += '<option value="' + t + '">' + t.charAt(0).toUpperCase() + t.slice(1) + '</option>';
+    });
+    html += '</select></div>';
+    // Meal relation
+    html += '<div><label style="font-size:0.85em; margin-bottom:4px; display:block;">Meal timing</label>';
+    html += '<select id="slotRelation_' + med.id + '" onchange="medUpdateMealSelect(\'' + med.id + '\')">';
+    html += '<option value="">— no meal</option>';
+    ['before','after','with'].forEach(r => {
+      html += '<option value="' + r + '">' + r.charAt(0).toUpperCase() + r.slice(1) + ' meal</option>';
+    });
+    html += '</select></div>';
+    // Meal picker (shown only when relation is selected)
+    html += '<div id="slotMealWrap_' + med.id + '" style="display:none;"><label style="font-size:0.85em; margin-bottom:4px; display:block;">Meal</label>';
+    html += '<select id="slotMeal_' + med.id + '">';
+    ['breakfast','lunch','dinner'].forEach(m => {
+      html += '<option value="' + m + '">' + m.charAt(0).toUpperCase() + m.slice(1) + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div>'; // end slot-form-row
+    html += '<div class="button-row" style="margin-top:10px;">';
+    html += '<button class="primary" onclick="saveSlot(\'' + courseId + '\',\'' + med.id + '\')">Add Dose Time</button>';
+    html += '<button class="secondary" onclick="hideAddSlotForm(\'' + med.id + '\')">Cancel</button>';
+    html += '</div></div>';
+    html += '<button class="secondary" style="font-size:0.82em; margin-top:6px; padding:4px 12px;" '
+          + 'onclick="showAddSlotForm(\'' + med.id + '\')">+ Add Dose Time</button>';
+  }
+
+  html += '</div>'; // end med-item
+  return html;
+}
+
+function medUpdateMealSelect(medId) {
+  const rel  = document.getElementById('slotRelation_' + medId);
+  const wrap = document.getElementById('slotMealWrap_' + medId);
+  if (wrap) wrap.style.display = (rel && rel.value) ? 'block' : 'none';
+}
+
+/* ---- Course CRUD ---- */
+function showAddCourseForm() {
+  _newCourseFormVisible = true;
+  const f = document.getElementById('newCourseForm');
+  if (f) { f.style.display = 'block'; const n = document.getElementById('newCourseName'); if (n) n.focus(); }
+}
+function hideAddCourseForm() {
+  _newCourseFormVisible = false;
+  const f = document.getElementById('newCourseForm');
+  if (f) f.style.display = 'none';
+}
+function saveCourse() {
+  const nameEl = document.getElementById('newCourseName');
+  const name   = (nameEl ? nameEl.value : '').trim();
+  if (!name) { alert('Please enter a course name.'); return; }
+  const notes  = (document.getElementById('newCourseNotes').value || '').trim();
+  const courses = getCourses();
+  courses.push({ id: medGenId('c'), name, notes, archived: false, medicines: [] });
+  setCourses(courses);
+  _newCourseFormVisible = false;
+  renderMedicinesTab();
+}
+function archiveCourse(courseId) {
+  const courses = getCourses();
+  const c = courses.find(x => x.id === courseId);
+  if (c) c.archived = true;
+  setCourses(courses);
+  renderMedicinesTab();
+}
+function unarchiveCourse(courseId) {
+  const courses = getCourses();
+  const c = courses.find(x => x.id === courseId);
+  if (c) c.archived = false;
+  setCourses(courses);
+  renderMedicinesTab();
+}
+function deleteCourse(courseId) {
+  if (!confirm('Delete this entire course and all its medicines? This cannot be undone.')) return;
+  setCourses(getCourses().filter(c => c.id !== courseId));
+  renderMedicinesTab();
+}
+
+/* ---- Medicine CRUD ---- */
+function showAddMedForm(courseId) {
+  const f = document.getElementById('addMedForm_' + courseId);
+  if (f) { f.style.display = 'block'; const n = document.getElementById('newMedName_' + courseId); if (n) n.focus(); }
+}
+function hideAddMedForm(courseId) {
+  const f = document.getElementById('addMedForm_' + courseId);
+  if (f) f.style.display = 'none';
+}
+function saveMedicine(courseId) {
+  const nameEl  = document.getElementById('newMedName_' + courseId);
+  const startEl = document.getElementById('newMedStart_' + courseId);
+  const daysEl  = document.getElementById('newMedDays_' + courseId);
+  const name    = (nameEl  ? nameEl.value  : '').trim();
+  const start   = (startEl ? startEl.value : '') || todayISO();
+  const days    = parseInt(daysEl ? daysEl.value : '') || 0;
+  if (!name)    { alert('Please enter a medicine name.'); return; }
+  if (days < 1) { alert('Please enter a valid duration (at least 1 day).'); return; }
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  if (!course) return;
+  if (!course.medicines) course.medicines = [];
+  course.medicines.push({ id: medGenId('m'), name, startDate: start, durationDays: days, slots: [] });
+  setCourses(courses);
+  renderMedicinesTab();
+  renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
+}
+function deleteMedicine(courseId, medId) {
+  if (!confirm('Remove this medicine from the course?')) return;
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  if (course) course.medicines = (course.medicines || []).filter(m => m.id !== medId);
+  setCourses(courses);
+  renderMedicinesTab();
+  renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
+}
+
+/* ---- Slot CRUD ---- */
+function showAddSlotForm(medId) {
+  const f = document.getElementById('addSlotForm_' + medId);
+  if (f) f.style.display = 'block';
+}
+function hideAddSlotForm(medId) {
+  const f = document.getElementById('addSlotForm_' + medId);
+  if (f) f.style.display = 'none';
+}
+function saveSlot(courseId, medId) {
+  const timeEl     = document.getElementById('slotTime_'     + medId);
+  const relationEl = document.getElementById('slotRelation_' + medId);
+  const mealEl     = document.getElementById('slotMeal_'     + medId);
+  const time       = timeEl     ? timeEl.value     : 'morning';
+  const relation   = relationEl ? relationEl.value  : '';
+  const meal       = (relation && mealEl) ? mealEl.value : '';
+  const courses    = getCourses();
+  const course     = courses.find(c => c.id === courseId);
+  if (!course) return;
+  const med = (course.medicines || []).find(m => m.id === medId);
+  if (!med) return;
+  if (!med.slots) med.slots = [];
+  // Prevent duplicate slot
+  if (med.slots.find(s => s.time === time && s.relation === relation && s.meal === meal)) {
+    alert('This dose time already exists for this medicine.'); return;
+  }
+  med.slots.push({ id: medGenId('s'), time, relation, meal });
+  setCourses(courses);
+  renderMedicinesTab();
+  renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
+}
+function deleteSlot(courseId, medId, slotIndex) {
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  const med     = (course && course.medicines || []).find(m => m.id === medId);
+  if (med && med.slots) med.slots.splice(slotIndex, 1);
+  setCourses(courses);
+  renderMedicinesTab();
+  renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
+}
+
+/* ---- Adherence summary in Day Report ---- */
+function medAdherenceHtml(dateStr) {
+  const slots  = getActiveSlotsForDate(dateStr);
+  if (slots.length === 0) return '';
+  const log = getMedLogForDate(dateStr);
+  const taken   = slots.filter(s => log[s.slotId] === true).length;
+  const skipped = slots.filter(s => log[s.slotId] === false).length;
+  const total   = slots.length;
+  const pct     = total > 0 ? Math.round((taken / total) * 100) : 0;
+  let html = '<div style="margin-top:16px; padding:14px 16px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">';
+  html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">';
+  html += '<strong style="color:var(--accent);">💊 Medicine Adherence</strong>';
+  html += '<span style="color:var(--soft); font-size:0.88em;">' + taken + ' / ' + total + ' doses taken (' + pct + '%)</span>';
+  html += '</div>';
+  slots.forEach(s => {
+    const state = log[s.slotId];
+    const icon  = state === true ? '✓' : (state === false ? '✗' : '?');
+    const col   = state === true ? 'var(--good)' : (state === false ? '#c0552a' : 'var(--soft)');
+    const lbl   = state === true ? '' : (state === false ? 'color:var(--soft); text-decoration:line-through;' : 'color:var(--soft);');
+    html += '<div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-top:1px solid var(--line); font-size:0.92em;">';
+    html += '<span style="color:' + col + '; font-size:1.1em; width:16px; text-align:center;">' + icon + '</span>';
+    html += '<span style="flex:1; ' + lbl + '">' + esc(s.medName) + ' — ' + esc(s.slotLabel) + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
