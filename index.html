@@ -839,6 +839,139 @@
   }
   .graph-tooltip.visible { opacity: 1; }
 
+  /* ========== SOCIAL CIRCLE ========== */
+  .social-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 600px) { .social-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  .social-stat-box {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .social-stat-box::after {
+    content: '';
+    display: block;
+    height: 3px;
+    border-radius: 2px;
+    margin-top: 10px;
+    background: var(--line);
+  }
+  .social-stat-box.cat-close::after  { background: #5a8a5a; }
+  .social-stat-box.cat-good::after   { background: #c9943f; }
+  .social-stat-box.cat-casual::after { background: #c97a4f; }
+  .social-stat-box.cat-wsn::after    { background: #8b8278; }
+  .social-stat-num {
+    font-size: 2em;
+    font-weight: bold;
+    line-height: 1.1;
+    letter-spacing: -1px;
+  }
+  .social-stat-box.cat-close  .social-stat-num { color: #5a8a5a; }
+  .social-stat-box.cat-good   .social-stat-num { color: #c9943f; }
+  .social-stat-box.cat-casual .social-stat-num { color: #c97a4f; }
+  .social-stat-box.cat-wsn    .social-stat-num { color: #8b8278; }
+  .social-stat-label { font-size: 0.78em; color: var(--soft); margin-top: 4px; }
+  .social-stat-target { font-size: 0.72em; color: var(--line); font-style: italic; }
+  .social-section { margin-bottom: 24px; }
+  .social-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 10px;
+    border-bottom: 2px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .social-section-title {
+    font-size: 1.05em;
+    font-weight: bold;
+    flex: 1;
+  }
+  .social-section-count {
+    font-size: 0.82em;
+    color: var(--soft);
+    font-style: italic;
+  }
+  .social-section.cat-close  .social-section-title { color: #5a8a5a; }
+  .social-section.cat-good   .social-section-title { color: #c9943f; }
+  .social-section.cat-casual .social-section-title { color: #c97a4f; }
+  .social-section.cat-wsn    .social-section-title { color: #8b8278; }
+  .person-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid transparent;
+    margin-bottom: 6px;
+    transition: border-color 0.15s;
+  }
+  .person-row:hover { border-color: var(--accent-soft); }
+  .person-info { flex: 1; min-width: 0; }
+  .person-name { font-size: 1em; color: var(--ink); font-weight: bold; }
+  .person-notes {
+    font-size: 0.83em;
+    color: var(--soft);
+    font-style: italic;
+    margin-top: 3px;
+    white-space: pre-line;
+  }
+  .person-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-top: 2px; }
+  .cat-pill {
+    display: inline-block;
+    font-size: 0.72em;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    letter-spacing: 0.2px;
+  }
+  .cat-pill.cat-close  { background: #d4edda; color: #2d6a3f; }
+  .cat-pill.cat-good   { background: #fdf0d5; color: #7a5800; }
+  .cat-pill.cat-casual { background: #fde8d8; color: #7a3a10; }
+  .cat-pill.cat-wsn    { background: #ebebeb; color: #555; }
+  .cat-pill:hover { filter: brightness(0.92); }
+  .person-edit-form {
+    display: none;
+    margin-top: 8px;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .social-add-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 8px;
+  }
+  .social-dunbar-bar {
+    height: 10px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .social-dunbar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s ease;
+    background: linear-gradient(90deg, #5a8a5a, #c9943f, #c97a4f, #8b8278);
+  }
+
   /* ========== MEDICINES ========== */
   .med-course {
     background: var(--bg);
@@ -962,6 +1095,7 @@
   <button class="tab" onclick="showTab('scoring')">Scoring</button>
   <button class="tab" onclick="showTab('data')">Data</button>
   <button class="tab" onclick="showTab('medicines')">Medicines</button>
+  <button class="tab" onclick="showTab('social')">Social Circle</button>
 </div>
 
 <!-- TODAY TAB -->
@@ -1239,6 +1373,11 @@
 <!-- MEDICINES TAB -->
 <div id="medicines" class="panel">
   <div id="medicinesContent"></div>
+</div>
+
+<!-- SOCIAL CIRCLE TAB -->
+<div id="social" class="panel">
+  <div id="socialContent"></div>
 </div>
 
 <p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
@@ -3213,7 +3352,7 @@ function confirmResetWeights() {
 /* ---------- DATA TAB ---------- */
 function exportJSON() {
   const payload = Object.assign({}, getAllEntries(), {
-    __meta: { courses: getCourses(), medlogs: getMedLogs() }
+    __meta: { courses: getCourses(), medlogs: getMedLogs(), social: getSocial() }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
@@ -3237,6 +3376,7 @@ function importJSON(ev) {
       if (data.__meta) {
         if (data.__meta.courses) setCourses(data.__meta.courses);
         if (data.__meta.medlogs) setMedLogs(data.__meta.medlogs);
+        if (data.__meta.social)  setSocial(data.__meta.social);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
@@ -3281,6 +3421,7 @@ function showTab(name) {
   if (name === 'history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); }
   if (name === 'scoring')   renderScoringTab();
   if (name === 'medicines') renderMedicinesTab();
+  if (name === 'social')    renderSocialTab();
 }
 
 /* ---------- AUTOSAVE ---------- */
@@ -3817,6 +3958,236 @@ function medAdherenceHtml(dateStr) {
   });
   html += '</div>';
   return html;
+}
+
+/* ========== SOCIAL CIRCLE ========== */
+
+const SOCIAL_KEY = 'dear-diary-social';
+const SOCIAL_TOTAL_CAP = 150;
+
+const SOCIAL_CATS = [
+  { id: 'close',  label: 'Close Friend',   plural: 'Close Friends',   target: 5,   dunbarNote: 'Inner circle — people you\'d call in a crisis' },
+  { id: 'good',   label: 'Good Friend',    plural: 'Good Friends',    target: 15,  dunbarNote: 'Sympathy group — genuine care, regular contact' },
+  { id: 'casual', label: 'Casual Friend',  plural: 'Casual Friends',  target: 50,  dunbarNote: 'Friendly acquaintances — big-party invitees' },
+  { id: 'wsn',    label: 'Wider Network',  plural: 'Wider Network',   target: 150, dunbarNote: 'Dunbar\'s number — names + life details you know' },
+];
+const SOCIAL_CAT_IDS = SOCIAL_CATS.map(c => c.id);
+
+function getSocial() {
+  try { return JSON.parse(localStorage.getItem(SOCIAL_KEY) || '[]'); } catch { return []; }
+}
+function setSocial(list) {
+  localStorage.setItem(SOCIAL_KEY, JSON.stringify(list));
+}
+function socialGenId() {
+  return 'p_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+/* ---- Main render ---- */
+function renderSocialTab() {
+  const el = document.getElementById('socialContent');
+  if (!el) return;
+  const people = getSocial();
+  const total  = people.length;
+
+  // Count per category
+  const counts = {};
+  SOCIAL_CAT_IDS.forEach(id => { counts[id] = people.filter(p => p.category === id).length; });
+
+  let html = '';
+
+  // ── Dunbar overview card ──
+  html += '<div class="card">';
+  html += '<h2>Social Circle</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.92em;">Based on Robin Dunbar\'s research. '
+        + 'The human brain can maintain around 150 stable relationships, nested in layers of closeness.</p>';
+
+  // Stats grid
+  html += '<div class="social-stats-grid">';
+  SOCIAL_CATS.forEach(c => {
+    const count  = counts[c.id];
+    const over   = count > c.target;
+    const numCol = over ? ' style="color:#c0552a;"' : '';
+    html += '<div class="social-stat-box cat-' + c.id + '">';
+    html += '<div class="social-stat-num"' + numCol + '>' + count + '</div>';
+    html += '<div class="social-stat-label">' + c.plural + '</div>';
+    html += '<div class="social-stat-target">target ≈ ' + c.target + '</div>';
+    html += '</div>';
+  });
+  html += '</div>'; // end stats grid
+
+  // Dunbar total bar
+  const pct = Math.min(100, Math.round((total / SOCIAL_TOTAL_CAP) * 100));
+  const barCol = total >= SOCIAL_TOTAL_CAP ? 'background:#c0552a;' : '';
+  html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">';
+  html += '<span style="font-size:0.85em; color:var(--soft);">Total connections</span>';
+  html += '<span style="font-size:0.85em; color:' + (total >= SOCIAL_TOTAL_CAP ? '#c0552a' : 'var(--soft)') + ';">'
+        + total + ' / ' + SOCIAL_TOTAL_CAP + '</span>';
+  html += '</div>';
+  html += '<div class="social-dunbar-bar"><div class="social-dunbar-fill" style="width:' + pct + '%;' + barCol + '"></div></div>';
+  if (total >= SOCIAL_TOTAL_CAP) {
+    html += '<p style="color:#c0552a; font-size:0.85em; margin:8px 0 0; font-style:italic;">You\'ve reached Dunbar\'s number! Consider who truly belongs here.</p>';
+  }
+  html += '</div>'; // end overview card
+
+  // ── People list card ──
+  html += '<div class="card">';
+
+  // Grouped by category
+  SOCIAL_CATS.forEach(cat => {
+    const group = people.filter(p => p.category === cat.id);
+    html += '<div class="social-section cat-' + cat.id + '">';
+    html += '<div class="social-section-header">';
+    html += '<span class="social-section-title">' + cat.plural + '</span>';
+    html += '<span class="social-section-count">' + group.length + ' / ' + cat.target + ' · <em>' + cat.dunbarNote + '</em></span>';
+    html += '</div>';
+    if (group.length === 0) {
+      html += '<p style="color:var(--soft); font-size:0.88em; font-style:italic; padding:6px 4px 2px;">None yet.</p>';
+    } else {
+      group.forEach(p => { html += renderPersonRow(p); });
+    }
+    html += '</div>';
+  });
+
+  html += '</div>'; // end list card
+
+  // ── Add person card ──
+  html += '<div class="social-add-card">';
+  html += '<h3 style="margin-top:0;">Add a Person</h3>';
+  if (total >= SOCIAL_TOTAL_CAP) {
+    html += '<p style="color:#c0552a; font-style:italic; font-size:0.9em;">You\'ve reached the 150-person limit. Remove someone before adding a new person.</p>';
+  } else {
+    html += '<div class="row" style="margin-bottom:10px;">';
+    html += '<div style="flex:2;"><label>Name <small style="color:var(--soft);">(required)</small></label>'
+          + '<input type="text" id="socialNewName" placeholder="e.g. Rahul Sharma" '
+          + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addPerson();}" style="width:100%;"></div>';
+    html += '<div style="flex:1;"><label>Category</label><select id="socialNewCat" style="width:100%;">';
+    SOCIAL_CATS.forEach(c => {
+      html += '<option value="' + c.id + '">' + c.label + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div>';
+    html += '<label>Notes <small style="color:var(--soft);">(optional — how you know them, context)</small></label>';
+    html += '<textarea id="socialNewNotes" placeholder="e.g. College roommate, works at X, met at Y..." '
+          + 'style="height:60px; margin-bottom:12px;"></textarea>';
+    html += '<div class="button-row"><button class="primary" onclick="addPerson()">Add to Circle</button></div>';
+  }
+  html += '</div>'; // end add card
+
+  el.innerHTML = html;
+}
+
+function renderPersonRow(p) {
+  const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
+  let html = '<div class="person-row" id="prow_' + p.id + '">';
+  // Main row
+  html += '<div class="person-info">';
+  html += '<div class="person-name">' + esc(p.name) + '</div>';
+  if (p.notes) html += '<div class="person-notes">' + esc(p.notes).replace(/\n/g, '<br>') + '</div>';
+  html += '</div>';
+  html += '<div class="person-actions">';
+  // Category pill — click to open category picker
+  html += '<button class="cat-pill cat-' + p.category + '" onclick="openCatPicker(\'' + p.id + '\')" title="Change category">'
+        + catInfo.label + ' ▾</button>';
+  // Edit button
+  html += '<button class="secondary" style="font-size:0.78em;padding:3px 9px;" onclick="toggleEditPerson(\'' + p.id + '\')">Edit</button>';
+  // Delete button
+  html += '<button class="danger" style="font-size:0.78em;padding:3px 9px;" onclick="deletePerson(\'' + p.id + '\')">✕</button>';
+  html += '</div>';
+
+  // Inline category picker (hidden by default)
+  html += '<div id="catpicker_' + p.id + '" style="display:none; width:100%; margin-top:8px; padding:10px; '
+        + 'background:var(--card); border:1px solid var(--line); border-radius:6px; display:none;">';
+  html += '<div style="font-size:0.82em; color:var(--soft); margin-bottom:8px;">Move to:</div>';
+  html += '<div style="display:flex; gap:6px; flex-wrap:wrap;">';
+  SOCIAL_CATS.forEach(c => {
+    const active = c.id === p.category ? ' style="outline:2px solid var(--accent);"' : '';
+    html += '<button class="cat-pill cat-' + c.id + '"' + active + ' onclick="changeCategory(\'' + p.id + '\',\'' + c.id + '\')">'
+          + c.label + '</button>';
+  });
+  html += '</div>';
+  html += '<button class="secondary" style="font-size:0.78em; margin-top:8px; padding:3px 9px;" '
+        + 'onclick="closeCatPicker(\'' + p.id + '\')">Cancel</button>';
+  html += '</div>';
+
+  // Inline edit form (hidden by default)
+  html += '<div class="person-edit-form" id="pedit_' + p.id + '">';
+  html += '<label style="font-size:0.88em;">Name</label>';
+  html += '<input type="text" id="peditName_' + p.id + '" value="' + esc(p.name) + '" style="margin-bottom:8px;">';
+  html += '<label style="font-size:0.88em;">Notes</label>';
+  html += '<textarea id="peditNotes_' + p.id + '" style="height:55px; margin-bottom:10px;">' + esc(p.notes || '') + '</textarea>';
+  html += '<div class="button-row">';
+  html += '<button class="primary" onclick="savePerson(\'' + p.id + '\')">Save</button>';
+  html += '<button class="secondary" onclick="toggleEditPerson(\'' + p.id + '\')">Cancel</button>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>'; // end person-row
+  return html;
+}
+
+/* ---- CRUD ---- */
+function addPerson() {
+  const name = (document.getElementById('socialNewName').value || '').trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  const cat   = document.getElementById('socialNewCat').value   || 'wsn';
+  const notes = (document.getElementById('socialNewNotes').value || '').trim();
+  const list  = getSocial();
+  if (list.length >= SOCIAL_TOTAL_CAP) { alert('You\'ve reached the 150-person limit.'); return; }
+  list.push({ id: socialGenId(), name, category: cat, notes, addedDate: todayISO() });
+  setSocial(list);
+  renderSocialTab();
+  // Scroll to the new person's section
+  setTimeout(() => {
+    const secMap = { close: 0, good: 1, casual: 2, wsn: 3 };
+    document.querySelectorAll('.social-section')[secMap[cat] || 0]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+function deletePerson(id) {
+  if (!confirm('Remove this person from your social circle?')) return;
+  setSocial(getSocial().filter(p => p.id !== id));
+  renderSocialTab();
+}
+
+function changeCategory(id, newCat) {
+  const list = getSocial();
+  const p = list.find(x => x.id === id);
+  if (p) p.category = newCat;
+  setSocial(list);
+  renderSocialTab();
+}
+
+function openCatPicker(id) {
+  const el = document.getElementById('catpicker_' + id);
+  if (el) el.style.display = el.style.display === 'none' || !el.style.display ? 'block' : 'none';
+}
+function closeCatPicker(id) {
+  const el = document.getElementById('catpicker_' + id);
+  if (el) el.style.display = 'none';
+}
+
+function toggleEditPerson(id) {
+  const el = document.getElementById('pedit_' + id);
+  if (!el) return;
+  el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+  if (el.style.display === 'block') {
+    const inp = document.getElementById('peditName_' + id);
+    if (inp) { inp.focus(); inp.select(); }
+  }
+}
+
+function savePerson(id) {
+  const nameEl  = document.getElementById('peditName_'  + id);
+  const notesEl = document.getElementById('peditNotes_' + id);
+  const name    = (nameEl  ? nameEl.value  : '').trim();
+  const notes   = (notesEl ? notesEl.value : '').trim();
+  if (!name) { alert('Name cannot be empty.'); return; }
+  const list = getSocial();
+  const p = list.find(x => x.id === id);
+  if (p) { p.name = name; p.notes = notes; }
+  setSocial(list);
+  renderSocialTab();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
