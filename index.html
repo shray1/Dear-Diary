@@ -924,7 +924,26 @@
     margin-top: 3px;
     white-space: pre-line;
   }
-  .person-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-top: 2px; }
+  .person-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-top: 2px; flex-wrap: wrap; }
+  /* WhatsApp / Instagram connect toggles */
+  .sc-connect-btn {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    opacity: 0.35;
+  }
+  .sc-connect-btn:hover { opacity: 0.7; border-color: var(--accent-soft); }
+  .sc-connect-btn.active { opacity: 1; border-color: transparent; }
+  .sc-connect-btn.wa.active  { background: #25d366; }
+  .sc-connect-btn.ig.active  { background: linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); }
   .cat-pill {
     display: inline-block;
     font-size: 0.72em;
@@ -4028,7 +4047,38 @@ function renderSocialTab() {
   if (total >= SOCIAL_TOTAL_CAP) {
     html += '<p style="color:#c0552a; font-size:0.85em; margin:8px 0 0; font-style:italic;">You\'ve reached Dunbar\'s number! Consider who truly belongs here.</p>';
   }
+  // WhatsApp / Instagram summary
+  const waCount = people.filter(p => p.whatsapp).length;
+  const igCount = people.filter(p => p.instagram).length;
+  if (total > 0) {
+    html += '<div style="display:flex; gap:18px; margin-top:10px; flex-wrap:wrap;">';
+    html += '<span style="font-size:0.85em; display:flex; align-items:center; gap:6px;">'
+          + '<span style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:#25d366;">'
+          + '<svg viewBox="0 0 24 24" width="12" height="12" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.119 1.524 5.849L.057 23.928c-.036.148.006.302.11.406.085.084.198.13.315.13.031 0 .063-.004.094-.012l6.298-1.648A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9a9.862 9.862 0 01-5.031-1.378l-.36-.214-3.733.977.999-3.648-.235-.374A9.862 9.862 0 012.1 12C2.1 6.533 6.533 2.1 12 2.1c5.467 0 9.9 4.433 9.9 9.9 0 5.467-4.433 9.9-9.9 9.9z"/></svg>'
+          + '</span>'
+          + '<span style="color:var(--soft);">WhatsApp: <strong style="color:var(--ink);">' + waCount + '</strong> / ' + total + '</span></span>';
+    html += '<span style="font-size:0.85em; display:flex; align-items:center; gap:6px;">'
+          + '<span style="display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);">'
+          + '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1" fill="#fff" stroke="none"/></svg>'
+          + '</span>'
+          + '<span style="color:var(--soft);">Instagram: <strong style="color:var(--ink);">' + igCount + '</strong> / ' + total + '</span></span>';
+    html += '</div>';
+  }
   html += '</div>'; // end overview card
+
+  // ── Search bar ──
+  html += '<div class="card" style="padding:14px 20px;">';
+  html += '<div style="position:relative;">';
+  html += '<span style="position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--soft); pointer-events:none; font-size:1em;">🔍</span>';
+  html += '<input type="text" id="socialSearch" placeholder="Search your social circle…" '
+        + 'oninput="filterSocialList(this.value)" '
+        + 'style="width:100%; padding:9px 36px 9px 34px; border-radius:6px; border:1px solid var(--line); '
+        + 'background:var(--bg); font-family:inherit; font-size:0.97em; box-sizing:border-box;">';
+  html += '<button id="socialSearchClear" onclick="clearSocialSearch()" '
+        + 'style="display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); '
+        + 'background:none; border:none; color:var(--soft); cursor:pointer; font-size:1.1em; padding:0; line-height:1;">✕</button>';
+  html += '</div>';
+  html += '</div>';
 
   // ── People list card ──
   html += '<div class="card">';
@@ -4079,13 +4129,45 @@ function renderSocialTab() {
 
 function renderPersonRow(p) {
   const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
-  let html = '<div class="person-row" id="prow_' + p.id + '">';
+  let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '">';
   // Main row
   html += '<div class="person-info">';
   html += '<div class="person-name">' + esc(p.name) + '</div>';
   if (p.notes) html += '<div class="person-notes">' + esc(p.notes).replace(/\n/g, '<br>') + '</div>';
   html += '</div>';
   html += '<div class="person-actions">';
+  // WhatsApp toggle
+  const waActive = p.whatsapp ? ' active' : '';
+  html += '<button class="sc-connect-btn wa' + waActive + '" '
+        + 'onclick="toggleConnect(\'' + p.id + '\',\'whatsapp\')" '
+        + 'title="' + (p.whatsapp ? 'On WhatsApp — click to remove' : 'Not on WhatsApp — click to mark') + '">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="' + (p.whatsapp ? '#fff' : 'var(--ink)') + '">'
+        + '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15'
+        + '-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475'
+        + '-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52'
+        + '.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207'
+        + '-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372'
+        + '-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2'
+        + ' 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719'
+        + ' 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>'
+        + '<path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.556 4.119 1.524 5.849L.057 23.928'
+        + 'c-.036.148.006.302.11.406.085.084.198.13.315.13.031 0 .063-.004.094-.012l6.298-1.648'
+        + 'A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.9'
+        + 'a9.862 9.862 0 01-5.031-1.378l-.36-.214-3.733.977.999-3.648-.235-.374'
+        + 'A9.862 9.862 0 012.1 12C2.1 6.533 6.533 2.1 12 2.1c5.467 0 9.9 4.433 9.9 9.9'
+        + ' 0 5.467-4.433 9.9-9.9 9.9z"/>'
+        + '</svg></button>';
+  // Instagram toggle
+  const igActive = p.instagram ? ' active' : '';
+  html += '<button class="sc-connect-btn ig' + igActive + '" '
+        + 'onclick="toggleConnect(\'' + p.id + '\',\'instagram\')" '
+        + 'title="' + (p.instagram ? 'On Instagram — click to remove' : 'Not on Instagram — click to mark') + '">'
+        + '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" '
+        + 'stroke="' + (p.instagram ? '#fff' : 'var(--ink)') + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        + '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>'
+        + '<circle cx="12" cy="12" r="4.5"/>'
+        + '<circle cx="17.5" cy="6.5" r="1" fill="' + (p.instagram ? '#fff' : 'var(--ink)') + '" stroke="none"/>'
+        + '</svg></button>';
   // Category pill — click to open category picker
   html += '<button class="cat-pill cat-' + p.category + '" onclick="openCatPicker(\'' + p.id + '\')" title="Change category">'
         + catInfo.label + ' ▾</button>';
@@ -4188,6 +4270,65 @@ function savePerson(id) {
   if (p) { p.name = name; p.notes = notes; }
   setSocial(list);
   renderSocialTab();
+}
+
+function filterSocialList(query) {
+  const q = (query || '').trim().toLowerCase();
+  const clearBtn = document.getElementById('socialSearchClear');
+  if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+  // Show/hide individual rows
+  document.querySelectorAll('.person-row').forEach(row => {
+    const name = row.dataset.name || '';
+    row.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+
+  // Hide sections whose every row is hidden; show "none yet" placeholder when empty
+  document.querySelectorAll('.social-section').forEach(section => {
+    const rows    = section.querySelectorAll('.person-row');
+    const visible = Array.from(rows).filter(r => r.style.display !== 'none');
+    // Toggle the whole section
+    section.style.display = (rows.length === 0 || visible.length > 0) ? '' : 'none';
+  });
+
+  // Show / hide a "no results" message
+  let noRes = document.getElementById('socialNoResults');
+  const anyVisible = Array.from(document.querySelectorAll('.person-row'))
+                          .some(r => r.style.display !== 'none');
+  if (q && !anyVisible) {
+    if (!noRes) {
+      noRes = document.createElement('p');
+      noRes.id = 'socialNoResults';
+      noRes.style.cssText = 'color:var(--soft); text-align:center; padding:18px 0; font-style:italic;';
+      const listCard = document.querySelector('#socialContent .card:nth-child(3)');
+      if (listCard) listCard.appendChild(noRes);
+    }
+    noRes.textContent = 'No one found matching "' + query.trim() + '"';
+    noRes.style.display = '';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
+
+function clearSocialSearch() {
+  const inp = document.getElementById('socialSearch');
+  if (inp) { inp.value = ''; inp.focus(); }
+  filterSocialList('');
+}
+
+function toggleConnect(id, platform) {
+  const list = getSocial();
+  const p = list.find(x => x.id === id);
+  if (!p) return;
+  p[platform] = !p[platform];
+  setSocial(list);
+  // Re-render only this row (avoids full tab redraw)
+  const row = document.getElementById('prow_' + id);
+  if (row) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = renderPersonRow(p);
+    row.replaceWith(tmp.firstElementChild);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
