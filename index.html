@@ -650,6 +650,36 @@
   .goal-btn.goal-save { background: var(--good); color: #fff; border-color: var(--good); }
   .goal-btn.goal-save:hover { background: #4a7a4a; }
   .goal-btn.goal-danger:hover { border-color: var(--warn); color: var(--warn); }
+  .goal-duration-badge {
+    font-size: 0.75em;
+    color: var(--soft);
+    background: var(--line);
+    border-radius: 10px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-style: normal;
+  }
+  .goal-item.done .goal-duration-badge { opacity: 0.5; }
+  /* Meal note input (inside daily practice rows) */
+  .meal-note-input {
+    flex: 1;
+    min-width: 0;
+    max-width: 260px;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 0.85em;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--bg);
+    color: var(--ink);
+    box-sizing: border-box;
+  }
+  .meal-note-input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 2px rgba(139,111,71,0.08); }
+  .meal-note-input::placeholder { color: var(--accent-soft); font-style: italic; font-size: 0.95em; }
+  /* Inside the inline meal row, label should shrink-wrap its text */
+  .meal-inline-row { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .meal-inline-row label { flex: 0 1 auto; white-space: nowrap; }
   .goals-empty {
     color: var(--soft);
     font-style: italic;
@@ -991,6 +1021,141 @@
     background: linear-gradient(90deg, #5a8a5a, #c9943f, #c97a4f, #8b8278);
   }
 
+  /* ========== WEEKLY REPORT EXTRAS ========== */
+  /* Practice tracker table */
+  .practice-table-wrap {
+    overflow-x: auto;
+    margin-top: 14px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+  }
+  .practice-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 580px;
+    font-size: 0.86em;
+  }
+  .practice-table thead th {
+    background: var(--bg);
+    padding: 8px 8px 6px;
+    border-bottom: 2px solid var(--line);
+    color: var(--soft);
+    font-weight: normal;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .practice-table thead th.pt-practice-col {
+    text-align: left;
+    min-width: 170px;
+    color: var(--ink);
+    font-style: italic;
+    padding-left: 14px;
+  }
+  .practice-table thead th .pt-day-name { font-weight: bold; color: var(--ink); font-size: 0.95em; }
+  .practice-table thead th .pt-day-date { font-size: 0.82em; color: var(--soft); }
+  .practice-table tbody td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+    vertical-align: middle;
+  }
+  .practice-table tbody td.pt-practice-name {
+    text-align: left;
+    color: var(--ink);
+    padding-left: 14px;
+    white-space: nowrap;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .practice-table tbody tr:last-child td { border-bottom: none; }
+  .practice-table tbody tr:hover td { background: #fdf9f4; }
+  /* Cell state indicators */
+  .pt-yes {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--good); color: #fff;
+    font-size: 0.82em; font-weight: bold;
+  }
+  .pt-no {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fce8e4; color: #c0552a;
+    font-size: 0.88em; font-weight: bold;
+  }
+  .pt-unfilled {
+    display: inline-block;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px dashed var(--line);
+    line-height: 20px;
+    color: var(--line); font-size: 0.8em;
+  }
+  .pt-no-entry { color: var(--line); font-size: 0.95em; }
+  .pt-stars { color: #e6b84a; font-size: 0.82em; letter-spacing: 0.5px; }
+  /* Bar charts (Anger / NSFW) */
+  .wbc-wrap {
+    margin-top: 14px;
+    padding: 0 4px;
+  }
+  .wbc-bars-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    height: 80px;
+  }
+  .wbc-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+  }
+  .wbc-bar-slot {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .wbc-bar {
+    width: 60%;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.25s;
+    min-height: 2px;
+  }
+  .wbc-col-foot {
+    margin-top: 5px;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .wbc-col-foot .wbc-day  { display: block; font-size: 0.7em; font-weight: bold; color: var(--soft); }
+  .wbc-col-foot .wbc-val  { display: block; font-size: 0.68em; color: var(--soft); }
+  .wbc-baseline {
+    border-top: 1px solid var(--line);
+    margin: 0 4px 0;
+  }
+  /* Rating label row below charts */
+  .wbc-legend {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .wbc-legend span {
+    font-size: 0.75em;
+    color: var(--soft);
+    font-style: italic;
+  }
+  /* Sleep / Wake chart improvements */
+  .sleep-wake-grid {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    height: 70px;
+    margin-top: 14px;
+  }
+
   /* ========== MEDICINES ========== */
   .med-course {
     background: var(--bg);
@@ -1159,10 +1324,23 @@
     <!-- Small Goals -->
     <div class="goals-section">
       <h3>⏱ Small Goals for Today</h3>
-      <p class="goals-hint">Each goal should take roughly 1 hour. Tick them off this evening.</p>
+      <p class="goals-hint">Add goals with estimated time (1 h – 6 h each). Tick them off this evening.</p>
       <div class="goals-input-row">
         <input type="text" id="goalInput" placeholder="e.g. Finish chapter 3 of the book…"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addGoal();}">
+        <select id="goalDuration" style="flex-shrink:0; width:90px;">
+          <option value="1">1 hr</option>
+          <option value="1.5">1.5 hr</option>
+          <option value="2">2 hr</option>
+          <option value="2.5">2.5 hr</option>
+          <option value="3">3 hr</option>
+          <option value="3.5">3.5 hr</option>
+          <option value="4">4 hr</option>
+          <option value="4.5">4.5 hr</option>
+          <option value="5">5 hr</option>
+          <option value="5.5">5.5 hr</option>
+          <option value="6">6 hr</option>
+        </select>
         <button class="secondary" onclick="addGoal()" style="white-space:nowrap;">+ Add Goal</button>
       </div>
       <div id="goalsList"></div>
@@ -1172,6 +1350,22 @@
         <span id="goalsProgressPct"></span>
       </div>
     </div>
+  </div>
+
+  <!-- Week Plan (Monday only) -->
+  <div id="weekPlanCard" class="card" style="display:none; border-left:3px solid var(--accent);">
+    <h2 style="margin-bottom:6px;">🗓 Plan for This Week</h2>
+    <p style="color:var(--soft); margin-top:0; font-size:0.9em;">Monday — set your intention and focus for the week ahead.</p>
+    <label for="weekPlanText">What do I want to achieve this week?</label>
+    <textarea id="weekPlanText" placeholder="This week I intend to…&#10;Key goals:&#10;Theme / word for the week:" style="height:110px;"></textarea>
+  </div>
+
+  <!-- Week Reflection (Sunday only) -->
+  <div id="weekReflectionCard" class="card" style="display:none; border-left:3px solid var(--good);">
+    <h2 style="margin-bottom:6px;">📝 Week Reflection</h2>
+    <p style="color:var(--soft); margin-top:0; font-size:0.9em;">Sunday — look back at the week with honesty and gratitude.</p>
+    <label for="weekReflectionText">How did this week go overall?</label>
+    <textarea id="weekReflectionText" placeholder="This week overall…&#10;Wins:&#10;Challenges:&#10;Next week I want to…" style="height:120px;"></textarea>
   </div>
 
   <!-- Today's Medicines — rendered dynamically when medicines are active -->
@@ -1411,9 +1605,11 @@ const DAILY_ITEMS = [
     { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
     { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
   ]},
-  { id: 'homemadeBreakfast', label: 'Healthy home-made breakfast at proper time' },
-  { id: 'homemadeLunch', label: 'Healthy home-made lunch at proper time' },
-  { id: 'homemadeDinner', label: 'Healthy home-made dinner at proper time' },
+  { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         mealKey: 'breakfast'    },
+  { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    mealKey: 'morningSnack' },
+  { id: 'homemadeLunch',        label: 'Lunch at proper time',             mealKey: 'lunch'        },
+  { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    mealKey: 'eveningSnack' },
+  { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
   { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
@@ -1476,9 +1672,11 @@ const TIME_SLOTS = (() => {
 const DEFAULT_DAILY_SCORING = {
   wakeSunrise:        { weight: 6 },
   morningWalk:        { weight: 6, subratings: { suryanamaskar: 3, pranayam: 3 } },
-  homemadeBreakfast:  { weight: 5 },
-  homemadeLunch:      { weight: 5 },
-  homemadeDinner:     { weight: 5 },
+  homemadeBreakfast:    { weight: 3 },
+  homemadeMorningSnack: { weight: 3 },
+  homemadeLunch:        { weight: 3 },
+  homemadeEveningSnack: { weight: 3 },
+  homemadeDinner:       { weight: 3 },
   morningPrayer:      { weight: 3, starsWeight: 5 },
   eveningPrayer:      { weight: 3, starsWeight: 5 },
   helpedSomeone:      { weight: 6 },
@@ -1666,7 +1864,22 @@ function buildChecklist(containerId, items, kind) {
         lab.appendChild(subWrap);
       }
       div.appendChild(togWrap);
-      div.appendChild(lab);
+      if (item.mealKey) {
+        // Inline layout: [label text] ......... [note input]
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'meal-inline-row';
+        rowWrap.appendChild(lab);
+        const noteInp = document.createElement('input');
+        noteInp.type = 'text';
+        noteInp.className = 'meal-note-input';
+        noteInp.id = 'mealNote_' + item.mealKey;
+        noteInp.placeholder = 'What did you eat?';
+        noteInp.addEventListener('input', debounce(autosave, 1500));
+        rowWrap.appendChild(noteInp);
+        div.appendChild(rowWrap);
+      } else {
+        div.appendChild(lab);
+      }
       el.appendChild(div);
       return;
     }
@@ -1847,6 +2060,9 @@ function setAllEntries(obj) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
 }
 
+function isMonday(dateStr) { return new Date(dateStr + 'T00:00:00').getDay() === 1; }
+function isSunday(dateStr)  { return new Date(dateStr + 'T00:00:00').getDay() === 0; }
+
 function readForm() {
   const entry = {
     date: document.getElementById('entryDate').value,
@@ -1854,7 +2070,17 @@ function readForm() {
     wakeTime: document.getElementById('wakeTime').value,
     bedTime: document.getElementById('bedTime').value,
     plan: document.getElementById('planText').value,
-    goals: currentGoals.map(g => ({ id: g.id, text: g.text, done: !!g.done })),
+    goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done })),
+    weekPlan:       document.getElementById('weekPlanText').value,
+    weekReflection: document.getElementById('weekReflectionText').value,
+    mealNotes: (() => {
+      const notes = {};
+      ['breakfast','morningSnack','lunch','eveningSnack','dinner'].forEach(k => {
+        const el = document.getElementById('mealNote_' + k);
+        if (el) notes[k] = el.value.trim();
+      });
+      return notes;
+    })(),
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
     apology: document.getElementById('apologyText').value,
@@ -1904,7 +2130,7 @@ function writeForm(entry) {
   document.getElementById('wakeTime').value = entry.wakeTime || '';
   document.getElementById('bedTime').value = entry.bedTime || '';
   document.getElementById('planText').value = entry.plan || '';
-  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', done: !!g.done, _editing: false }));
+  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, _editing: false }));
   renderGoalsList();
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
@@ -1971,7 +2197,20 @@ function writeForm(entry) {
     document.getElementById('min_' + a.id).value = val !== undefined ? (val || '') : (a.default !== undefined ? a.default : '');
   });
   updateTotal();
-  renderTodayMedicines(entry.date || todayISO());
+  // Week plan (Monday) & week reflection (Sunday)
+  const _dateVal = entry.date || todayISO();
+  const wpc = document.getElementById('weekPlanCard');
+  const wrc = document.getElementById('weekReflectionCard');
+  if (wpc) wpc.style.display = isMonday(_dateVal) ? 'block' : 'none';
+  if (wrc) wrc.style.display = isSunday(_dateVal)  ? 'block' : 'none';
+  document.getElementById('weekPlanText').value       = entry.weekPlan       || '';
+  document.getElementById('weekReflectionText').value = entry.weekReflection || '';
+  // Meal notes
+  ['breakfast','morningSnack','lunch','eveningSnack','dinner'].forEach(k => {
+    const el = document.getElementById('mealNote_' + k);
+    if (el) el.value = (entry.mealNotes && entry.mealNotes[k]) || '';
+  });
+  renderTodayMedicines(_dateVal);
 }
 
 function saveEntry() {
@@ -2028,14 +2267,22 @@ function renderGoalsList() {
   const total = currentGoals.length;
   const pct   = Math.round((done / total) * 100);
 
+  const DURATION_OPTIONS = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6];
+  const durationLabel = d => d === 1 ? '1 hr' : d + ' hr';
+
   list.innerHTML = currentGoals.map((goal, idx) => {
+    const dur = goal.duration || 1;
     if (goal._editing) {
+      const durOptions = DURATION_OPTIONS.map(v =>
+        `<option value="${v}" ${v === dur ? 'selected' : ''}>${durationLabel(v)}</option>`
+      ).join('');
       return `<div class="goal-item">
         <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})">
         <input class="goal-edit-input" id="goalEdit_${idx}"
           value="${esc(goal.text)}"
           onkeydown="if(event.key==='Enter'){event.preventDefault();saveGoalEdit(${idx});}
                      if(event.key==='Escape') cancelGoalEdit(${idx});">
+        <select id="goalEditDur_${idx}" style="flex-shrink:0;width:80px;padding:4px;font-family:inherit;font-size:0.85em;border:1px solid var(--line);border-radius:5px;">${durOptions}</select>
         <div class="goal-actions">
           <button class="goal-btn goal-save" onclick="saveGoalEdit(${idx})">Save</button>
           <button class="goal-btn" onclick="cancelGoalEdit(${idx})">Cancel</button>
@@ -2046,6 +2293,7 @@ function renderGoalsList() {
       <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})"
         title="${goal.done ? 'Mark as not done' : 'Mark as done'}">
       <span class="goal-text">${esc(goal.text)}</span>
+      <span class="goal-duration-badge">${durationLabel(dur)}</span>
       <div class="goal-actions">
         <button class="goal-btn" onclick="editGoal(${idx})" title="Edit goal">✎</button>
         <button class="goal-btn goal-danger" onclick="removeGoal(${idx})" title="Remove goal">✕</button>
@@ -2061,18 +2309,23 @@ function renderGoalsList() {
   }
 
   // Progress bar
+  const totalHrs = currentGoals.reduce((s, g) => s + (g.duration || 1), 0);
+  const doneHrs  = currentGoals.filter(g => g.done).reduce((s, g) => s + (g.duration || 1), 0);
   footer.style.display = 'flex';
-  progText.textContent = done + ' of ' + total + ' done';
+  progText.textContent = done + ' of ' + total + ' done · ' + doneHrs + 'h of ' + totalHrs + 'h';
   progFill.style.width = pct + '%';
   progPct.textContent  = pct + '%';
 }
 
 function addGoal() {
-  const input = document.getElementById('goalInput');
-  const text  = (input.value || '').trim();
+  const input    = document.getElementById('goalInput');
+  const durSel   = document.getElementById('goalDuration');
+  const text     = (input.value || '').trim();
   if (!text) { input.focus(); return; }
-  currentGoals.push({ id: Date.now(), text, done: false, _editing: false });
+  const duration = parseFloat(durSel ? durSel.value : 1) || 1;
+  currentGoals.push({ id: Date.now(), text, duration, done: false, _editing: false });
   input.value = '';
+  if (durSel) durSel.value = '1'; // reset to default
   input.focus();
   renderGoalsList();
   autosave();
@@ -2098,11 +2351,13 @@ function editGoal(idx) {
 }
 
 function saveGoalEdit(idx) {
-  const input = document.getElementById('goalEdit_' + idx);
+  const input  = document.getElementById('goalEdit_'    + idx);
+  const durSel = document.getElementById('goalEditDur_' + idx);
   if (!input) return;
   const text = input.value.trim();
   if (!text) { input.focus(); return; }
   currentGoals[idx].text     = text;
+  currentGoals[idx].duration = durSel ? (parseFloat(durSel.value) || 1) : (currentGoals[idx].duration || 1);
   currentGoals[idx]._editing = false;
   renderGoalsList();
   autosave();
@@ -2830,7 +3085,12 @@ function renderDayReport(c) {
       else if (isNo)  stateIcon = '<span title="Not done" style="color:#c0552a;font-size:1em;margin-right:6px;">✗</span>';
       else            stateIcon = '<span title="Not filled" style="color:var(--soft);font-size:1em;margin-right:6px;">?</span>';
     }
-    html += '<div class="progress-row"><span>' + stateIcon + b.label + '</span>';
+    // Append meal note inline if this item has one
+    const mealItem = DAILY_ITEMS.find(i => i.id === b.id && i.mealKey);
+    const mealNote = mealItem && entry.mealNotes && entry.mealNotes[mealItem.mealKey];
+    html += '<div class="progress-row"><span>' + stateIcon + b.label
+          + (mealNote ? ' <span style="color:var(--soft); font-style:italic; font-size:0.85em;">— ' + esc(mealNote) + '</span>' : '')
+          + '</span>';
     html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
     html += '<span class="pct">' + b.points.toFixed(1) + ' / ' + b.max + '</span></div>';
   });
@@ -2868,6 +3128,186 @@ function renderDayReport(c) {
   c.innerHTML = html;
 }
 
+/* ── Practice tracker table (weekly) ── */
+function renderPracticeTrackerHtml(dayResults, allEntries) {
+  const DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  let html = '<div class="practice-table-wrap">';
+  html += '<table class="practice-table">';
+
+  // Header row — days
+  html += '<thead><tr><th class="pt-practice-col">Practice</th>';
+  dayResults.forEach((d, i) => {
+    const hasEntry = !!allEntries[d.date];
+    const dayStyle = hasEntry ? '' : ' style="opacity:0.5;"';
+    html += '<th' + dayStyle + '>';
+    html += '<div class="pt-day-name">' + d.dayName + '</div>';
+    html += '<div class="pt-day-date">' + d.date.slice(5) + '</div>';
+    html += '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  // Data rows — one per practice
+  DAILY_ITEMS.forEach(item => {
+    html += '<tr><td class="pt-practice-name" title="' + esc(item.label) + '">' + esc(item.label) + '</td>';
+    dayResults.forEach(d => {
+      const entry = allEntries[d.date];
+      if (!entry) {
+        html += '<td><span class="pt-no-entry">—</span></td>';
+        return;
+      }
+      if (item.rateOnly) {
+        const rating = (entry.daily && entry.daily[item.id + 'Rating']) || 0;
+        const filled = '★'.repeat(rating);
+        const empty  = '★'.repeat(5 - rating);
+        if (rating === 0) {
+          html += '<td><span class="pt-no-entry">☆</span></td>';
+        } else {
+          html += '<td><span class="pt-stars" title="' + rating + '/5">'
+                + '<span style="color:#e6b84a;">' + filled + '</span>'
+                + '<span style="color:var(--line);">' + empty + '</span>'
+                + '</span></td>';
+        }
+      } else {
+        const isYes = entry.daily && entry.daily[item.id] === true;
+        const isNo  = entry.dailyNo && entry.dailyNo[item.id];
+        if (isYes) {
+          html += '<td><span class="pt-yes" title="Done">✓</span></td>';
+        } else if (isNo) {
+          html += '<td><span class="pt-no" title="Not done">✗</span></td>';
+        } else {
+          html += '<td><span class="pt-unfilled" title="Not filled">·</span></td>';
+        }
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+/* ── Bar chart for a star-rated item across 7 days ── */
+function renderWeekBarChartHtml(dayResults, allEntries, ratingKey, starLabels, barColor) {
+  const MAX_H = 72; // px — full bar height for rating=5
+
+  let html = '<div class="wbc-wrap">';
+  html += '<div class="wbc-bars-row">';
+
+  dayResults.forEach(d => {
+    const entry  = allEntries[d.date];
+    const rating = entry ? ((entry.daily && entry.daily[ratingKey]) || 0) : null;
+    const barH   = rating !== null ? Math.round((rating / 5) * MAX_H) : 0;
+    const noData = rating === null;
+    const color  = noData || rating === 0 ? 'var(--line)' : barColor;
+    const valLbl = noData ? '—' : (rating + '★');
+    const tooltip = noData
+      ? (d.dayName + ': no entry')
+      : (d.dayName + ': ' + rating + '/5' + (starLabels && starLabels[rating] ? ' — ' + starLabels[rating] : ''));
+
+    html += '<div class="wbc-col">';
+    html += '<div class="wbc-bar-slot">';
+    html += '<div class="wbc-bar" style="height:' + barH + 'px; background:' + color + ';" title="' + esc(tooltip) + '"></div>';
+    html += '</div>';
+    html += '<div class="wbc-col-foot">';
+    html += '<span class="wbc-day">' + d.dayName + '</span>';
+    html += '<span class="wbc-val">' + valLbl + '</span>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  html += '<div class="wbc-baseline"></div>';
+
+  // Legend: show all 5 labels
+  if (starLabels) {
+    html += '<div class="wbc-legend">';
+    for (let i = 1; i <= 5; i++) {
+      if (starLabels[i]) html += '<span>' + i + '★ ' + esc(starLabels[i]) + '</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ── Wake / Bed time dot chart across 7 days ── */
+function renderWakeBedChartHtml(dayResults, allEntries) {
+  // Convert HHMM to a 0–24 float for positioning
+  function toHours(hhmm) {
+    if (!hhmm) return null;
+    const [h, m] = hhmm.split(':').map(Number);
+    return h + m / 60;
+  }
+  // Map hour to % left on a scale from 18:00 (6 PM) to 30:00 (= 6 AM next day)
+  // Bed time: 18–24; Wake time: 0–12 (shown as 24–36 offset)
+  const SCALE_START = 18, SCALE_END = 30; // 6 PM → 6 AM
+  function hourToLeftPct(h) {
+    if (h < 12) h += 24; // treat times before noon as next-day (e.g. 6AM = 30)
+    return Math.max(0, Math.min(100, ((h - SCALE_START) / (SCALE_END - SCALE_START)) * 100));
+  }
+
+  const rows = dayResults.map(d => {
+    const e = allEntries[d.date] || {};
+    return {
+      label: d.dayName + ' ' + d.date.slice(5),
+      bedH:  toHours(e.bedTime),
+      wakeH: toHours(e.wakeTime),
+      bedFmt:  e.bedTime  ? formatTime12hFromHHMM(e.bedTime)  : null,
+      wakeFmt: e.wakeTime ? formatTime12hFromHHMM(e.wakeTime) : null,
+    };
+  });
+
+  if (!rows.some(r => r.bedH !== null || r.wakeH !== null)) return '';
+
+  const ticks = ['6 PM','8 PM','10 PM','12 AM','2 AM','4 AM','6 AM'];
+  const tickPcts = ticks.map((_, i) => Math.round(i / (ticks.length - 1) * 100));
+
+  let html = '<div class="sleep-chart" style="margin-top:12px;">';
+
+  // Axis header
+  html += '<div class="sleep-chart-row sleep-chart-header">';
+  html += '<div class="sleep-chart-day"></div>';
+  html += '<div class="sleep-chart-track sleep-chart-axis" style="position:relative; height:16px;">';
+  ticks.forEach((t, i) => {
+    html += '<div class="sleep-chart-tick" style="left:' + tickPcts[i] + '%;">' + t + '</div>';
+  });
+  html += '</div>';
+  html += '<div class="sleep-chart-times" style="font-size:0.78em; color:var(--soft);">bed → wake</div>';
+  html += '</div>';
+
+  rows.forEach(r => {
+    html += '<div class="sleep-chart-row">';
+    html += '<div class="sleep-chart-day">' + esc(r.label) + '</div>';
+    html += '<div class="sleep-chart-track" style="position:relative;">';
+
+    if (r.bedH !== null && r.wakeH !== null) {
+      const bpct = hourToLeftPct(r.bedH);
+      const wpct = hourToLeftPct(r.wakeH);
+      const width = Math.max(2, wpct - bpct);
+      html += '<div class="sleep-chart-bar" style="left:' + bpct.toFixed(1) + '%; width:' + width.toFixed(1) + '%;"'
+            + ' title="' + r.bedFmt + ' → ' + r.wakeFmt + '"></div>';
+    } else if (r.bedH !== null) {
+      const bpct = hourToLeftPct(r.bedH);
+      html += '<div style="position:absolute; left:' + bpct.toFixed(1) + '%; top:2px; bottom:2px; width:4px; border-radius:2px; background:#5a6db8;" title="Bedtime: ' + r.bedFmt + '"></div>';
+    } else if (r.wakeH !== null) {
+      const wpct = hourToLeftPct(r.wakeH);
+      html += '<div style="position:absolute; left:' + wpct.toFixed(1) + '%; top:2px; bottom:2px; width:4px; border-radius:2px; background:var(--good);" title="Wake: ' + r.wakeFmt + '"></div>';
+    }
+    html += '</div>';
+
+    let timeText = '';
+    if (r.bedFmt)  timeText += r.bedFmt;
+    if (r.bedFmt && r.wakeFmt) timeText += ' → ';
+    if (r.wakeFmt) timeText += r.wakeFmt;
+    html += '<div class="sleep-chart-times">' + (timeText || '—') + '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
 function renderWeekReport(c) {
   const month = parseInt(document.getElementById('reportWeekMonth').value);
   const year  = parseInt(document.getElementById('reportWeekYear').value);
@@ -2882,6 +3322,12 @@ function renderWeekReport(c) {
   const monday = weeks[idx];
   const r = scoreWeek(monday);
 
+  const _allEntries = getAllEntries();
+  const mondayEntry  = _allEntries[r.weekStart] || {};
+  const sundayEntry  = _allEntries[r.weekEnd]   || {};
+  const weekPlan       = (mondayEntry.weekPlan       || '').trim();
+  const weekReflection = (sundayEntry.weekReflection || '').trim();
+
   let html = '<div class="card">';
   html += '<h2>Week Score — Week ' + (idx+1) + ' of ' + MONTH_NAMES_FULL[month] + ' ' + year + '</h2>';
   html += '<p style="color:var(--soft); margin-top:0;">Monday → Sunday &middot; ' + r.weekStart + ' to ' + r.weekEnd + '</p>';
@@ -2890,6 +3336,14 @@ function renderWeekReport(c) {
   html += statBoxHtml(r.dailyPart.toFixed(1) + '/' + r.dailyMax, 'Daily portion');
   html += statBoxHtml(r.weeklyPart.toFixed(0) + '/' + r.weeklyMax, 'Weekly tasks');
   html += '</div>';
+
+  // Week plan (from Monday entry)
+  if (weekPlan) {
+    html += '<div style="margin-top:16px; padding:14px 16px; background:#fdf8f2; border-radius:8px; border-left:3px solid var(--accent);">';
+    html += '<div style="font-size:0.82em; color:var(--soft); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">🗓 Week Plan</div>';
+    html += '<div style="white-space:pre-line; color:var(--ink);">' + esc(weekPlan) + '</div>';
+    html += '</div>';
+  }
 
   html += '<h3 style="margin-top:18px;">Daily scores</h3>';
   r.dayResults.forEach(d => {
@@ -2909,30 +3363,123 @@ function renderWeekReport(c) {
     const dStr = done && _wDates[i.id] ? ' <span style="color:var(--good); font-style:italic;">— done ' + formatPerformedDate(_wDates[i.id]) + '</span>' : '';
     html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
   });
-  html += '</ul></div>';
+  html += '</ul>';
 
-  // Sleep schedule card
-  const _allEntries = getAllEntries();
+  // Week reflection (from Sunday entry)
+  if (weekReflection) {
+    html += '<div style="margin-top:16px; padding:14px 16px; background:#f2f8f2; border-radius:8px; border-left:3px solid var(--good);">';
+    html += '<div style="font-size:0.82em; color:var(--soft); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">📝 Week Reflection</div>';
+    html += '<div style="white-space:pre-line; color:var(--ink);">' + esc(weekReflection) + '</div>';
+    html += '</div>';
+  }
+
+  html += '</div>'; // end week-score card
+
+  // ── Practice Tracker table ──
+  html += '<div class="card">';
+  html += '<h2>Practice Tracker</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-yes" style="width:18px;height:18px;font-size:0.75em;">✓</span> Done</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-no" style="width:18px;height:18px;font-size:0.8em;">✗</span> Not done</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-unfilled" style="width:18px;height:18px;line-height:16px;">·</span> Not filled</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;"><span class="pt-no-entry">—</span> No entry</span>'
+        + '</p>';
+  html += renderPracticeTrackerHtml(r.dayResults, _allEntries);
+  html += '</div>';
+
+  // ── Anger Management chart ──
+  const angerItem = DAILY_ITEMS.find(i => i.id === 'noAnger');
+  const angerLabels = angerItem ? angerItem.starLabels : null;
+  html += '<div class="card">';
+  html += '<h2>Anger Management — Weekly Trend</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Higher = calmer. 5★ means fully peaceful all day.</p>';
+  html += renderWeekBarChartHtml(r.dayResults, _allEntries, 'noAngerRating', angerLabels, '#5a8a9a');
+  html += '</div>';
+
+  // ── NSFW Free chart ──
+  const nsfwItem = DAILY_ITEMS.find(i => i.id === 'nsfwFree');
+  const nsfwLabels = nsfwItem ? nsfwItem.starLabels : null;
+  html += '<div class="card">';
+  html += '<h2>NSFW Free — Weekly Trend</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Higher = purer. 5★ means pure thoughts all day.</p>';
+  html += renderWeekBarChartHtml(r.dayResults, _allEntries, 'nsfwFreeRating', nsfwLabels, '#8b6f9a');
+  html += '</div>';
+
+  // ── Sleep & Wake time chart ──
   const wakeTimes = [], bedTimes = [];
-  const chartRows = r.dayResults.map(d => {
+  r.dayResults.forEach(d => {
     const e = _allEntries[d.date] || {};
     if (e.wakeTime) wakeTimes.push(e.wakeTime);
     if (e.bedTime)  bedTimes.push(e.bedTime);
-    return { label: d.dayName + ' ' + d.date.slice(5), bedTime: e.bedTime || '', wakeTime: e.wakeTime || '' };
   });
   const avgWake = avgWakeTime(wakeTimes);
   const avgBed  = avgBedTime(bedTimes);
-  if (avgWake || avgBed || chartRows.some(x => x.bedTime || x.wakeTime)) {
-    html += '<div class="card"><h2>Sleep Schedule</h2>';
+  const sleepChartHtml = renderWakeBedChartHtml(r.dayResults, _allEntries);
+  if (sleepChartHtml) {
+    html += '<div class="card"><h2>Sleep &amp; Wake — Weekly View</h2>';
     html += '<div class="stat-grid">';
     html += statBoxHtml(avgWake ? formatTime12hFromHHMM(avgWake) : '—', 'Avg wake-up');
     html += statBoxHtml(avgBed  ? formatTime12hFromHHMM(avgBed)  : '—', 'Avg bedtime');
     html += '</div>';
-    html += renderSleepChartHtml(chartRows);
+    html += sleepChartHtml;
     html += '</div>';
   }
 
+  // ── Compiled Daily Reflections ──
+  html += renderWeeklyReflectionsHtml(r.dayResults, _allEntries);
+
   c.innerHTML = html;
+}
+
+function renderWeeklyReflectionsHtml(dayResults, allEntries) {
+  // Collect each reflection field across the 7 days
+  const sections = [
+    { key: 'actual',   emoji: '📅', title: 'How Each Day Went' },
+    { key: 'grateful', emoji: '🙏', title: 'Gratitude This Week' },
+    { key: 'lesson',   emoji: '📚', title: 'Learnings' },
+    { key: 'apology',  emoji: '😔', title: 'Mistakes &amp; Apologies' },
+    { key: 'kindness', emoji: '💚', title: 'Acts of Kindness' },
+  ];
+
+  // Check if any day has any reflection content
+  const hasAny = dayResults.some(d => {
+    const e = allEntries[d.date];
+    return e && sections.some(s => e[s.key] && e[s.key].trim());
+  });
+  if (!hasAny) return '';
+
+  let html = '<div class="card">';
+  html += '<h2>📖 Week in Review</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">All daily reflections compiled, day by day.</p>';
+
+  sections.forEach(sec => {
+    // Collect non-empty entries
+    const rows = dayResults.map(d => {
+      const e = allEntries[d.date];
+      const text = e && e[sec.key] ? e[sec.key].trim() : '';
+      return { dayName: d.dayName, date: d.date, text };
+    }).filter(r => r.text);
+
+    if (rows.length === 0) return;
+
+    html += '<div style="margin-bottom:20px;">';
+    html += '<h3 style="margin-bottom:10px;">' + sec.emoji + ' ' + sec.title + '</h3>';
+    rows.forEach(r => {
+      html += '<div style="display:flex; gap:12px; padding:10px 0; border-top:1px solid var(--line);">';
+      // Day label
+      html += '<div style="flex-shrink:0; min-width:80px;">';
+      html += '<span style="font-weight:bold; color:var(--accent); font-size:0.92em;">' + esc(r.dayName) + '</span> ';
+      html += '<span style="color:var(--soft); font-size:0.82em;">' + r.date.slice(5) + '</span>';
+      html += '</div>';
+      // Content
+      html += '<div style="color:var(--ink); white-space:pre-line; line-height:1.6; flex:1;">' + esc(r.text) + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  html += '</div>';
+  return html;
 }
 
 function renderMonthReport(c) {
@@ -3468,7 +4015,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','wakeTime','bedTime','planText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
+  const ids = ['dayMood','wakeTime','bedTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
