@@ -1232,35 +1232,80 @@
     align-items: flex-end;
   }
   .med-slot-form-row > div { flex: 1; min-width: 110px; }
-  /* Today's Medicines card */
-  .med-log-group {
-    background: var(--bg);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+  /* Today's Medicines card — compact table layout */
+  .med-log-table {
+    width: 100%;
+    border-collapse: collapse;
   }
-  .med-log-group-header {
+  .med-log-table tr {
+    border-bottom: 1px solid var(--line);
+  }
+  .med-log-table tr:last-child { border-bottom: none; }
+  .med-log-table td {
+    padding: 8px 6px;
+    vertical-align: middle;
+  }
+  .med-log-name-cell {
+    white-space: nowrap;
+    font-size: 0.95em;
+    color: var(--ink);
+    font-weight: bold;
+    padding-right: 12px !important;
+    min-width: 110px;
+  }
+  .med-log-sub {
+    display: block;
+    font-size: 0.75em;
+    color: var(--soft);
+    font-style: italic;
+    font-weight: normal;
+  }
+  .med-log-slots-cell {
+    width: 100%;
+  }
+  .med-log-slots {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
     flex-wrap: wrap;
     gap: 6px;
-    margin-bottom: 10px;
   }
-  .med-log-course {
+  /* Slot pill button */
+  .med-slot-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 20px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82em;
+    color: var(--soft);
+    transition: all 0.15s;
+    white-space: nowrap;
+    line-height: 1.5;
+  }
+  .med-slot-pill:hover { border-color: var(--accent-soft); color: var(--ink); }
+  .med-slot-pill .pill-icon { font-size: 0.95em; }
+  .med-slot-pill.pill-taken {
+    background: #eef5ee;
+    border-color: var(--good);
+    color: var(--good);
+    font-weight: bold;
+  }
+  .med-slot-pill.pill-skipped {
+    background: #fdf0ec;
+    border-color: #c0552a;
+    color: #c0552a;
+    font-weight: bold;
+  }
+  .med-log-summary {
     font-size: 0.82em;
     color: var(--soft);
     font-style: italic;
+    margin-top: 10px;
+    text-align: right;
   }
-  .med-log-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 5px 0;
-    border-top: 1px solid var(--line);
-  }
-  .med-log-slot-label { font-size: 0.9em; color: var(--ink); }
 </style>
 </head>
 <body>
@@ -4129,7 +4174,7 @@ function renderTodayMedicines(dateStr) {
 
   if (slots.length === 0) { el.innerHTML = ''; return; }
 
-  // Group by medicine
+  // Group slots by medicine
   const groups = {};
   const groupOrder = [];
   slots.forEach(s => {
@@ -4140,33 +4185,54 @@ function renderTodayMedicines(dateStr) {
     groups[s.medId].slots.push(s);
   });
 
-  let html = '<div class="card"><h2>💊 Today\'s Medicines</h2>';
+  // Summary counts
+  let totalSlots = 0, takenSlots = 0;
+  slots.forEach(s => {
+    totalSlots++;
+    if (medLog[s.slotId] === true) takenSlots++;
+  });
+
+  let html = '<div class="card" style="padding-bottom:16px;">';
+  html += '<h2 style="margin-bottom:12px;">💊 Today\'s Medicines</h2>';
+  html += '<table class="med-log-table"><tbody>';
+
   groupOrder.forEach(medId => {
     const g = groups[medId];
     const dlText = g.daysLeft !== null
-      ? (g.daysLeft === 1 ? ' · last day' : ' · ' + g.daysLeft + ' day' + (g.daysLeft === 1 ? '' : 's') + ' left')
+      ? (g.daysLeft === 1 ? 'last day' : g.daysLeft + 'd left')
       : '';
-    html += '<div class="med-log-group">';
-    html += '<div class="med-log-group-header">';
-    html += '<strong>' + esc(g.medName) + '</strong>';
-    html += '<span class="med-log-course">' + esc(g.courseName) + dlText + '</span>';
-    html += '</div>';
+    const subLine = [esc(g.courseName), dlText].filter(Boolean).join(' · ');
+
+    html += '<tr>';
+    // Medicine name column
+    html += '<td class="med-log-name-cell">';
+    html += esc(g.medName);
+    if (subLine) html += '<span class="med-log-sub">' + subLine + '</span>';
+    html += '</td>';
+
+    // Slots column — pill buttons
+    html += '<td class="med-log-slots-cell"><div class="med-log-slots">';
     g.slots.forEach(s => {
-      const state = medLog[s.slotId];   // true=taken, false=skipped, undefined=unmarked
-      const isYes = state === true;
-      const isNo  = state === false;
-      html += '<div class="med-log-item">';
-      html += '<div class="ptog-wrap">';
-      html += '<button type="button" class="ptog-btn ptog-yes' + (isYes ? ' active' : '') + '" '
-            + 'onclick="setMedSlot(\'' + s.slotId + '\',' + (isYes ? 'null' : 'true') + ')" title="Taken">✓</button>';
-      html += '<button type="button" class="ptog-btn ptog-no' + (isNo ? ' active' : '') + '" '
-            + 'onclick="setMedSlot(\'' + s.slotId + '\',' + (isNo ? 'null' : 'false') + ')" title="Skipped">✗</button>';
-      html += '</div>';
-      html += '<span class="med-log-slot-label">' + esc(s.slotLabel) + '</span>';
-      html += '</div>';
+      const state  = medLog[s.slotId];      // true=taken, false=skipped, undefined=unmarked
+      const isTaken   = state === true;
+      const isSkipped = state === false;
+      const pillClass = isTaken ? 'pill-taken' : isSkipped ? 'pill-skipped' : '';
+      const icon      = isTaken ? '✓' : isSkipped ? '✗' : '○';
+      // Clicking cycles: unmarked→taken, taken→skipped, skipped→unmarked
+      const nextVal   = isTaken ? 'false' : isSkipped ? 'null' : 'true';
+      html += '<button type="button" class="med-slot-pill ' + pillClass + '" '
+            + 'onclick="setMedSlot(\'' + s.slotId + '\',' + nextVal + ')" '
+            + 'title="Click to cycle: pending → taken → skipped">'
+            + '<span class="pill-icon">' + icon + '</span>'
+            + esc(s.slotLabel)
+            + '</button>';
     });
-    html += '</div>';
+    html += '</div></td>';
+    html += '</tr>';
   });
+
+  html += '</tbody></table>';
+  html += '<div class="med-log-summary">' + takenSlots + ' of ' + totalSlots + ' dose' + (totalSlots !== 1 ? 's' : '') + ' taken today</div>';
   html += '</div>';
   el.innerHTML = html;
 }
