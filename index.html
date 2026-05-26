@@ -4742,7 +4742,7 @@ function renderSocialTab() {
 
 function renderPersonRow(p) {
   const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
-  let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '">';
+  let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '" data-notes="' + esc((p.notes || '').toLowerCase()) + '">';
   // Main row
   html += '<div class="person-info">';
   html += '<div class="person-name">' + esc(p.name) + '</div>';
@@ -4892,8 +4892,9 @@ function filterSocialList(query) {
 
   // Show/hide individual rows
   document.querySelectorAll('.person-row').forEach(row => {
-    const name = row.dataset.name || '';
-    row.style.display = (!q || name.includes(q)) ? '' : 'none';
+    const name  = row.dataset.name  || '';
+    const notes = row.dataset.notes || '';
+    row.style.display = (!q || name.includes(q) || notes.includes(q)) ? '' : 'none';
   });
 
   // Hide sections whose every row is hidden; show "none yet" placeholder when empty
