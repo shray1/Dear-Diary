@@ -1318,11 +1318,9 @@
 
 <div class="tabs">
   <button class="tab active" onclick="showTab('today')">Today's Entry</button>
-  <button class="tab" onclick="showTab('history')">History</button>
   <button class="tab" onclick="showTab('reports')">Reports</button>
-  <button class="tab" onclick="showTab('goals')">Goals</button>
-  <button class="tab" onclick="showTab('scoring')">Scoring</button>
-  <button class="tab" onclick="showTab('data')">Data</button>
+  <button class="tab" onclick="showTab('goals-scoring')">Goals &amp; Scoring</button>
+  <button class="tab" onclick="showTab('data-history')">Data &amp; History</button>
   <button class="tab" onclick="showTab('medicines')">Medicines</button>
   <button class="tab" onclick="showTab('social')">Social Circle</button>
 </div>
@@ -1465,43 +1463,6 @@
   <div id="saveMsg" class="status-msg"></div>
 </div>
 
-<!-- HISTORY TAB -->
-<div id="history" class="panel">
-
-  <!-- Activity Graph -->
-  <div class="card">
-    <div class="graph-header">
-      <h2>Activity Graph</h2>
-      <div class="graph-year-nav">
-        <button onclick="graphShiftYear(-1)" title="Previous year">‹</button>
-        <span class="graph-year-label" id="graphYearLabel">—</span>
-        <button onclick="graphShiftYear(1)" title="Next year">›</button>
-      </div>
-    </div>
-    <div class="graph-stats" id="graphStats"></div>
-    <div class="graph-scroll">
-      <div class="graph-wrap" id="graphWrap"></div>
-    </div>
-    <div class="graph-legend">
-      <span>Less</span>
-      <span class="graph-legend-cell" style="background:#e8e0d4;" title="No entry"></span>
-      <span class="graph-legend-cell" style="background:#f5c9a0;" title="Score 1–19"></span>
-      <span class="graph-legend-cell" style="background:#e8a96a;" title="Score 20–39"></span>
-      <span class="graph-legend-cell" style="background:#c97a4f;" title="Score 40–59"></span>
-      <span class="graph-legend-cell" style="background:#8aba8a;" title="Score 60–74"></span>
-      <span class="graph-legend-cell" style="background:#5a8a5a;" title="Score 75+"></span>
-      <span>More</span>
-      <span style="margin-left:8px; color:var(--soft);">· Click any cell to open that entry</span>
-    </div>
-  </div>
-
-  <!-- Entry List -->
-  <div class="card">
-    <h2>Past Entries</h2>
-    <p style="color:var(--soft); margin-top:0;">Click an entry to load it back into Today's tab for editing.</p>
-    <ul class="entry-list" id="entryList"></ul>
-  </div>
-</div>
 
 <!-- Tooltip (shared, lives outside the card to avoid clipping) -->
 <div class="graph-tooltip" id="graphTooltip"></div>
@@ -1549,8 +1510,8 @@
   <div id="reportContent"></div>
 </div>
 
-<!-- GOALS TAB -->
-<div id="goals" class="panel">
+<!-- GOALS & SCORING TAB -->
+<div id="goals-scoring" class="panel">
   <div class="card">
     <h2>A Good Day</h2>
     <p>1440 minutes thoughtfully spent across:</p>
@@ -1596,15 +1557,11 @@
     </ul>
   </div>
   <div class="quote">"Small disciplines done daily, with love, become a beautiful life."</div>
-</div>
-
-<!-- SCORING TAB -->
-<div id="scoring" class="panel">
   <div id="scoringContent"></div>
 </div>
 
-<!-- DATA TAB -->
-<div id="data" class="panel">
+<!-- DATA & HISTORY TAB -->
+<div id="data-history" class="panel">
   <div class="card">
     <h2>Backup &amp; Restore</h2>
     <p style="color:var(--soft); margin-top:0;">Your entries are saved in your browser. Export a JSON backup periodically (and any time before clearing browser data) so you don't lose your diary.</p>
@@ -1625,6 +1582,39 @@
       <li><strong>Weekly &amp; monthly:</strong> Visit Reports to see how you're tracking.</li>
       <li><strong>Anytime:</strong> Share your entries with Claude for deeper analysis and gentle advice.</li>
     </ol>
+  </div>
+  <!-- Activity Graph -->
+  <div class="card">
+    <div class="graph-header">
+      <h2>Activity Graph</h2>
+      <div class="graph-year-nav">
+        <button onclick="graphShiftYear(-1)" title="Previous year">‹</button>
+        <span class="graph-year-label" id="graphYearLabel">—</span>
+        <button onclick="graphShiftYear(1)" title="Next year">›</button>
+      </div>
+    </div>
+    <div class="graph-stats" id="graphStats"></div>
+    <div class="graph-scroll">
+      <div class="graph-wrap" id="graphWrap"></div>
+    </div>
+    <div class="graph-legend">
+      <span>Less</span>
+      <span class="graph-legend-cell" style="background:#e8e0d4;" title="No entry"></span>
+      <span class="graph-legend-cell" style="background:#f5c9a0;" title="Score 1–19"></span>
+      <span class="graph-legend-cell" style="background:#e8a96a;" title="Score 20–39"></span>
+      <span class="graph-legend-cell" style="background:#c97a4f;" title="Score 40–59"></span>
+      <span class="graph-legend-cell" style="background:#8aba8a;" title="Score 60–74"></span>
+      <span class="graph-legend-cell" style="background:#5a8a5a;" title="Score 75+"></span>
+      <span>More</span>
+      <span style="margin-left:8px; color:var(--soft);">· Click any cell to open that entry</span>
+    </div>
+  </div>
+
+  <!-- Entry List -->
+  <div class="card">
+    <h2>Past Entries</h2>
+    <p style="color:var(--soft); margin-top:0;">Click an entry to load it back into Today's tab for editing.</p>
+    <ul class="entry-list" id="entryList"></ul>
   </div>
 </div>
 
@@ -4029,8 +4019,8 @@ function showTab(name) {
   });
   document.getElementById(name).classList.add('active');
   if (name === 'reports')   renderReport();
-  if (name === 'history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); }
-  if (name === 'scoring')   renderScoringTab();
+  if (name === 'data-history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); }
+  if (name === 'goals-scoring')  renderScoringTab();
   if (name === 'medicines') renderMedicinesTab();
   if (name === 'social')    renderSocialTab();
 }
