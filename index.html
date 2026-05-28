@@ -1306,6 +1306,67 @@
     margin-top: 10px;
     text-align: right;
   }
+
+  /* ── Weekly Food Table ── */
+  .food-table-wrap {
+    overflow-x: auto;
+    margin-top: 4px;
+  }
+  .food-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88em;
+  }
+  .food-table th,
+  .food-table td {
+    padding: 9px 10px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+  .food-table thead th {
+    font-size: 0.8em;
+    color: var(--soft);
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid var(--line);
+    white-space: nowrap;
+    background: var(--bg);
+  }
+  .food-table tbody tr:last-child td { border-bottom: none; }
+  .food-table tbody tr:hover td { background: #faf6f0; }
+  .food-meal-label {
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 0.92em;
+    white-space: nowrap;
+  }
+  .food-cell {
+    color: var(--ink);
+    line-height: 1.45;
+  }
+  .food-cell.no-entry {
+    color: var(--line);
+    font-style: italic;
+  }
+  .food-status {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    font-size: 0.7em;
+    line-height: 14px;
+    text-align: center;
+    flex-shrink: 0;
+    margin-right: 4px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+  .food-status.fs-yes  { background: var(--good);  color: #fff; }
+  .food-status.fs-no   { background: #d98060;      color: #fff; }
+  .food-status.fs-open { background: var(--line);  color: var(--soft); }
 </style>
 </head>
 <body>
@@ -1635,7 +1696,7 @@
 <script>
 /* ---------- DATA MODEL ---------- */
 const DAILY_ITEMS = [
-  { id: 'wakeSunrise', label: 'Woke up before sunrise' },
+  { id: 'wakeSunrise', label: 'Woke up before sunrise', noReason: true },
   { id: 'morningWalk', label: 'Morning walk or jogging', subratings: [
     { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
     { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
@@ -1912,6 +1973,20 @@ function buildChecklist(containerId, items, kind) {
         noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
         div.appendChild(rowWrap);
+      } else if (item.noReason) {
+        // Inline layout: [label text] ......... [reason input, shown only when No]
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'meal-inline-row';
+        rowWrap.appendChild(lab);
+        const reasonInp = document.createElement('input');
+        reasonInp.type = 'text';
+        reasonInp.className = 'meal-note-input';
+        reasonInp.id = 'noReason_' + item.id;
+        reasonInp.placeholder = 'Why not?';
+        reasonInp.style.display = 'none';
+        reasonInp.addEventListener('input', debounce(autosave, 1500));
+        rowWrap.appendChild(reasonInp);
+        div.appendChild(rowWrap);
       } else {
         div.appendChild(lab);
       }
@@ -1967,6 +2042,12 @@ function setPracticeState(id, state) {
   if (starEl) starEl.style.display = state === 'yes' ? 'flex' : 'none';
   const subEl = div.querySelector('.subratings-wrap');
   if (subEl) subEl.style.display = state === 'yes' ? 'flex' : 'none';
+  // "No" reason field only visible when no
+  const reasonInp = document.getElementById('noReason_' + id);
+  if (reasonInp) {
+    reasonInp.style.display = state === 'no' ? '' : 'none';
+    if (state === 'no') setTimeout(() => reasonInp.focus(), 50);
+  }
   // fire change event so autosave picks it up
   div.dispatchEvent(new Event('change', { bubbles: true }));
 }
@@ -2116,6 +2197,14 @@ function readForm() {
       });
       return notes;
     })(),
+    noReasons: (() => {
+      const reasons = {};
+      DAILY_ITEMS.filter(i => i.noReason).forEach(i => {
+        const el = document.getElementById('noReason_' + i.id);
+        if (el) reasons[i.id] = el.value.trim();
+      });
+      return reasons;
+    })(),
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
     apology: document.getElementById('apologyText').value,
@@ -2244,6 +2333,15 @@ function writeForm(entry) {
   ['breakfast','morningSnack','lunch','eveningSnack','dinner'].forEach(k => {
     const el = document.getElementById('mealNote_' + k);
     if (el) el.value = (entry.mealNotes && entry.mealNotes[k]) || '';
+  });
+  // "No" reason fields (restore value; visibility is handled by setPracticeState above)
+  DAILY_ITEMS.filter(i => i.noReason).forEach(i => {
+    const el = document.getElementById('noReason_' + i.id);
+    if (el) {
+      el.value = (entry.noReasons && entry.noReasons[i.id]) || '';
+      const isNo = !!(entry.dailyNo && entry.dailyNo[i.id]);
+      el.style.display = isNo ? '' : 'none';
+    }
   });
   renderTodayMedicines(_dateVal);
 }
@@ -3343,6 +3441,68 @@ function renderWakeBedChartHtml(dayResults, allEntries) {
   return html;
 }
 
+function renderWeekFoodTableHtml(dayResults, allEntries) {
+  const MEALS = [
+    { key: 'breakfast',    itemId: 'homemadeBreakfast',    label: '🍳 Breakfast'       },
+    { key: 'morningSnack', itemId: 'homemadeMorningSnack', label: '🍎 Morning Snacks'  },
+    { key: 'lunch',        itemId: 'homemadeLunch',        label: '🍱 Lunch'           },
+    { key: 'eveningSnack', itemId: 'homemadeEveningSnack', label: '🥜 Evening Snacks'  },
+    { key: 'dinner',       itemId: 'homemadeDinner',       label: '🍽 Dinner'          },
+  ];
+
+  // Check if there's any food data at all this week
+  const hasAny = dayResults.some(d => {
+    const e = allEntries[d.date];
+    return e && (e.mealNotes && Object.values(e.mealNotes).some(v => v && v.trim()));
+  });
+
+  let html = '<div class="food-table-wrap">';
+  html += '<table class="food-table"><thead><tr>';
+  html += '<th style="width:80px;">Day</th>';
+  MEALS.forEach(m => { html += '<th>' + m.label + '</th>'; });
+  html += '</tr></thead><tbody>';
+
+  dayResults.forEach(d => {
+    const entry = allEntries[d.date];
+    const parts = d.date.split('-');
+    const dayLabel = d.dayName.slice(0, 3) + ' ' + parseInt(parts[2]);
+
+    html += '<tr>';
+    html += '<td class="food-meal-label" style="white-space:nowrap;">' + dayLabel + '</td>';
+
+    MEALS.forEach(meal => {
+      if (!entry) {
+        html += '<td class="food-cell no-entry">—</td>';
+        return;
+      }
+      const isYes = entry.daily   && entry.daily[meal.itemId]   === true;
+      const isNo  = entry.dailyNo && entry.dailyNo[meal.itemId] === true;
+      const note  = (entry.mealNotes && entry.mealNotes[meal.key] || '').trim();
+
+      const statusClass = isYes ? 'fs-yes' : isNo ? 'fs-no' : 'fs-open';
+      const statusIcon  = isYes ? '✓'      : isNo ? '✗'     : '·';
+
+      html += '<td class="food-cell">';
+      html += '<span class="food-status ' + statusClass + '">' + statusIcon + '</span>';
+      if (note) {
+        html += esc(note);
+      } else if (!isYes && !isNo) {
+        html += '<span style="color:var(--line);">—</span>';
+      }
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  if (!hasAny) {
+    html += '<p style="color:var(--soft); font-size:0.88em; font-style:italic; margin-top:8px;">No meal notes recorded this week.</p>';
+  }
+
+  return html;
+}
+
 function renderWeekReport(c) {
   const month = parseInt(document.getElementById('reportWeekMonth').value);
   const year  = parseInt(document.getElementById('reportWeekYear').value);
@@ -3459,6 +3619,17 @@ function renderWeekReport(c) {
     html += sleepChartHtml;
     html += '</div>';
   }
+
+  // ── Weekly Food Log ──
+  html += '<div class="card">';
+  html += '<h2>🥗 Weekly Food Log</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">';
+  html += '<span style="margin-right:14px;"><span class="food-status fs-yes" style="display:inline-block;">✓</span> At proper time</span>';
+  html += '<span style="margin-right:14px;"><span class="food-status fs-no" style="display:inline-block;">✗</span> Skipped / missed</span>';
+  html += '<span><span class="food-status fs-open" style="display:inline-block;">·</span> Not filled</span>';
+  html += '</p>';
+  html += renderWeekFoodTableHtml(r.dayResults, _allEntries);
+  html += '</div>';
 
   // ── Compiled Daily Reflections ──
   html += renderWeeklyReflectionsHtml(r.dayResults, _allEntries);
