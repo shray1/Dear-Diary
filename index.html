@@ -545,6 +545,26 @@
     font-style: italic;
   }
 
+  /* ── Daily Practice Sections ── */
+  .practice-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 18px 0 8px;
+    font-size: 0.78em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--accent);
+  }
+  .practice-section-header:first-child { margin-top: 4px; }
+  .practice-section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
   /* ── Daily Goals ── */
   .goals-section {
     margin-top: 18px;
@@ -1699,28 +1719,42 @@
 <script>
 /* ---------- DATA MODEL ---------- */
 const DAILY_ITEMS = [
-  { id: 'wakeSunrise', label: 'Woke up before sunrise', noReason: true },
-  { id: 'morningWalk', label: 'Morning walk or jogging', subratings: [
+  // ── Body & Rhythm ──
+  { id: 'wakeSunrise',        section: 'Body & Rhythm', label: 'Woke up before sunrise', noReason: true },
+  { id: 'morningWalk',        label: 'Morning walk or jogging', subratings: [
     { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
     { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
   ]},
+  { id: 'waterSumiran1', label: 'Water intake & Sumiran 1' },
   { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         mealKey: 'breakfast'    },
+  { id: 'waterSumiran2', label: 'Water intake & Sumiran 2' },
   { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    mealKey: 'morningSnack' },
+  { id: 'waterSumiran3', label: 'Water intake & Sumiran 3' },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             mealKey: 'lunch'        },
+  { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    mealKey: 'eveningSnack' },
+  { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
-  { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
+  { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
+
+  // ── Mind & Self-Discipline ──
+  { id: 'noAnger',    section: 'Mind & Self-Discipline', label: 'Anger Management', hint: '0 stars = got angry · 5 stars = fully peaceful all day', rateOnly: true, starLabels: ["Couldn't manage anger", 'Often angry', 'Sometimes angry', 'Mostly calm', 'Very calm', 'Fully peaceful'] },
+  { id: 'nsfwFree',   label: 'NSFW Free', hint: '1★ = Fail · 3★ = Pure Watching · 5★ = Pure Thoughts', rateOnly: true, starLabels: ['Major slip', 'Fail', 'Slipped', 'Pure Watching', 'Pure-minded', 'Pure Thoughts'] },
+  { id: 'noIllSpeak', label: 'Did not ill-speak about anyone', hint: '5★ = 0 times · 4★ = 1 time · 3★ = 2 times · 2★ = 3 times · 1★ = 4+ times', rateOnly: true, starLabels: ['4+ times', '4 times', '3 times', '2 times', '1 time', '0 times'] },
+  { id: 'spokeLess',  label: 'Spoke less than usual — conserved energy' },
+  { id: 'forgave',    label: 'Forgave others for their mistakes' },
+
+  // ── Spirit ──
+  { id: 'morningPrayer', section: 'Spirit', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
+  { id: 'grateful',      label: 'Practiced gratitude' },
+
+  // ── Relationships ──
+  { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this' },
+  { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
+  { id: 'doGood',      label: 'Did good / heard good / spoke good / watched good' },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
-  { id: 'noAnger', label: 'Anger Management', hint: '0 stars = got angry at some point · 5 stars = stayed peaceful all day', rateOnly: true, starLabels: ["Couldn't manage anger", 'Often angry', 'Sometimes angry', 'Mostly calm', 'Very calm', 'Fully peaceful'] },
-  { id: 'nsfwFree', label: 'NSFW Free', hint: '1★ = Fail · 3★ = Pure Watching · 5★ = Pure Thoughts', rateOnly: true, starLabels: ['Major slip', 'Fail', 'Slipped', 'Pure Watching', 'Pure-minded', 'Pure Thoughts'] },
-  { id: 'madeHappy', label: 'Made someone happy', hint: 'Extra marks for this' },
-  { id: 'spokeLess', label: 'Spoke less than usual — conserved energy' },
-  { id: 'familyTime', label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
-  { id: 'doGood', label: 'Did good / heard good / spoke good / watched good' },
-  { id: 'apologized', label: 'Apologized for my mistakes (where needed)' },
-  { id: 'grateful', label: 'Practiced gratitude' },
-  { id: 'forgave', label: 'Forgave others for their mistakes' }
+  { id: 'apologized',  label: 'Apologized for my mistakes (where needed)' },
 ];
 
 const WEEKLY_ITEMS = [
@@ -1775,19 +1809,26 @@ const DEFAULT_DAILY_SCORING = {
   homemadeMorningSnack: { weight: 3 },
   homemadeLunch:        { weight: 3 },
   homemadeEveningSnack: { weight: 3 },
-  homemadeDinner:       { weight: 3 },
+  homemadeDinner:          { weight: 3 },
+  waterSumiran1: { weight: 1 },
+  waterSumiran2: { weight: 1 },
+  waterSumiran3: { weight: 1 },
+  waterSumiran4: { weight: 1 },
+  waterSumiran5: { weight: 1 },
+  waterSumiran6: { weight: 1 },
   morningPrayer:      { weight: 3, starsWeight: 5 },
   eveningPrayer:      { weight: 3, starsWeight: 5 },
-  helpedSomeone:      { weight: 6 },
   noAnger:            { rateOnly: true, ratingWeight: 8 },
   nsfwFree:           { rateOnly: true, ratingWeight: 8 },
-  madeHappy:          { weight: 5 },
+  noIllSpeak:         { rateOnly: true, ratingWeight: 5 },
   spokeLess:          { weight: 3 },
-  familyTime:         { weight: 5 },
-  doGood:             { weight: 5 },
-  apologized:         { weight: 3 },
+  forgave:            { weight: 4 },
   grateful:           { weight: 4 },
-  forgave:            { weight: 4 }
+  madeHappy:          { weight: 5 },
+  familyTime:         { weight: 5 },
+  doGood:             { weight: 4 },
+  helpedSomeone:      { weight: 5 },
+  apologized:         { weight: 3 }
 };
 // Default weekly tasks — sum to 20
 const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5 };
@@ -1901,6 +1942,13 @@ function buildChecklist(containerId, items, kind) {
   el.innerHTML = '';
   const isPeriodKind = (kind === 'weekly' || kind === 'monthly');
   items.forEach(item => {
+    // Section header (daily checklist only)
+    if (!isPeriodKind && item.section) {
+      const hdr = document.createElement('div');
+      hdr.className = 'practice-section-header';
+      hdr.textContent = item.section;
+      el.appendChild(hdr);
+    }
     const div = document.createElement('div');
     div.className = 'check-item';
     // rate-only items have no checkbox — just label + always-visible stars
@@ -3285,8 +3333,29 @@ function renderPracticeTrackerHtml(dayResults, allEntries) {
   });
   html += '</tr></thead><tbody>';
 
+  // Water items are consolidated into one row
+  const WATER_IDS = ['waterSumiran1','waterSumiran2','waterSumiran3','waterSumiran4','waterSumiran5','waterSumiran6'];
+  let waterRowInserted = false;
+
   // Data rows — one per practice
   DAILY_ITEMS.forEach(item => {
+    // Consolidate all 6 water items into a single count row
+    if (WATER_IDS.includes(item.id)) {
+      if (waterRowInserted) return; // skip the remaining 5
+      waterRowInserted = true;
+      html += '<tr><td class="pt-practice-name" title="Water intake &amp; Sumiran">Water intake &amp; Sumiran</td>';
+      dayResults.forEach(d => {
+        const entry = allEntries[d.date];
+        if (!entry) { html += '<td><span class="pt-no-entry">—</span></td>'; return; }
+        const count = WATER_IDS.filter(id => entry.daily && entry.daily[id] === true).length;
+        const color = count === 6 ? 'var(--good)' : count === 0 ? 'var(--soft)' : 'var(--accent)';
+        html += '<td><span style="font-size:0.85em; font-weight:bold; color:' + color + ';" title="' + count + ' of 6 done">'
+              + count + '/6</span></td>';
+      });
+      html += '</tr>';
+      return;
+    }
+
     html += '<tr><td class="pt-practice-name" title="' + esc(item.label) + '">' + esc(item.label) + '</td>';
     dayResults.forEach(d => {
       const entry = allEntries[d.date];
