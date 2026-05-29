@@ -1513,6 +1513,9 @@
 
     <label for="lessonText" style="margin-top:12px;">Something I learned today</label>
     <textarea id="lessonText" placeholder="Optional"></textarea>
+
+    <label for="shareText" style="margin-top:12px;">Anything you would like to share</label>
+    <textarea id="shareText" placeholder="Optional — a thought, a moment, anything on your mind..."></textarea>
   </div>
 
   <div class="button-row">
@@ -2210,6 +2213,7 @@ function readForm() {
     apology: document.getElementById('apologyText').value,
     kindness: document.getElementById('kindnessText').value,
     lesson: document.getElementById('lessonText').value,
+    share:  document.getElementById('shareText').value,
     daily: {},
     weekly: {},
     weeklyOn: {},
@@ -2261,6 +2265,7 @@ function writeForm(entry) {
   document.getElementById('apologyText').value = entry.apology || '';
   document.getElementById('kindnessText').value = entry.kindness || '';
   document.getElementById('lessonText').value = entry.lesson || '';
+  document.getElementById('shareText').value  = entry.share  || '';
   DAILY_ITEMS.forEach(i => {
     if (i.rateOnly) {
       let rating = (entry.daily && entry.daily[i.id + 'Rating']);
@@ -3643,6 +3648,7 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
     { key: 'actual',   emoji: '📅', title: 'How Each Day Went' },
     { key: 'grateful', emoji: '🙏', title: 'Gratitude This Week' },
     { key: 'lesson',   emoji: '📚', title: 'Learnings' },
+    { key: 'share',    emoji: '💬', title: 'Shared Thoughts' },
     { key: 'apology',  emoji: '😔', title: 'Mistakes &amp; Apologies' },
     { key: 'kindness', emoji: '💚', title: 'Acts of Kindness' },
   ];
@@ -4221,7 +4227,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','wakeTime','bedTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText'];
+  const ids = ['dayMood','wakeTime','bedTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText','shareText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
