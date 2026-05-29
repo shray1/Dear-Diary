@@ -545,6 +545,42 @@
     font-style: italic;
   }
 
+  /* ── Collapsible card sections ── */
+  .collapsible-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 0 4px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+  .collapsible-toggle span:first-child {
+    font-size: 1.5em;
+    color: var(--accent);
+    font-weight: normal;
+    letter-spacing: 0.3px;
+  }
+  .collapsible-icon {
+    font-size: 1em;
+    color: var(--accent-soft);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+  .collapsible-toggle[aria-expanded="true"] .collapsible-icon {
+    transform: rotate(90deg);
+  }
+  .collapsible-body {
+    border-top: 1px solid var(--line);
+    margin-top: 8px;
+    padding-top: 12px;
+  }
+
   /* ── Daily Practice Sections ── */
   .practice-section-header {
     display: flex;
@@ -1437,7 +1473,16 @@
         <select id="bedTime"></select>
       </div>
     </div>
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label for="screenTime">📱 Mobile screen time</label>
+        <select id="screenTime"></select>
+      </div>
+    </div>
   </div>
+
+  <!-- Today's Medicines — rendered dynamically when medicines are active -->
+  <div id="todayMedicinesCard"></div>
 
   <div class="card">
     <h2>Morning Plan</h2>
@@ -1492,8 +1537,6 @@
     <textarea id="weekReflectionText" placeholder="This week overall…&#10;Wins:&#10;Challenges:&#10;Next week I want to…" style="height:120px;"></textarea>
   </div>
 
-  <!-- Today's Medicines — rendered dynamically when medicines are active -->
-  <div id="todayMedicinesCard"></div>
 
   <div class="card">
     <h2>Evening Reflection — Daily Practices</h2>
@@ -1502,9 +1545,14 @@
   </div>
 
   <div class="card">
-    <h2>Time Allocation (minutes)</h2>
-    <p style="color:var(--soft); margin-top:0;">Roughly how did your 1440 minutes flow today? Optional but useful over time.</p>
-    <div class="minutes-grid" id="minutesGrid"></div>
+    <button class="collapsible-toggle" id="timeAllocToggle" onclick="toggleSection('timeAllocBody','timeAllocToggle')" aria-expanded="false">
+      <span>Time Allocation (minutes)</span>
+      <span class="collapsible-icon">▸</span>
+    </button>
+    <div id="timeAllocBody" class="collapsible-body" style="display:none;">
+      <p style="color:var(--soft); margin-top:0;">Roughly how did your 1440 minutes flow today? Optional but useful over time.</p>
+      <div class="minutes-grid" id="minutesGrid"></div>
+    </div>
   </div>
 
   <div class="card">
@@ -1906,6 +1954,24 @@ function buildTimeSelects() {
     });
     sel.addEventListener('change', autofillRestFromSleepTimes);
   });
+
+  // Screen time select: 15 min increments from 15 min → 6 hr
+  const screenSel = document.getElementById('screenTime');
+  if (screenSel) {
+    screenSel.innerHTML = '<option value="">— select —</option>';
+    for (let mins = 15; mins <= 360; mins += 15) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      let label;
+      if (h === 0)      label = m + ' min';
+      else if (m === 0) label = h + ' hr';
+      else              label = h + ' hr ' + m + ' min';
+      const opt = document.createElement('option');
+      opt.value = String(mins);
+      opt.textContent = label;
+      screenSel.appendChild(opt);
+    }
+  }
 }
 
 // Compute sleep duration in minutes between bedtime and wake time, handling
@@ -1929,6 +1995,15 @@ function autofillRestFromSleepTimes() {
     restInp.value = mins;
     updateTotal();
   }
+}
+
+function toggleSection(bodyId, toggleId) {
+  const body   = document.getElementById(bodyId);
+  const toggle = document.getElementById(toggleId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (toggle) toggle.setAttribute('aria-expanded', String(!isOpen));
 }
 
 function todayISO() {
@@ -2236,6 +2311,7 @@ function readForm() {
     mood: document.getElementById('dayMood').value,
     wakeTime: document.getElementById('wakeTime').value,
     bedTime: document.getElementById('bedTime').value,
+    screenTime: document.getElementById('screenTime').value,
     plan: document.getElementById('planText').value,
     goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done })),
     weekPlan:       document.getElementById('weekPlanText').value,
@@ -2305,6 +2381,7 @@ function writeForm(entry) {
   document.getElementById('dayMood').value = entry.mood || '';
   document.getElementById('wakeTime').value = entry.wakeTime || '';
   document.getElementById('bedTime').value = entry.bedTime || '';
+  document.getElementById('screenTime').value = entry.screenTime || '';
   document.getElementById('planText').value = entry.plan || '';
   currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, _editing: false }));
   renderGoalsList();
@@ -4296,7 +4373,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','wakeTime','bedTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText','shareText'];
+  const ids = ['dayMood','wakeTime','bedTime','screenTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText','shareText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
