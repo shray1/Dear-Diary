@@ -1519,6 +1519,18 @@
     </div>
   </div>
 
+  <!-- Month Plan Banner — shown on all days that have a plan for this month -->
+  <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid #c97a4f; border-radius:8px; padding:14px 18px; margin-bottom:12px;">
+    <div style="font-size:0.78em; color:#c97a4f; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📅 This Month's Plan</div>
+    <div id="monthPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+  </div>
+
+  <!-- Week Plan Banner — shown Tue–Sun when a week plan exists -->
+  <div id="weekPlanBanner" style="display:none; background:#f8f5ff; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px; margin-bottom:20px;">
+    <div style="font-size:0.78em; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🗓 This Week's Plan</div>
+    <div id="weekPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+  </div>
+
   <!-- Birthday reminders — rendered dynamically -->
   <div id="birthdayRemindersCard"></div>
 
@@ -1560,12 +1572,6 @@
         <span id="goalsProgressPct"></span>
       </div>
     </div>
-  </div>
-
-  <!-- Month Plan Banner — shown on all days that have a plan for this month -->
-  <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px; margin-bottom:20px;">
-    <div style="font-size:0.78em; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📅 This Month's Plan</div>
-    <div id="monthPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
   </div>
 
   <!-- Month Plan (1st of month only) -->
@@ -2401,10 +2407,27 @@ function isMonday(dateStr)       { return new Date(dateStr + 'T00:00:00').getDay
 function isFirstOfMonth(dateStr) { return new Date(dateStr + 'T00:00:00').getDate() === 1; }
 
 function getMonthPlan(dateStr) {
-  // Return the monthPlan stored on the 1st of the same month
   const firstOfMonth = dateStr.slice(0, 8) + '01';
   const entry = getAllEntries()[firstOfMonth];
   return (entry && entry.monthPlan) ? entry.monthPlan.trim() : '';
+}
+
+function getMondayOf(dateStr) {
+  const d    = new Date(dateStr + 'T00:00:00');
+  const day  = d.getDay(); // local day: 0=Sun … 6=Sat
+  const diff = (day === 0) ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  // Format using LOCAL time methods — avoids UTC shift for UTC+ timezones (e.g. IST)
+  const y  = d.getFullYear();
+  const m  = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dd;
+}
+
+function getWeekPlan(dateStr) {
+  const monday = getMondayOf(dateStr);
+  const entry  = getAllEntries()[monday];
+  return (entry && entry.weekPlan) ? entry.weekPlan.trim() : '';
 }
 function isSunday(dateStr)  { return new Date(dateStr + 'T00:00:00').getDay() === 0; }
 
@@ -2607,6 +2630,14 @@ function writeForm(entry) {
     : getMonthPlan(_dateVal);          // all other days, read from the 1st entry
   if (mpb) mpb.style.display = (_monthPlan && !isFirstOfMonth(_dateVal)) ? 'block' : 'none';
   if (mpbt) mpbt.textContent = _monthPlan;
+  // Week plan banner — shown Tue–Sun (hidden on Monday where the edit card appears)
+  const wpb  = document.getElementById('weekPlanBanner');
+  const wpbt = document.getElementById('weekPlanBannerText');
+  const _weekPlan = isMonday(_dateVal)
+    ? (entry.weekPlan || '').trim()   // on Monday read from current entry (edit card visible)
+    : getWeekPlan(_dateVal);          // all other days read from Monday entry
+  if (wpb)  wpb.style.display  = (_weekPlan && !isMonday(_dateVal)) ? 'block' : 'none';
+  if (wpbt) wpbt.textContent = _weekPlan;
   // Week plan (Monday) & week reflection (Sunday)
   const wpc = document.getElementById('weekPlanCard');
   const wrc = document.getElementById('weekReflectionCard');
