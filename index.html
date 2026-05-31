@@ -1562,6 +1562,20 @@
     </div>
   </div>
 
+  <!-- Month Plan Banner — shown on all days that have a plan for this month -->
+  <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px; margin-bottom:20px;">
+    <div style="font-size:0.78em; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📅 This Month's Plan</div>
+    <div id="monthPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+  </div>
+
+  <!-- Month Plan (1st of month only) -->
+  <div id="monthPlanCard" class="card" style="display:none; border-left:3px solid #c97a4f;">
+    <h2 style="margin-bottom:6px;">🗓 Plan for This Month</h2>
+    <p style="color:var(--soft); margin-top:0; font-size:0.9em;">1st of the month — set your intention and focus for the month ahead.</p>
+    <label for="monthPlanText">What do I want to achieve this month?</label>
+    <textarea id="monthPlanText" placeholder="This month I intend to…&#10;Key goals:&#10;Theme / word for the month:" style="height:120px;"></textarea>
+  </div>
+
   <!-- Week Plan (Monday only) -->
   <div id="weekPlanCard" class="card" style="display:none; border-left:3px solid var(--accent);">
     <h2 style="margin-bottom:6px;">🗓 Plan for This Week</h2>
@@ -1616,9 +1630,6 @@
 
     <label for="apologyText" style="margin-top:12px;">Mistakes I want to apologize for or learn from</label>
     <textarea id="apologyText" placeholder="Optional"></textarea>
-
-    <label for="kindnessText" style="margin-top:12px;">Did I help or make someone happy today? How?</label>
-    <textarea id="kindnessText" placeholder="Optional"></textarea>
 
     <label for="lessonText" style="margin-top:12px;">Something I learned today</label>
     <textarea id="lessonText" placeholder="Optional"></textarea>
@@ -1839,7 +1850,7 @@ const DAILY_ITEMS = [
   { id: 'grateful',      label: 'Practiced gratitude' },
 
   // ── Relationships ──
-  { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this' },
+  { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this', yesNote: true },
   { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
   { id: 'doGood',      label: 'Did good / heard good / spoke good / watched good' },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
@@ -1847,10 +1858,10 @@ const DAILY_ITEMS = [
 ];
 
 const WEEKLY_ITEMS = [
-  { id: 'visitedRelative', label: 'Visited a relative or friend this week' },
-  { id: 'highIntensity1', label: 'High-intensity workout #1 (this week)' },
-  { id: 'highIntensity2', label: 'High-intensity workout #2 (this week)' },
-  { id: 'foodFast', label: 'Completed a food fast this week' }
+  { id: 'visitedRelative', label: 'Visited a relative or friend this week', checkNote: true, checkNotePlaceholder: 'Whom did you visit?' },
+  { id: 'highIntensity1',  label: 'High-intensity workout #1 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
+  { id: 'highIntensity2',  label: 'High-intensity workout #2 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
+  { id: 'foodFast',        label: 'Completed a food fast this week' }
 ];
 
 const MONTHLY_ITEMS = [
@@ -2155,6 +2166,20 @@ function buildChecklist(containerId, items, kind) {
         reasonInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(reasonInp);
         div.appendChild(rowWrap);
+      } else if (item.yesNote) {
+        // Inline layout: [label text] ......... [note input, shown only when Yes]
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'meal-inline-row';
+        rowWrap.appendChild(lab);
+        const noteInp = document.createElement('input');
+        noteInp.type = 'text';
+        noteInp.className = 'meal-note-input';
+        noteInp.id = 'yesNote_' + item.id;
+        noteInp.placeholder = 'How did you make them happy?';
+        noteInp.style.display = 'none';
+        noteInp.addEventListener('input', debounce(autosave, 1500));
+        rowWrap.appendChild(noteInp);
+        div.appendChild(rowWrap);
       } else {
         div.appendChild(lab);
       }
@@ -2175,6 +2200,12 @@ function buildChecklist(containerId, items, kind) {
         e.target.dataset.performedOn = '';
       }
       updatePerformedOnLabel(item.id, e.target.dataset.performedOn);
+      // Show/hide check-note input
+      const noteInp = document.getElementById('checkNote_' + item.id);
+      if (noteInp) {
+        noteInp.style.display = e.target.checked ? '' : 'none';
+        if (e.target.checked) setTimeout(() => noteInp.focus(), 50);
+      }
     });
     const lab = document.createElement('label');
     lab.htmlFor = inp.id;
@@ -2190,7 +2221,23 @@ function buildChecklist(containerId, items, kind) {
     perfSpan.id = 'perfon_' + item.id;
     lab.appendChild(perfSpan);
     div.appendChild(inp);
-    div.appendChild(lab);
+    if (item.checkNote) {
+      // Inline layout: label takes flex:1, note input sits right of it
+      const rowWrap = document.createElement('div');
+      rowWrap.className = 'meal-inline-row';
+      rowWrap.appendChild(lab);
+      const noteInp = document.createElement('input');
+      noteInp.type = 'text';
+      noteInp.className = 'meal-note-input';
+      noteInp.id = 'checkNote_' + item.id;
+      noteInp.placeholder = item.checkNotePlaceholder || 'Add details…';
+      noteInp.style.display = 'none';
+      noteInp.addEventListener('input', debounce(autosave, 1500));
+      rowWrap.appendChild(noteInp);
+      div.appendChild(rowWrap);
+    } else {
+      div.appendChild(lab);
+    }
     el.appendChild(div);
   });
 }
@@ -2215,6 +2262,12 @@ function setPracticeState(id, state) {
   if (reasonInp) {
     reasonInp.style.display = state === 'no' ? '' : 'none';
     if (state === 'no') setTimeout(() => reasonInp.focus(), 50);
+  }
+  // "Yes" note field only visible when yes
+  const yesNoteInp = document.getElementById('yesNote_' + id);
+  if (yesNoteInp) {
+    yesNoteInp.style.display = state === 'yes' ? '' : 'none';
+    if (state === 'yes') setTimeout(() => yesNoteInp.focus(), 50);
   }
   // fire change event so autosave picks it up
   div.dispatchEvent(new Event('change', { bubbles: true }));
@@ -2344,7 +2397,15 @@ function setAllEntries(obj) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
 }
 
-function isMonday(dateStr) { return new Date(dateStr + 'T00:00:00').getDay() === 1; }
+function isMonday(dateStr)       { return new Date(dateStr + 'T00:00:00').getDay() === 1; }
+function isFirstOfMonth(dateStr) { return new Date(dateStr + 'T00:00:00').getDate() === 1; }
+
+function getMonthPlan(dateStr) {
+  // Return the monthPlan stored on the 1st of the same month
+  const firstOfMonth = dateStr.slice(0, 8) + '01';
+  const entry = getAllEntries()[firstOfMonth];
+  return (entry && entry.monthPlan) ? entry.monthPlan.trim() : '';
+}
 function isSunday(dateStr)  { return new Date(dateStr + 'T00:00:00').getDay() === 0; }
 
 function readForm() {
@@ -2356,6 +2417,7 @@ function readForm() {
     screenTime: document.getElementById('screenTime').value,
     plan: document.getElementById('planText').value,
     goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done })),
+    monthPlan:      document.getElementById('monthPlanText').value,
     weekPlan:       document.getElementById('weekPlanText').value,
     weekReflection: document.getElementById('weekReflectionText').value,
     mealNotes: (() => {
@@ -2377,9 +2439,16 @@ function readForm() {
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
     apology: document.getElementById('apologyText').value,
-    kindness: document.getElementById('kindnessText').value,
     lesson: document.getElementById('lessonText').value,
     share:  document.getElementById('shareText').value,
+    yesNotes: (() => {
+      const notes = {};
+      DAILY_ITEMS.filter(i => i.yesNote).forEach(i => {
+        const el = document.getElementById('yesNote_' + i.id);
+        if (el) notes[i.id] = el.value.trim();
+      });
+      return notes;
+    })(),
     daily: {},
     weekly: {},
     weeklyOn: {},
@@ -2404,10 +2473,15 @@ function readForm() {
       entry.daily[i.id + '_' + sub.id] = getStarRating(i.id + '_' + sub.id);
     });
   });
+  entry.weeklyNotes = {};
   WEEKLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
     entry.weekly[i.id] = c.checked;
     entry.weeklyOn[i.id] = c.checked ? (c.dataset.performedOn || entry.date) : '';
+    if (i.checkNote) {
+      const n = document.getElementById('checkNote_' + i.id);
+      if (n) entry.weeklyNotes[i.id] = n.value.trim();
+    }
   });
   MONTHLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
@@ -2430,7 +2504,19 @@ function writeForm(entry) {
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
   document.getElementById('apologyText').value = entry.apology || '';
-  document.getElementById('kindnessText').value = entry.kindness || '';
+  // Yes-note fields (restore value and visibility)
+  // Backward-compat: old entries stored "Made someone happy" detail in entry.kindness
+  const YESNOTE_FALLBACKS = { madeHappy: entry.kindness };
+  DAILY_ITEMS.filter(i => i.yesNote).forEach(i => {
+    const el = document.getElementById('yesNote_' + i.id);
+    if (el) {
+      el.value = (entry.yesNotes && entry.yesNotes[i.id])
+              || YESNOTE_FALLBACKS[i.id]
+              || '';
+      const isYes = !!(entry.daily && entry.daily[i.id] === true);
+      el.style.display = isYes ? '' : 'none';
+    }
+  });
   document.getElementById('lessonText').value = entry.lesson || '';
   document.getElementById('shareText').value  = entry.share  || '';
   DAILY_ITEMS.forEach(i => {
@@ -2479,6 +2565,21 @@ function writeForm(entry) {
     const d = c.checked ? (_weeklyDates[i.id] || _date) : '';
     c.dataset.performedOn = d;
     updatePerformedOnLabel(i.id, d);
+    if (i.checkNote) {
+      const n = document.getElementById('checkNote_' + i.id);
+      if (n) {
+        // Pick note from current entry first, then any sibling in the same week
+        let note = (entry.weeklyNotes && entry.weeklyNotes[i.id]) || '';
+        if (!note) {
+          entriesInSameWeek(_date, _all).forEach(s => {
+            if (!note && s.entry.weeklyNotes && s.entry.weeklyNotes[i.id])
+              note = s.entry.weeklyNotes[i.id];
+          });
+        }
+        n.value = note;
+        n.style.display = c.checked ? '' : 'none';
+      }
+    }
   });
   MONTHLY_ITEMS.forEach(i => {
     const c = document.getElementById('chk_' + i.id);
@@ -2493,8 +2594,20 @@ function writeForm(entry) {
     document.getElementById('min_' + a.id).value = val !== undefined ? (val || '') : (a.default !== undefined ? a.default : '');
   });
   updateTotal();
-  // Week plan (Monday) & week reflection (Sunday)
+  // Month plan (1st of month: edit card) + banner for all days
   const _dateVal = entry.date || todayISO();
+  const mpc  = document.getElementById('monthPlanCard');
+  const mpb  = document.getElementById('monthPlanBanner');
+  const mpbt = document.getElementById('monthPlanBannerText');
+  if (mpc) mpc.style.display = isFirstOfMonth(_dateVal) ? 'block' : 'none';
+  document.getElementById('monthPlanText').value = entry.monthPlan || '';
+  // Banner: show the 1st-of-month plan for all other days
+  const _monthPlan = isFirstOfMonth(_dateVal)
+    ? (entry.monthPlan || '').trim()   // on the 1st, read from current entry
+    : getMonthPlan(_dateVal);          // all other days, read from the 1st entry
+  if (mpb) mpb.style.display = (_monthPlan && !isFirstOfMonth(_dateVal)) ? 'block' : 'none';
+  if (mpbt) mpbt.textContent = _monthPlan;
+  // Week plan (Monday) & week reflection (Sunday)
   const wpc = document.getElementById('weekPlanCard');
   const wrc = document.getElementById('weekReflectionCard');
   if (wpc) wpc.style.display = isMonday(_dateVal) ? 'block' : 'none';
@@ -3422,13 +3535,14 @@ function renderDayReport(c) {
   }
 
   // Reflection
-  if (entry.actual || entry.grateful || entry.lesson || entry.kindness || entry.apology) {
+  const madeHappyNote = (entry.yesNotes && entry.yesNotes.madeHappy) || entry.kindness || '';
+  if (entry.actual || entry.grateful || entry.lesson || madeHappyNote || entry.apology) {
     html += '<div class="card"><h2>Reflection</h2>';
-    if (entry.actual)   html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
-    if (entry.grateful) html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
-    if (entry.kindness) html += '<p><strong>Kindness:</strong> ' + esc(entry.kindness) + '</p>';
-    if (entry.lesson)   html += '<p><strong>Learned:</strong> ' + esc(entry.lesson) + '</p>';
-    if (entry.apology)  html += '<p><strong>Apology:</strong> ' + esc(entry.apology) + '</p>';
+    if (entry.actual)      html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
+    if (entry.grateful)    html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
+    if (madeHappyNote)     html += '<p><strong>Made someone happy:</strong> ' + esc(madeHappyNote) + '</p>';
+    if (entry.lesson)      html += '<p><strong>Learned:</strong> ' + esc(entry.lesson) + '</p>';
+    if (entry.apology)     html += '<p><strong>Apology:</strong> ' + esc(entry.apology) + '</p>';
     html += '</div>';
   }
   c.innerHTML = html;
@@ -3768,11 +3882,21 @@ function renderWeekReport(c) {
   // Look up performed-on dates from any entry in this week
   const _allW = getAllEntries();
   const _wDates = unionWeeklyDateFromSiblings(r.weekStart, _allW);
+  // Collect weekly notes from any entry in the week
+  const _wNotes = {};
+  entriesInSameWeek(r.weekStart, _allW).forEach(s => {
+    if (s.entry.weeklyNotes) {
+      WEEKLY_ITEMS.forEach(i => {
+        if (!_wNotes[i.id] && s.entry.weeklyNotes[i.id]) _wNotes[i.id] = s.entry.weeklyNotes[i.id];
+      });
+    }
+  });
   WEEKLY_ITEMS.forEach(i => {
-    const w = WEEKLY_SCORING[i.id] || 0;
+    const w    = WEEKLY_SCORING[i.id] || 0;
     const done = r.weeklyHits[i.id];
     const dStr = done && _wDates[i.id] ? ' <span style="color:var(--good); font-style:italic;">— done ' + formatPerformedDate(_wDates[i.id]) + '</span>' : '';
-    html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + '</li>';
+    const note = done && _wNotes[i.id] ? ' <span style="color:var(--soft); font-style:italic; font-size:0.9em;">· ' + esc(_wNotes[i.id]) + '</span>' : '';
+    html += '<li>' + (done ? '✓' : '○') + ' ' + i.label + ' <span style="color:var(--soft);">(' + w + ' pts)</span>' + dStr + note + '</li>';
   });
   html += '</ul>';
 
@@ -3846,13 +3970,22 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
     { key: 'lesson',   emoji: '📚', title: 'Learnings' },
     { key: 'share',    emoji: '💬', title: 'Shared Thoughts' },
     { key: 'apology',  emoji: '😔', title: 'Mistakes &amp; Apologies' },
-    { key: 'kindness', emoji: '💚', title: 'Acts of Kindness' },
+    { key: 'madeHappy', emoji: '💚', title: 'Made Someone Happy', fromYesNotes: true },
   ];
+
+  const getSecText = (e, sec) => {
+    if (!e) return '';
+    if (sec.fromYesNotes) {
+      // New field: yesNotes.madeHappy — fall back to legacy entry.kindness
+      return (e.yesNotes && e.yesNotes[sec.key]) || (sec.key === 'madeHappy' ? e.kindness : '') || '';
+    }
+    return e[sec.key] || '';
+  };
 
   // Check if any day has any reflection content
   const hasAny = dayResults.some(d => {
     const e = allEntries[d.date];
-    return e && sections.some(s => e[s.key] && e[s.key].trim());
+    return e && sections.some(s => getSecText(e, s).trim());
   });
   if (!hasAny) return '';
 
@@ -3864,7 +3997,7 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
     // Collect non-empty entries
     const rows = dayResults.map(d => {
       const e = allEntries[d.date];
-      const text = e && e[sec.key] ? e[sec.key].trim() : '';
+      const text = getSecText(e, sec).trim();
       return { dayName: d.dayName, date: d.date, text };
     }).filter(r => r.text);
 
@@ -4024,7 +4157,22 @@ function renderMonthReport(c) {
   if (isNaN(month) || isNaN(year)) { c.innerHTML = '<div class="card"><p>Pick a month and year.</p></div>'; return; }
   const r = scoreMonth(year, month);
 
-  let html = '<div class="card">';
+  // Month plan — stored on the 1st of the month
+  const _firstOfMonth = year + '-' + String(month).padStart(2,'0') + '-01';
+  const _firstEntry   = getAllEntries()[_firstOfMonth] || {};
+  const _monthPlan    = (_firstEntry.monthPlan || '').trim();
+
+  let html = '';
+
+  // Show month plan banner at the very top if it exists
+  if (_monthPlan) {
+    html += '<div style="background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid #c97a4f; border-radius:8px; padding:14px 18px; margin-bottom:20px;">';
+    html += '<div style="font-size:0.78em; color:#c97a4f; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">📅 Month Plan — ' + MONTH_NAMES_FULL[month] + ' ' + year + '</div>';
+    html += '<div style="white-space:pre-line; color:var(--ink); line-height:1.6;">' + esc(_monthPlan) + '</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="card">';
   html += '<h2>Month Score — ' + MONTH_NAMES_FULL[month] + ' ' + year + '</h2>';
   html += '<p style="color:var(--soft); margin-top:0;">Range: ' + r.monthStart + ' → ' + r.monthEnd + ' (' + r.weekResults.length + ' weeks)</p>';
   html += scoreDisplayHtml(r.total, 100);
@@ -4551,7 +4699,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','wakeTime','bedTime','screenTime','planText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','kindnessText','lessonText','shareText'];
+  const ids = ['dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','lessonText','shareText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
