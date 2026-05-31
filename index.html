@@ -1010,6 +1010,44 @@
     margin-top: 3px;
     white-space: pre-line;
   }
+  /* Birthday reminder rows in Today's Entry */
+  .bday-reminder-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 0.93em;
+  }
+  .bday-reminder-row:last-child { margin-bottom: 0; }
+  .bday-reminder-row.bday-r-today {
+    background: #f0f5ed;
+    border: 1px solid var(--good);
+  }
+  .bday-reminder-row.bday-r-soon {
+    background: #fdf8f2;
+    border: 1px solid var(--accent-soft);
+  }
+  .bday-reminder-name { font-weight: bold; color: var(--ink); }
+  .bday-reminder-date { color: var(--soft); font-size: 0.87em; margin-left: auto; white-space: nowrap; }
+
+  .person-birthday {
+    font-size: 0.8em;
+    color: var(--soft);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .person-birthday.bday-soon {
+    color: #c97a4f;
+    font-weight: bold;
+  }
+  .person-birthday.bday-today {
+    color: var(--good);
+    font-weight: bold;
+  }
   .person-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-top: 2px; flex-wrap: wrap; }
   /* WhatsApp / Instagram connect toggles */
   .sc-connect-btn {
@@ -1481,6 +1519,9 @@
     </div>
   </div>
 
+  <!-- Birthday reminders — rendered dynamically -->
+  <div id="birthdayRemindersCard"></div>
+
   <!-- Today's Medicines — rendered dynamically when medicines are active -->
   <div id="todayMedicinesCard"></div>
 
@@ -1940,6 +1981,7 @@ function init() {
   refreshHistoryList();
   initReportSelectors();
   renderTodayMedicines(todayISO());
+  renderBirthdayReminders(todayISO());
 }
 
 function buildTimeSelects() {
@@ -2474,6 +2516,7 @@ function writeForm(entry) {
     }
   });
   renderTodayMedicines(_dateVal);
+  renderBirthdayReminders(_dateVal);
 }
 
 function saveEntry() {
@@ -3465,6 +3508,28 @@ function renderPracticeTrackerHtml(dayResults, allEntries) {
       }
     });
     html += '</tr>';
+
+    // Sub-rows for subratings (e.g. Suryanamaskar & Pranayam under Morning Walk)
+    if (item.subratings) {
+      item.subratings.forEach(sub => {
+        const key = item.id + '_' + sub.id;
+        html += '<tr style="background:rgba(139,111,71,0.03);">';
+        html += '<td class="pt-practice-name" style="padding-left:22px; color:var(--soft); font-size:0.88em;" title="' + esc(sub.title) + '">↳ ' + esc(sub.title) + '</td>';
+        dayResults.forEach(d => {
+          const entry = allEntries[d.date];
+          if (!entry) { html += '<td><span class="pt-no-entry">—</span></td>'; return; }
+          const rating = (entry.daily && entry.daily[key]) || 0;
+          if (rating === 0) {
+            html += '<td><span class="pt-unfilled" title="Not recorded">·</span></td>';
+          } else {
+            const lbl = sub.starLabels && sub.starLabels[rating] ? sub.starLabels[rating] : rating;
+            html += '<td><span style="font-size:0.82em; color:#e6b84a; font-weight:bold;" title="' + rating + '★">'
+                  + '★ </span><span style="font-size:0.8em; color:var(--ink);">' + esc(String(lbl)) + '</span></td>';
+          }
+        });
+        html += '</tr>';
+      });
+    }
   });
 
   html += '</tbody></table></div>';
@@ -3733,24 +3798,6 @@ function renderWeekReport(c) {
   html += renderPracticeTrackerHtml(r.dayResults, _allEntries);
   html += '</div>';
 
-  // ── Anger Management chart ──
-  const angerItem = DAILY_ITEMS.find(i => i.id === 'noAnger');
-  const angerLabels = angerItem ? angerItem.starLabels : null;
-  html += '<div class="card">';
-  html += '<h2>Anger Management — Weekly Trend</h2>';
-  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Higher = calmer. 5★ means fully peaceful all day.</p>';
-  html += renderWeekBarChartHtml(r.dayResults, _allEntries, 'noAngerRating', angerLabels, '#5a8a9a');
-  html += '</div>';
-
-  // ── NSFW Free chart ──
-  const nsfwItem = DAILY_ITEMS.find(i => i.id === 'nsfwFree');
-  const nsfwLabels = nsfwItem ? nsfwItem.starLabels : null;
-  html += '<div class="card">';
-  html += '<h2>NSFW Free — Weekly Trend</h2>';
-  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Higher = purer. 5★ means pure thoughts all day.</p>';
-  html += renderWeekBarChartHtml(r.dayResults, _allEntries, 'nsfwFreeRating', nsfwLabels, '#8b6f9a');
-  html += '</div>';
-
   // ── Sleep & Wake time chart ──
   const wakeTimes = [], bedTimes = [];
   r.dayResults.forEach(d => {
@@ -3784,6 +3831,9 @@ function renderWeekReport(c) {
 
   // ── Compiled Daily Reflections ──
   html += renderWeeklyReflectionsHtml(r.dayResults, _allEntries);
+
+  // ── Weekly Tasks Review ──
+  html += renderWeekTasksHtml(r.dayResults, _allEntries);
 
   c.innerHTML = html;
 }
@@ -3837,6 +3887,134 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
   });
 
   html += '</div>';
+  return html;
+}
+
+function renderWeekTasksHtml(dayResults, allEntries) {
+  const durLabel = d => (d === 1 ? '1 hr' : d + ' hr');
+
+  // Per-day stats + flat done/notDone lists
+  const done = [], notDone = [];
+  const daySummaries = [];
+
+  dayResults.forEach(d => {
+    const entry  = allEntries[d.date];
+    const goals  = (entry && entry.goals) ? entry.goals.filter(g => g.text) : [];
+    const dayTag = d.dayName.slice(0, 3);
+
+    const dayDone    = goals.filter(g =>  g.done);
+    const dayNotDone = goals.filter(g => !g.done);
+    const dayTotalH  = goals.reduce((s, g) => s + (g.duration || 1), 0);
+    const dayDoneH   = dayDone.reduce((s, g) => s + (g.duration || 1), 0);
+
+    dayDone.forEach(g    => done.push({    text: g.text, dur: g.duration || 1, day: dayTag }));
+    dayNotDone.forEach(g => notDone.push({ text: g.text, dur: g.duration || 1, day: dayTag }));
+
+    daySummaries.push({
+      dayTag,
+      hasEntry: !!entry,
+      total: goals.length,
+      doneCount: dayDone.length,
+      totalHrs: dayTotalH,
+      doneHrs: dayDoneH,
+    });
+  });
+
+  if (done.length === 0 && notDone.length === 0) return '';
+
+  const totalTasks = done.length + notDone.length;
+  const totalHrs   = [...done, ...notDone].reduce((s, g) => s + g.dur, 0);
+  const doneHrs    = done.reduce((s, g) => s + g.dur, 0);
+  const pct        = totalTasks > 0 ? Math.round(done.length / totalTasks * 100) : 0;
+
+  const taskRow = (item, isDone) => {
+    const icon      = isDone ? '✓' : '○';
+    const iconColor = isDone ? 'var(--good)' : 'var(--soft)';
+    const textStyle = isDone ? 'color:var(--soft); text-decoration:line-through;' : 'color:var(--ink);';
+    return '<div style="display:flex; align-items:baseline; gap:8px; padding:7px 0; border-bottom:1px solid var(--line);">'
+      + '<span style="color:' + iconColor + '; font-size:0.9em; flex-shrink:0; width:14px;">' + icon + '</span>'
+      + '<span style="flex:1; font-size:0.92em; ' + textStyle + '">' + esc(item.text) + '</span>'
+      + '<span style="font-size:0.75em; color:var(--soft); white-space:nowrap; margin-left:6px;">' + esc(item.day) + '</span>'
+      + '<span style="font-size:0.75em; background:var(--line); color:var(--soft); border-radius:10px; padding:1px 7px; white-space:nowrap; flex-shrink:0;">' + durLabel(item.dur) + '</span>'
+      + '</div>';
+  };
+
+  let html = '<div class="card">';
+  html += '<h2>✅ Weekly Tasks Review</h2>';
+
+  // ── Overall progress bar ──
+  html += '<div style="display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap;">';
+  html += '<div style="flex:1; min-width:160px;">';
+  html += '<div style="height:8px; background:var(--line); border-radius:4px; overflow:hidden;">';
+  html += '<div style="height:100%; width:' + pct + '%; background:var(--good); border-radius:4px;"></div>';
+  html += '</div></div>';
+  html += '<span style="font-size:0.88em; color:var(--soft); white-space:nowrap;">'
+        + done.length + ' / ' + totalTasks + ' tasks &nbsp;·&nbsp; '
+        + doneHrs + ' / ' + totalHrs + ' hrs</span>';
+  html += '</div>';
+
+  // ── Day-wise breakdown table ──
+  const activeDays = daySummaries.filter(s => s.total > 0);
+  if (activeDays.length > 0) {
+    html += '<div style="overflow-x:auto; margin-bottom:20px;">';
+    html += '<table style="width:100%; border-collapse:collapse; font-size:0.85em;">';
+    html += '<thead><tr>';
+    html += '<th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--soft); font-weight:normal; text-transform:uppercase; font-size:0.78em; letter-spacing:0.4px;">Day</th>';
+    html += '<th style="text-align:center; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--soft); font-weight:normal; text-transform:uppercase; font-size:0.78em; letter-spacing:0.4px;">Tasks</th>';
+    html += '<th style="text-align:center; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--soft); font-weight:normal; text-transform:uppercase; font-size:0.78em; letter-spacing:0.4px;">Hours</th>';
+    html += '<th style="text-align:left; padding:6px 8px; border-bottom:2px solid var(--line); color:var(--soft); font-weight:normal; text-transform:uppercase; font-size:0.78em; letter-spacing:0.4px; min-width:80px;"></th>';
+    html += '</tr></thead><tbody>';
+
+    daySummaries.forEach(s => {
+      if (s.total === 0) return;
+      const dayPct   = Math.round(s.doneCount / s.total * 100);
+      const allDone  = s.doneCount === s.total;
+      const noneDone = s.doneCount === 0;
+      const barColor = allDone ? 'var(--good)' : noneDone ? '#e8a96a' : 'var(--accent)';
+      const taskLbl  = s.doneCount + '/' + s.total;
+      const hrLbl    = s.doneHrs + '/' + s.totalHrs + ' hr';
+
+      html += '<tr style="border-bottom:1px solid var(--line);">';
+      html += '<td style="padding:7px 8px; font-weight:bold; color:var(--accent);">' + esc(s.dayTag) + '</td>';
+      html += '<td style="padding:7px 8px; text-align:center; color:' + (allDone ? 'var(--good)' : 'var(--ink)') + ';">' + taskLbl + '</td>';
+      html += '<td style="padding:7px 8px; text-align:center; color:var(--soft);">' + hrLbl + '</td>';
+      html += '<td style="padding:7px 8px;">';
+      html += '<div style="height:6px; background:var(--line); border-radius:3px; overflow:hidden;">';
+      html += '<div style="height:100%; width:' + dayPct + '%; background:' + barColor + '; border-radius:3px;"></div>';
+      html += '</div></td>';
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    html += '</div>';
+  }
+
+  // Two columns
+  html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">';
+
+  // Done column
+  html += '<div>';
+  html += '<div style="font-size:0.8em; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; color:var(--good); margin-bottom:6px;">Done (' + done.length + ')</div>';
+  if (done.length === 0) {
+    html += '<p style="color:var(--soft); font-style:italic; font-size:0.88em; margin:0;">No tasks completed.</p>';
+  } else {
+    done.forEach(item => { html += taskRow(item, true); });
+  }
+  html += '</div>';
+
+  // Not done column
+  html += '<div>';
+  html += '<div style="font-size:0.8em; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; color:var(--warn); margin-bottom:6px;">Not Done (' + notDone.length + ')</div>';
+  if (notDone.length === 0) {
+    html += '<p style="color:var(--soft); font-style:italic; font-size:0.88em; margin:0;">All tasks completed! 🎉</p>';
+  } else {
+    notDone.forEach(item => { html += taskRow(item, false); });
+    html += '<p style="color:var(--soft); font-size:0.82em; font-style:italic; margin-top:10px; margin-bottom:0;">Consider carrying these forward to next week\'s plan.</p>';
+  }
+  html += '</div>';
+
+  html += '</div>'; // end grid
+  html += '</div>'; // end card
   return html;
 }
 
@@ -4420,6 +4598,10 @@ function isMedActiveOnDate(med, dateStr) {
   if (dateStr < med.startDate) return false;
   const end = getMedEndDate(med);
   if (end && dateStr > end) return false;
+  // Weekly meds: only active on the specified day of week
+  if (med.frequency === 'weekly' && med.weekDay !== undefined) {
+    if (new Date(dateStr + 'T00:00:00').getDay() !== med.weekDay) return false;
+  }
   return true;
 }
 
@@ -4661,9 +4843,25 @@ function renderCourseBlock(course, today, isArchived) {
     html += '<h3 style="margin-top:0; font-size:1em;">Add Medicine to this Course</h3>';
     html += '<label>Medicine name <small style="color:var(--soft);">(include strength, e.g. Paracetamol 500mg)</small></label>';
     html += '<input type="text" id="newMedName_' + course.id + '" placeholder="Medicine name" style="margin-bottom:10px;">';
+    // Frequency selector
+    html += '<div class="row" style="margin-bottom:10px;">';
+    html += '<div><label>Frequency</label>';
+    html += '<select id="newMedFreq_' + course.id + '" onchange="medFreqChange(\'' + course.id + '\')">';
+    html += '<option value="daily">Daily</option>';
+    html += '<option value="weekly">Weekly (once a week)</option>';
+    html += '</select></div>';
+    // Weekly day-of-week picker (hidden by default)
+    html += '<div id="newMedWeekDayWrap_' + course.id + '" style="display:none;"><label>Day of week</label>';
+    html += '<select id="newMedWeekDay_' + course.id + '">';
+    ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].forEach((d, i) => {
+      html += '<option value="' + i + '">' + d + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div>';
+    // Start / End dates
     html += '<div class="row">';
     html += '<div><label>Start date</label><input type="date" id="newMedStart_' + course.id + '" value="' + today + '"></div>';
-    html += '<div><label>Duration (days)</label><input type="number" id="newMedDays_' + course.id + '" placeholder="e.g. 7" min="1" style="width:100%;"></div>';
+    html += '<div><label>End date</label><input type="date" id="newMedEnd_' + course.id + '"></div>';
     html += '</div>';
     html += '<div class="button-row" style="margin-top:10px;">';
     html += '<button class="primary" onclick="saveMedicine(\'' + course.id + '\')">Add Medicine</button>';
@@ -4686,13 +4884,16 @@ function renderMedBlock(courseId, med, today, isArchived) {
   else if (isFinished) badge = '<span class="med-badge med-badge-done">done</span>';
   else if (isFuture)   badge = '<span class="med-badge med-badge-upcoming">upcoming</span>';
 
-  const durLabel = (med.durationDays || '?') + ' day' + (med.durationDays !== 1 ? 's' : '');
-  const endLabel = end ? 'until ' + end : '';
+  const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const endLabel  = end ? 'until ' + end : '';
+  const freqBadge = med.frequency === 'weekly'
+    ? '<span class="med-badge" style="background:#e8f0fb; color:#3a5fa0; border:1px solid #b8cef0;">weekly · ' + (DAY_NAMES[med.weekDay] || '?') + '</span>'
+    : '';
 
   let html = '<div class="med-item">';
   html += '<div class="med-item-header">';
-  html += '<div><strong>' + esc(med.name) + '</strong> ' + badge;
-  html += '<span class="med-date-range">' + (med.startDate || '') + ' · ' + durLabel + (endLabel ? ' (' + endLabel + ')' : '') + '</span></div>';
+  html += '<div><strong>' + esc(med.name) + '</strong> ' + badge + ' ' + freqBadge;
+  html += '<span class="med-date-range">' + (med.startDate || '') + (endLabel ? ' → ' + end : '') + '</span></div>';
   if (!isArchived) {
     html += '<div><button class="danger" style="font-size:0.78em;padding:3px 8px;" onclick="deleteMedicine(\'' + courseId + '\',\'' + med.id + '\')">Remove</button></div>';
   }
@@ -4749,6 +4950,12 @@ function renderMedBlock(courseId, med, today, isArchived) {
 
   html += '</div>'; // end med-item
   return html;
+}
+
+function medFreqChange(courseId) {
+  const freqEl = document.getElementById('newMedFreq_'        + courseId);
+  const wrap   = document.getElementById('newMedWeekDayWrap_' + courseId);
+  if (wrap) wrap.style.display = (freqEl && freqEl.value === 'weekly') ? 'block' : 'none';
 }
 
 function medUpdateMealSelect(medId) {
@@ -4809,19 +5016,35 @@ function hideAddMedForm(courseId) {
   if (f) f.style.display = 'none';
 }
 function saveMedicine(courseId) {
-  const nameEl  = document.getElementById('newMedName_' + courseId);
-  const startEl = document.getElementById('newMedStart_' + courseId);
-  const daysEl  = document.getElementById('newMedDays_' + courseId);
-  const name    = (nameEl  ? nameEl.value  : '').trim();
-  const start   = (startEl ? startEl.value : '') || todayISO();
-  const days    = parseInt(daysEl ? daysEl.value : '') || 0;
-  if (!name)    { alert('Please enter a medicine name.'); return; }
-  if (days < 1) { alert('Please enter a valid duration (at least 1 day).'); return; }
+  const nameEl    = document.getElementById('newMedName_'    + courseId);
+  const startEl   = document.getElementById('newMedStart_'   + courseId);
+  const endEl     = document.getElementById('newMedEnd_'     + courseId);
+  const freqEl    = document.getElementById('newMedFreq_'    + courseId);
+  const weekDayEl = document.getElementById('newMedWeekDay_' + courseId);
+
+  const name      = (nameEl  ? nameEl.value  : '').trim();
+  const start     = (startEl ? startEl.value : '') || todayISO();
+  const end       = endEl    ? endEl.value    : '';
+  const frequency = freqEl   ? freqEl.value   : 'daily';
+  const weekDay   = (frequency === 'weekly' && weekDayEl) ? parseInt(weekDayEl.value) : undefined;
+
+  if (!name)  { alert('Please enter a medicine name.'); return; }
+  if (!end)   { alert('Please enter an end date.'); return; }
+  if (end < start) { alert('End date must be on or after the start date.'); return; }
+
+  // Compute durationDays from start → end (inclusive)
+  const startMs = new Date(start + 'T00:00:00').getTime();
+  const endMs   = new Date(end   + 'T00:00:00').getTime();
+  const days    = Math.round((endMs - startMs) / 86400000) + 1;
+
   const courses = getCourses();
   const course  = courses.find(c => c.id === courseId);
   if (!course) return;
   if (!course.medicines) course.medicines = [];
-  course.medicines.push({ id: medGenId('m'), name, startDate: start, durationDays: days, slots: [] });
+
+  const med = { id: medGenId('m'), name, startDate: start, durationDays: days, slots: [], frequency };
+  if (frequency === 'weekly' && weekDay !== undefined) med.weekDay = weekDay;
+  course.medicines.push(med);
   setCourses(courses);
   renderMedicinesTab();
   renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
@@ -5053,6 +5276,76 @@ function renderSocialTab() {
   el.innerHTML = html;
 }
 
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function formatBirthday(mmdd) {
+  // mmdd = "MM-DD"
+  if (!mmdd || !mmdd.includes('-')) return '';
+  const [mm, dd] = mmdd.split('-').map(Number);
+  if (!mm || !dd) return '';
+  return dd + ' ' + (MONTH_SHORT[mm - 1] || '');
+}
+
+function birthdayStatus(mmdd) {
+  // returns: 'today' | 'soon' (within 14 days) | 'upcoming' | ''
+  if (!mmdd) return '';
+  const [mm, dd] = mmdd.split('-').map(Number);
+  if (!mm || !dd) return '';
+  const today = new Date();
+  const ty = today.getFullYear();
+  // Next occurrence of this birthday
+  let next = new Date(ty, mm - 1, dd);
+  if (next < today) next = new Date(ty + 1, mm - 1, dd);
+  const diff = Math.round((next - today) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff <= 14) return 'soon';
+  return '';
+}
+
+function renderBirthdayReminders(dateStr) {
+  const el = document.getElementById('birthdayRemindersCard');
+  if (!el) return;
+  const people = getSocial();
+  const base   = new Date((dateStr || todayISO()) + 'T00:00:00');
+
+  const reminders = [];
+  people.forEach(p => {
+    if (!p.birthday) return;
+    const [mm, dd] = p.birthday.split('-').map(Number);
+    if (!mm || !dd) return;
+    // Next occurrence from base date
+    let next = new Date(base.getFullYear(), mm - 1, dd);
+    if (next < base) next = new Date(base.getFullYear() + 1, mm - 1, dd);
+    const diff = Math.round((next - base) / 86400000);
+    if (diff <= 10) reminders.push({ p, diff, date: formatBirthday(p.birthday) });
+  });
+
+  if (reminders.length === 0) { el.innerHTML = ''; return; }
+
+  // Sort: today first, then by days away
+  reminders.sort((a, b) => a.diff - b.diff);
+
+  let html = '<div class="card" style="border-left:3px solid #e6b84a; padding-bottom:16px;">';
+  html += '<h2 style="margin-bottom:10px;">🎂 Upcoming Birthdays</h2>';
+
+  reminders.forEach(({ p, diff, date }) => {
+    const isToday = diff === 0;
+    const cls = isToday ? 'bday-r-today' : 'bday-r-soon';
+    const msg = isToday
+      ? '🎉 Today is ' + esc(p.name) + '\'s birthday!'
+      : 'In ' + diff + ' day' + (diff === 1 ? '' : 's') + ' — ' + esc(p.name);
+    html += '<div class="bday-reminder-row ' + cls + '">';
+    html += '<span>' + (isToday ? '🎂' : '🎁') + '</span>';
+    html += '<span class="bday-reminder-name">' + (isToday ? '🎉 Today! ' : '') + esc(p.name) + '</span>';
+    if (!isToday) html += '<span style="color:var(--soft); font-size:0.92em;">in ' + diff + ' day' + (diff === 1 ? '' : 's') + '</span>';
+    html += '<span class="bday-reminder-date">' + date + '</span>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderPersonRow(p) {
   const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
   let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '" data-notes="' + esc((p.notes || '').toLowerCase()) + '">';
@@ -5060,6 +5353,14 @@ function renderPersonRow(p) {
   html += '<div class="person-info">';
   html += '<div class="person-name">' + esc(p.name) + '</div>';
   if (p.notes) html += '<div class="person-notes">' + esc(p.notes).replace(/\n/g, '<br>') + '</div>';
+  if (p.birthday) {
+    const status = birthdayStatus(p.birthday);
+    const cls = status === 'today' ? ' bday-today' : status === 'soon' ? ' bday-soon' : '';
+    const label = status === 'today' ? '🎂 Birthday today!'
+                : status === 'soon'  ? '🎂 ' + formatBirthday(p.birthday) + ' — coming soon'
+                :                      '🎂 ' + formatBirthday(p.birthday);
+    html += '<div class="person-birthday' + cls + '">' + label + '</div>';
+  }
   html += '</div>';
   html += '<div class="person-actions">';
   // WhatsApp toggle
@@ -5122,6 +5423,12 @@ function renderPersonRow(p) {
   html += '<div class="person-edit-form" id="pedit_' + p.id + '">';
   html += '<label style="font-size:0.88em;">Name</label>';
   html += '<input type="text" id="peditName_' + p.id + '" value="' + esc(p.name) + '" style="margin-bottom:8px;">';
+  html += '<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">';
+  html += '<div style="flex:1; min-width:120px;"><label style="font-size:0.88em;">Birthday (optional)</label>';
+  html += '<input type="date" id="peditBirthday_' + p.id + '" '
+        + 'value="' + (p.birthday ? '2000-' + p.birthday : '') + '" '
+        + 'style="width:100%;" title="Year is ignored — only month &amp; day are saved"></div>';
+  html += '</div>';
   html += '<label style="font-size:0.88em;">Notes</label>';
   html += '<textarea id="peditNotes_' + p.id + '" style="height:55px; margin-bottom:10px;">' + esc(p.notes || '') + '</textarea>';
   html += '<div class="button-row">';
@@ -5186,14 +5493,21 @@ function toggleEditPerson(id) {
 }
 
 function savePerson(id) {
-  const nameEl  = document.getElementById('peditName_'  + id);
-  const notesEl = document.getElementById('peditNotes_' + id);
+  const nameEl     = document.getElementById('peditName_'     + id);
+  const notesEl    = document.getElementById('peditNotes_'    + id);
+  const birthdayEl = document.getElementById('peditBirthday_' + id);
   const name    = (nameEl  ? nameEl.value  : '').trim();
   const notes   = (notesEl ? notesEl.value : '').trim();
+  // Extract MM-DD from the date input (ignore the year)
+  let birthday = '';
+  if (birthdayEl && birthdayEl.value) {
+    const parts = birthdayEl.value.split('-'); // YYYY-MM-DD
+    if (parts.length === 3) birthday = parts[1] + '-' + parts[2]; // MM-DD
+  }
   if (!name) { alert('Name cannot be empty.'); return; }
   const list = getSocial();
   const p = list.find(x => x.id === id);
-  if (p) { p.name = name; p.notes = notes; }
+  if (p) { p.name = name; p.notes = notes; p.birthday = birthday; }
   setSocial(list);
   renderSocialTab();
 }
