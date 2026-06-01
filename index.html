@@ -1400,6 +1400,52 @@
     margin-top: 10px;
     text-align: right;
   }
+  /* One-off Medicines card */
+  .adhoc-med-input-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .adhoc-med-input-row > input[type="text"] {
+    flex: 1 1 160px;
+    min-width: 140px;
+  }
+  .adhoc-med-input-row > select {
+    flex-shrink: 0;
+    width: 150px;
+  }
+  .adhoc-med-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+  .adhoc-med-item-main { flex: 1; line-height: 1.45; }
+  .adhoc-med-time {
+    color: var(--soft);
+    font-size: 0.85em;
+    font-style: italic;
+    margin-left: 6px;
+  }
+  .adhoc-med-reason {
+    color: var(--soft);
+    font-size: 0.85em;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .adhoc-med-empty {
+    color: var(--soft);
+    font-style: italic;
+    font-size: 0.9em;
+    margin: 10px 0 0;
+    text-align: center;
+  }
 
   /* ── Weekly Food Table ── */
   .food-table-wrap {
@@ -1536,6 +1582,21 @@
 
   <!-- Today's Medicines — rendered dynamically when medicines are active -->
   <div id="todayMedicinesCard"></div>
+
+  <!-- One-off Medicines (self-administered, not part of any course) -->
+  <div class="card">
+    <h2>🩹 One-off Medicines</h2>
+    <p style="color:var(--soft); margin-top:0; font-size:0.92em;">For medicines taken outside any tracked course — e.g. paracetamol for a fever, cough syrup for a cough.</p>
+    <div class="adhoc-med-input-row">
+      <input type="text" id="adHocMedName" placeholder="Medicine name (e.g. Paracetamol 500mg)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addAdHocMed();}">
+      <input type="text" id="adHocMedReason" placeholder="Why? (e.g. Fever — optional)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addAdHocMed();}">
+      <select id="adHocMedTime"></select>
+      <button class="secondary" onclick="addAdHocMed()" style="white-space:nowrap;">+ Add</button>
+    </div>
+    <div id="adHocMedsList" style="margin-top:12px;"></div>
+  </div>
 
   <div class="card">
     <h2>Morning Plan</h2>
@@ -2014,6 +2075,18 @@ function buildTimeSelects() {
     sel.addEventListener('change', autofillRestFromSleepTimes);
   });
 
+  // Ad-hoc medicine time-of-day select (optional)
+  const adHocTimeSel = document.getElementById('adHocMedTime');
+  if (adHocTimeSel) {
+    adHocTimeSel.innerHTML = '<option value="">— time (optional) —</option>';
+    TIME_SLOTS.forEach(slot => {
+      const opt = document.createElement('option');
+      opt.value = slot.value;
+      opt.textContent = slot.label;
+      adHocTimeSel.appendChild(opt);
+    });
+  }
+
   // Screen time select: 15 min increments from 15 min → 6 hr
   const screenSel = document.getElementById('screenTime');
   if (screenSel) {
@@ -2440,6 +2513,12 @@ function readForm() {
     screenTime: document.getElementById('screenTime').value,
     plan: document.getElementById('planText').value,
     goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done })),
+    adHocMeds: currentAdHocMeds.map(m => ({
+      id: m.id,
+      name: m.name || '',
+      reason: m.reason || '',
+      time: m.time || ''
+    })),
     monthPlan:      document.getElementById('monthPlanText').value,
     weekPlan:       document.getElementById('weekPlanText').value,
     weekReflection: document.getElementById('weekReflectionText').value,
@@ -2524,6 +2603,13 @@ function writeForm(entry) {
   document.getElementById('planText').value = entry.plan || '';
   currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, _editing: false }));
   renderGoalsList();
+  currentAdHocMeds = (entry.adHocMeds || []).map(m => ({
+    id: m.id || ('adhoc_' + Date.now() + '_' + Math.floor(Math.random() * 9999)),
+    name: m.name || '',
+    reason: m.reason || '',
+    time: m.time || ''
+  }));
+  renderAdHocMeds();
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
   document.getElementById('apologyText').value = entry.apology || '';
@@ -2698,6 +2784,56 @@ function clearForm(keepDate) {
 
 /* ---------- DAILY GOALS ---------- */
 let currentGoals = [];
+let currentAdHocMeds = [];
+
+/* ── One-off (self-administered) medicines for today's entry ── */
+function renderAdHocMeds() {
+  const list = document.getElementById('adHocMedsList');
+  if (!list) return;
+  if (!currentAdHocMeds.length) {
+    list.innerHTML = '<p class="adhoc-med-empty">No one-off medicines logged for this day.</p>';
+    return;
+  }
+  let html = '';
+  currentAdHocMeds.forEach((m, idx) => {
+    html += '<div class="adhoc-med-item">';
+    html += '<div class="adhoc-med-item-main">';
+    html += '<strong>' + esc(m.name) + '</strong>';
+    if (m.time) html += '<span class="adhoc-med-time">at ' + formatTime12hFromHHMM(m.time) + '</span>';
+    if (m.reason) html += '<div class="adhoc-med-reason">' + esc(m.reason) + '</div>';
+    html += '</div>';
+    html += '<button class="danger" style="font-size:0.78em;padding:3px 10px;" onclick="removeAdHocMed(' + idx + ')">Remove</button>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function addAdHocMed() {
+  const nameEl   = document.getElementById('adHocMedName');
+  const reasonEl = document.getElementById('adHocMedReason');
+  const timeEl   = document.getElementById('adHocMedTime');
+  const name = (nameEl.value || '').trim();
+  if (!name) { nameEl.focus(); return; }
+  currentAdHocMeds.push({
+    id: 'adhoc_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
+    name: name,
+    reason: (reasonEl.value || '').trim(),
+    time: timeEl.value || ''
+  });
+  nameEl.value = '';
+  reasonEl.value = '';
+  timeEl.value = '';
+  nameEl.focus();
+  renderAdHocMeds();
+  autosave();
+}
+
+function removeAdHocMed(idx) {
+  if (!confirm('Remove this medicine entry?')) return;
+  currentAdHocMeds.splice(idx, 1);
+  renderAdHocMeds();
+  autosave();
+}
 
 function renderGoalsList() {
   const list     = document.getElementById('goalsList');
@@ -3522,6 +3658,23 @@ function renderDayReport(c) {
   }
 
   html += medAdherenceHtml(dateStr);
+
+  // One-off medicines for this day
+  if (entry.adHocMeds && entry.adHocMeds.length > 0) {
+    html += '<div style="margin-top:16px; padding:14px 16px; background:var(--bg); border-radius:8px; border:1px solid var(--line);">';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">';
+    html += '<strong style="color:var(--accent);">🩹 One-off Medicines</strong>';
+    html += '<span style="color:var(--soft); font-size:0.88em;">' + entry.adHocMeds.length + ' logged</span>';
+    html += '</div>';
+    entry.adHocMeds.forEach(m => {
+      html += '<div style="padding:6px 0; border-top:1px solid var(--line); font-size:0.92em;">';
+      html += '<strong>' + esc(m.name || '') + '</strong>';
+      if (m.time)   html += ' <span style="color:var(--soft);">at ' + formatTime12hFromHHMM(m.time) + '</span>';
+      if (m.reason) html += ' <span style="color:var(--soft); font-style:italic;">— ' + esc(m.reason) + '</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
 
   html += '<h3 style="margin-top:18px;">Practice breakdown</h3>';
   const dailyIds = new Set(DAILY_ITEMS.filter(i => !i.rateOnly).map(i => i.id));
