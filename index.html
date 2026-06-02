@@ -1507,9 +1507,467 @@
   .food-status.fs-yes  { background: var(--good);  color: #fff; }
   .food-status.fs-no   { background: #d98060;      color: #fff; }
   .food-status.fs-open { background: var(--line);  color: var(--soft); }
+
+  /* ── 2026 UI refresh: sticky tabs, compact header, hierarchy, chip, rail ── */
+
+  /* Sticky tab nav */
+  .tabs {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+    padding-top: 6px;
+    margin-bottom: 18px;
+  }
+
+  /* Compact sticky entry header strip — replaces the bulky date/mood/wake/bed card */
+  .entry-header-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px 12px;
+    background: var(--card);
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 56px;
+    z-index: 90;
+  }
+  .ehs-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .ehs-field label {
+    font-size: 0.72em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--soft);
+    margin: 0;
+  }
+  .ehs-field input,
+  .ehs-field select {
+    padding: 6px 8px;
+    font-size: 0.9em;
+    border-radius: 5px;
+  }
+  @media (max-width: 600px) {
+    .entry-header-strip { padding: 10px; gap: 6px 8px; top: 52px; }
+    .ehs-field label { font-size: 0.66em; }
+  }
+
+  /* Visual hierarchy tiers */
+  .card.card-core {
+    border-left: 4px solid var(--accent);
+    padding-left: 22px;
+  }
+  .card.card-log {
+    background: var(--bg);
+    box-shadow: none;
+    border: 1px dashed var(--line);
+  }
+  .card.card-log h2 {
+    color: var(--soft);
+    font-size: 1.2em;
+    border-bottom-color: rgba(0,0,0,0.04);
+  }
+
+  /* Two-column pairing on wide screens */
+  .card-pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  @media (min-width: 1100px) {
+    .container { max-width: 1080px; }
+    .card-pair {
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .card-pair > .card { margin-bottom: 20px; }
+  }
+
+  /* Floating day-summary chip (top-right) */
+  .day-summary-chip {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 200;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 16px rgba(60,50,35,0.14);
+    font-family: 'Georgia', serif;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(-8px);
+  }
+  .day-summary-chip.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .day-summary-chip .chip-score {
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 1.05em;
+  }
+  .day-summary-chip .chip-divider { color: var(--line); }
+  .day-summary-chip .chip-practices {
+    font-size: 0.92em;
+    color: var(--ink);
+  }
+  .day-summary-chip .chip-label {
+    font-size: 0.7em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-left: 4px;
+  }
+  @media (max-width: 800px) {
+    .day-summary-chip { display: none; }
+  }
+
+  /* Section quick-jump rail (right side, desktop only) */
+  .section-rail {
+    position: fixed;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 150;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 12px 7px;
+    box-shadow: 0 4px 16px rgba(60,50,35,0.08);
+  }
+  .section-rail.show { display: flex; }
+  .section-rail .rail-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--line);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    border: none;
+    padding: 0;
+  }
+  .section-rail .rail-dot:hover { background: var(--accent-soft); }
+  .section-rail .rail-dot.active {
+    background: var(--accent);
+    transform: scale(1.3);
+  }
+  .section-rail .rail-dot .rail-tip {
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translate(6px, -50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.78em;
+    font-family: 'Georgia', serif;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .section-rail .rail-dot:hover .rail-tip {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+  @media (max-width: 1200px) {
+    .section-rail { display: none !important; }
+  }
+
+  /* ── Financial tab ── */
+  .fin-month-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+  .fin-month-bar h2 { margin: 0; border: none; padding: 0; }
+  .fin-month-nav {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .fin-nav-btn {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.92em;
+    transition: all 0.15s;
+  }
+  .fin-nav-btn:hover { background: var(--accent-soft); color: white; }
+  .fin-month-label {
+    font-weight: bold;
+    color: var(--accent);
+    min-width: 130px;
+    text-align: center;
+  }
+  .fin-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+  .fin-summary-box {
+    background: var(--bg);
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid var(--line);
+  }
+  .fin-summary-num {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--accent);
+    line-height: 1.2;
+  }
+  .fin-summary-num.over   { color: #c0552a; }
+  .fin-summary-num.under  { color: var(--good); }
+  .fin-summary-label {
+    font-size: 0.78em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 4px;
+  }
+  .fin-table-wrap {
+    overflow-x: auto;
+    margin-top: 6px;
+  }
+  .fin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92em;
+  }
+  .fin-table th {
+    text-align: left;
+    padding: 10px 8px;
+    color: var(--soft);
+    font-size: 0.78em;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid var(--line);
+    background: var(--bg);
+    white-space: nowrap;
+  }
+  .fin-table th.fin-num-col { text-align: right; }
+  .fin-table td {
+    padding: 8px 6px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+  .fin-cat-cell {
+    color: var(--ink);
+    line-height: 1.3;
+    min-width: 160px;
+  }
+  .fin-cat-hint {
+    display: block;
+    color: var(--soft);
+    font-size: 0.78em;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .fin-num-input {
+    width: 100px;
+    padding: 6px 8px;
+    text-align: right;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95em;
+  }
+  .fin-num-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+  .fin-variance-cell {
+    text-align: right;
+    font-weight: bold;
+    white-space: nowrap;
+    min-width: 80px;
+  }
+  .fin-variance-cell.over  { color: #c0552a; }
+  .fin-variance-cell.under { color: var(--good); }
+  .fin-variance-cell.zero  { color: var(--soft); font-weight: normal; }
+  .fin-remarks-input {
+    width: 100%;
+    min-width: 180px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--card);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.88em;
+  }
+  .fin-remarks-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+  .fin-totals-row td {
+    border-top: 2px solid var(--accent);
+    border-bottom: none;
+    font-weight: bold;
+    color: var(--accent);
+    background: var(--bg);
+    padding-top: 12px;
+  }
+  .fin-totals-row .fin-variance-cell { font-size: 1.05em; }
+  .fin-savemsg {
+    font-size: 0.82em;
+    color: var(--good);
+    font-style: italic;
+    margin-top: 8px;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .fin-savemsg.show { opacity: 1; }
+  @media (max-width: 700px) {
+    .fin-num-input { width: 80px; font-size: 0.88em; }
+    .fin-cat-cell { min-width: 130px; }
+    .fin-table th, .fin-table td { padding: 6px 4px; }
+  }
+
+  /* ── "Don't miss twice" banner ── */
+  .never-miss-card {
+    border-left: 4px solid #c97a4f;
+    background: linear-gradient(135deg, #fdf6f0 0%, var(--card) 70%);
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  .never-miss-card.all-recovered {
+    border-left-color: var(--good);
+    background: linear-gradient(135deg, #f0f7ee 0%, var(--card) 70%);
+  }
+  .never-miss-card .nm-title {
+    margin: 0;
+    color: var(--accent);
+    font-size: 1.2em;
+    font-family: 'Georgia', serif;
+    font-weight: normal;
+  }
+  .never-miss-card.all-recovered .nm-title { color: var(--good); }
+  .never-miss-card .nm-sub {
+    margin: 6px 0 0;
+    color: var(--soft);
+    font-size: 0.88em;
+    font-style: italic;
+  }
+  .nm-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .nm-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-family: 'Georgia', serif;
+    font-size: 0.88em;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink);
+  }
+  .nm-chip:hover {
+    border-color: var(--accent-soft);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(60,50,35,0.08);
+  }
+  .nm-chip.caution {
+    background: #fdf6f0;
+    border-color: #d4a574;
+    color: #8b5a2b;
+  }
+  .nm-chip.danger {
+    background: #fbe7df;
+    border-color: #c0552a;
+    color: #8b3a17;
+    font-weight: bold;
+  }
+  .nm-chip.recovered {
+    background: #ecf5ec;
+    border-color: var(--good);
+    color: var(--good);
+    font-weight: bold;
+  }
+  .nm-chip.missed-again {
+    background: #f9d5d0;
+    border-color: #a02818;
+    color: #7a1f12;
+    font-weight: bold;
+  }
+  .nm-chip-icon { font-size: 0.95em; line-height: 1; }
+  .nm-chip-streak {
+    margin-left: 4px;
+    padding: 1px 6px;
+    background: rgba(192, 85, 42, 0.2);
+    border-radius: 10px;
+    font-size: 0.76em;
+    color: #8b3a17;
+    font-weight: bold;
+  }
+  .nm-chip.missed-again .nm-chip-streak { background: rgba(160, 40, 24, 0.25); color: #7a1f12; }
+  .nm-chip.recovered .nm-chip-streak    { display: none; }
+  .nm-progress-line {
+    margin-top: 10px;
+    color: var(--soft);
+    font-size: 0.82em;
+    font-style: italic;
+  }
+
+  /* Optional reflection collapsible (reuses .collapsible-toggle but quieter) */
+  .reflection-optional-toggle {
+    font-size: 0.92em !important;
+    color: var(--soft) !important;
+  }
+  .reflection-optional-toggle span:first-child {
+    font-size: 1em !important;
+    color: var(--soft) !important;
+  }
 </style>
 </head>
 <body>
+
+<!-- Floating day summary chip (top-right, desktop only) -->
+<div class="day-summary-chip" id="daySummaryChip">
+  <span class="chip-practices" id="chipPractices">0 / 16</span>
+  <span class="chip-label">practices</span>
+  <span class="chip-divider">·</span>
+  <span class="chip-score" id="chipScore">0 / 100</span>
+  <span class="chip-label">score</span>
+</div>
+
+<!-- Section quick-jump rail (right side, wide desktop only) -->
+<nav class="section-rail" id="sectionRail" aria-label="Jump to section"></nav>
+
 <div class="container">
 
 <header>
@@ -1524,46 +1982,45 @@
   <button class="tab" onclick="showTab('data-history')">Data &amp; History</button>
   <button class="tab" onclick="showTab('medicines')">Medicines</button>
   <button class="tab" onclick="showTab('social')">Social Circle</button>
+  <button class="tab" onclick="showTab('financial')">Financial</button>
 </div>
 
 <!-- TODAY TAB -->
 <div id="today" class="panel active">
 
-  <div class="card">
-    <div class="row">
-      <div>
-        <label for="entryDate">Date</label>
-        <input type="date" id="entryDate">
-      </div>
-      <div>
-        <label for="dayMood">Overall mood (1–5)</label>
-        <select id="dayMood">
-          <option value="">— select —</option>
-          <option value="1">1 — Heavy</option>
-          <option value="2">2 — Low</option>
-          <option value="3">3 — Steady</option>
-          <option value="4">4 — Good</option>
-          <option value="5">5 — Joyful</option>
-        </select>
-      </div>
+  <!-- Compact sticky entry header -->
+  <div class="entry-header-strip" id="entryHeaderStrip">
+    <div class="ehs-field">
+      <label for="entryDate">📅 Date</label>
+      <input type="date" id="entryDate">
     </div>
-    <div class="row" style="margin-top:12px;">
-      <div>
-        <label for="wakeTime">Wake-up time</label>
-        <select id="wakeTime"></select>
-      </div>
-      <div>
-        <label for="bedTime">Bedtime</label>
-        <select id="bedTime"></select>
-      </div>
+    <div class="ehs-field">
+      <label for="dayMood">😌 Mood</label>
+      <select id="dayMood">
+        <option value="">—</option>
+        <option value="1">1 — Heavy</option>
+        <option value="2">2 — Low</option>
+        <option value="3">3 — Steady</option>
+        <option value="4">4 — Good</option>
+        <option value="5">5 — Joyful</option>
+      </select>
     </div>
-    <div class="row" style="margin-top:12px;">
-      <div>
-        <label for="screenTime">📱 Mobile screen time</label>
-        <select id="screenTime"></select>
-      </div>
+    <div class="ehs-field">
+      <label for="wakeTime">🌅 Wake</label>
+      <select id="wakeTime"></select>
+    </div>
+    <div class="ehs-field">
+      <label for="bedTime">🌙 Bed</label>
+      <select id="bedTime"></select>
+    </div>
+    <div class="ehs-field">
+      <label for="screenTime">📱 Screen</label>
+      <select id="screenTime"></select>
     </div>
   </div>
+
+  <!-- "Don't miss twice" banner — rendered dynamically when yesterday had any misses -->
+  <div id="neverMissTwiceCard"></div>
 
   <!-- Month Plan Banner — shown on all days that have a plan for this month -->
   <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid #c97a4f; border-radius:8px; padding:14px 18px; margin-bottom:12px;">
@@ -1584,7 +2041,7 @@
   <div id="todayMedicinesCard"></div>
 
   <!-- One-off Medicines (self-administered, not part of any course) -->
-  <div class="card">
+  <div class="card card-log">
     <h2>🩹 One-off Medicines</h2>
     <p style="color:var(--soft); margin-top:0; font-size:0.92em;">For medicines taken outside any tracked course — e.g. paracetamol for a fever, cough syrup for a cough.</p>
     <div class="adhoc-med-input-row">
@@ -1598,7 +2055,7 @@
     <div id="adHocMedsList" style="margin-top:12px;"></div>
   </div>
 
-  <div class="card">
+  <div class="card card-core" id="sec-plan">
     <h2>Morning Plan</h2>
     <p style="color:var(--soft); margin-top:0;">Set your intention for the day. Write this in the morning.</p>
     <label for="planText">How do I wish to spend today?</label>
@@ -1660,13 +2117,13 @@
   </div>
 
 
-  <div class="card">
+  <div class="card card-core" id="sec-practices">
     <h2>Evening Reflection — Daily Practices</h2>
     <p style="color:var(--soft); margin-top:0;">Tick what you actually did today.</p>
     <div class="checklist" id="dailyChecklist"></div>
   </div>
 
-  <div class="card">
+  <div class="card card-log" id="sec-time">
     <button class="collapsible-toggle" id="timeAllocToggle" onclick="toggleSection('timeAllocBody','timeAllocToggle')" aria-expanded="false">
       <span>Time Allocation (minutes)</span>
       <span class="collapsible-icon">▸</span>
@@ -1677,17 +2134,29 @@
     </div>
   </div>
 
-  <div class="card">
-    <h2>This Week</h2>
-    <div class="checklist" id="weeklyChecklist"></div>
+  <div class="card-pair">
+    <div class="card" id="sec-week">
+      <button class="collapsible-toggle" id="weeklyToggle" onclick="toggleSection('weeklyBody','weeklyToggle')" aria-expanded="true">
+        <span>This Week</span>
+        <span class="collapsible-icon" style="transform:rotate(90deg);">▸</span>
+      </button>
+      <div id="weeklyBody" class="collapsible-body">
+        <div class="checklist" id="weeklyChecklist"></div>
+      </div>
+    </div>
+
+    <div class="card" id="sec-month">
+      <button class="collapsible-toggle" id="monthlyToggle" onclick="toggleSection('monthlyBody','monthlyToggle')" aria-expanded="true">
+        <span>This Month</span>
+        <span class="collapsible-icon" style="transform:rotate(90deg);">▸</span>
+      </button>
+      <div id="monthlyBody" class="collapsible-body">
+        <div class="checklist" id="monthlyChecklist"></div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>This Month</h2>
-    <div class="checklist" id="monthlyChecklist"></div>
-  </div>
-
-  <div class="card">
+  <div class="card card-core" id="sec-reflection">
     <h2>Reflection</h2>
     <label for="actualText">How did the day actually go?</label>
     <textarea id="actualText" placeholder="The day unfolded like..."></textarea>
@@ -1695,14 +2164,23 @@
     <label for="gratefulText" style="margin-top:12px;">Three things I'm grateful for today</label>
     <textarea id="gratefulText" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
 
-    <label for="apologyText" style="margin-top:12px;">Mistakes I want to apologize for or learn from</label>
-    <textarea id="apologyText" placeholder="Optional"></textarea>
+    <div style="margin-top:18px; padding-top:12px; border-top:1px solid var(--line);">
+      <button class="collapsible-toggle reflection-optional-toggle" id="reflectionOptToggle"
+              onclick="toggleSection('reflectionOptBody','reflectionOptToggle')" aria-expanded="false">
+        <span>Optional reflections</span>
+        <span class="collapsible-icon">▸</span>
+      </button>
+      <div id="reflectionOptBody" class="collapsible-body" style="display:none;">
+        <label for="apologyText">Mistakes I want to apologize for or learn from</label>
+        <textarea id="apologyText" placeholder="Optional"></textarea>
 
-    <label for="lessonText" style="margin-top:12px;">Something I learned today</label>
-    <textarea id="lessonText" placeholder="Optional"></textarea>
+        <label for="lessonText" style="margin-top:12px;">Something I learned today</label>
+        <textarea id="lessonText" placeholder="Optional"></textarea>
 
-    <label for="shareText" style="margin-top:12px;">Anything you would like to share</label>
-    <textarea id="shareText" placeholder="Optional — a thought, a moment, anything on your mind..."></textarea>
+        <label for="shareText" style="margin-top:12px;">Anything you would like to share</label>
+        <textarea id="shareText" placeholder="Optional — a thought, a moment, anything on your mind..."></textarea>
+      </div>
+    </div>
   </div>
 
   <div class="button-row">
@@ -1879,6 +2357,11 @@
   <div id="socialContent"></div>
 </div>
 
+<!-- FINANCIAL TAB -->
+<div id="financial" class="panel">
+  <div id="financialContent"></div>
+</div>
+
 <p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
 
 </div>
@@ -1903,6 +2386,7 @@ const DAILY_ITEMS = [
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
   { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
+  { id: 'brushNight',    label: 'Brushed teeth at night', hint: 'A small discipline that protects the day from carrying over' },
 
   // ── Mind & Self-Discipline ──
   { id: 'noAnger',    section: 'Mind & Self-Discipline', label: 'Anger Management', hint: '0 stars = got angry · 5 stars = fully peaceful all day', rateOnly: true, starLabels: ["Couldn't manage anger", 'Often angry', 'Sometimes angry', 'Mostly calm', 'Very calm', 'Fully peaceful'] },
@@ -1910,6 +2394,7 @@ const DAILY_ITEMS = [
   { id: 'noIllSpeak', label: 'Did not ill-speak about anyone', hint: '5★ = 0 times · 4★ = 1 time · 3★ = 2 times · 2★ = 3 times · 1★ = 4+ times', rateOnly: true, starLabels: ['4+ times', '4 times', '3 times', '2 times', '1 time', '0 times'] },
   { id: 'spokeLess',  label: 'Spoke less than usual — conserved energy' },
   { id: 'forgave',    label: 'Forgave others for their mistakes' },
+  { id: 'crackJoke',  label: 'Did you crack a joke today?', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
 
   // ── Spirit ──
   { id: 'morningPrayer', section: 'Spirit', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
@@ -1928,7 +2413,8 @@ const WEEKLY_ITEMS = [
   { id: 'visitedRelative', label: 'Visited a relative or friend this week', checkNote: true, checkNotePlaceholder: 'Whom did you visit?' },
   { id: 'highIntensity1',  label: 'High-intensity workout #1 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
   { id: 'highIntensity2',  label: 'High-intensity workout #2 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
-  { id: 'foodFast',        label: 'Completed a food fast this week' }
+  { id: 'foodFast',        label: 'Completed a food fast this week' },
+  { id: 'shabadVani',      label: 'Memorised a new ShabadVani this week',   checkNote: true, checkNotePlaceholder: 'Which ShabadVani did you learn?' }
 ];
 
 const MONTHLY_ITEMS = [
@@ -1983,6 +2469,7 @@ const DEFAULT_DAILY_SCORING = {
   waterSumiran4: { weight: 1 },
   waterSumiran5: { weight: 1 },
   waterSumiran6: { weight: 1 },
+  brushNight:    { weight: 2 },
   morningPrayer:      { weight: 3, starsWeight: 5 },
   eveningPrayer:      { weight: 3, starsWeight: 5 },
   noAnger:            { rateOnly: true, ratingWeight: 8 },
@@ -1990,6 +2477,7 @@ const DEFAULT_DAILY_SCORING = {
   noIllSpeak:         { rateOnly: true, ratingWeight: 5 },
   spokeLess:          { weight: 3 },
   forgave:            { weight: 4 },
+  crackJoke:          { weight: 2 },
   grateful:           { weight: 4 },
   madeHappy:          { weight: 5 },
   familyTime:         { weight: 5 },
@@ -1998,7 +2486,7 @@ const DEFAULT_DAILY_SCORING = {
   apologized:         { weight: 3 }
 };
 // Default weekly tasks — sum to 20
-const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5 };
+const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5, shabadVani: 5 };
 // Default monthly tasks — sum to 20
 const DEFAULT_MONTHLY_SCORING = { ashram1: 10, ashram2: 10 };
 
@@ -2025,8 +2513,19 @@ function loadCustomWeights() {
         });
         DAILY_SCORING = saved.daily;
       }
-      if (saved.weekly)  WEEKLY_SCORING  = saved.weekly;
-      if (saved.monthly) MONTHLY_SCORING = saved.monthly;
+      if (saved.weekly) {
+        // Backfill any weekly tasks added since the saved version (e.g. shabadVani)
+        Object.keys(DEFAULT_WEEKLY_SCORING).forEach(id => {
+          if (saved.weekly[id] === undefined) saved.weekly[id] = DEFAULT_WEEKLY_SCORING[id];
+        });
+        WEEKLY_SCORING = saved.weekly;
+      }
+      if (saved.monthly) {
+        Object.keys(DEFAULT_MONTHLY_SCORING).forEach(id => {
+          if (saved.monthly[id] === undefined) saved.monthly[id] = DEFAULT_MONTHLY_SCORING[id];
+        });
+        MONTHLY_SCORING = saved.monthly;
+      }
     }
   } catch (e) { /* ignore */ }
 }
@@ -2060,6 +2559,22 @@ function init() {
   initReportSelectors();
   renderTodayMedicines(todayISO());
   renderBirthdayReminders(todayISO());
+  // UI refresh: floating chip + section rail + "don't miss twice" banner
+  buildSectionRail();
+  setSectionRailVisible(true);
+  updateDaySummaryChip();
+  renderNeverMissTwice();
+  // Any click inside the Today panel may have changed practice/star state — refresh
+  const todayPanel = document.getElementById('today');
+  if (todayPanel) {
+    const refresh = () => setTimeout(() => {
+      updateDaySummaryChip();
+      renderNeverMissTwice();
+    }, 50);
+    todayPanel.addEventListener('click',  refresh);
+    todayPanel.addEventListener('input',  refresh);
+    todayPanel.addEventListener('change', refresh);
+  }
 }
 
 function buildTimeSelects() {
@@ -2138,6 +2653,230 @@ function toggleSection(bodyId, toggleId) {
   if (toggle) toggle.setAttribute('aria-expanded', String(!isOpen));
 }
 
+/* ── Floating Day Summary Chip ── */
+function updateDaySummaryChip() {
+  const chip = document.getElementById('daySummaryChip');
+  if (!chip) return;
+  // Only show on the Today tab
+  const todayPanel = document.getElementById('today');
+  if (!todayPanel || !todayPanel.classList.contains('active')) {
+    chip.classList.remove('show');
+    return;
+  }
+  try {
+    const entry = readForm();
+    if (!entry || !entry.date) { chip.classList.remove('show'); return; }
+    const r = scoreDay(entry);
+    // "Practices done" only counts yes/no-style practices (excludes rate-only items
+    // like Anger Management and NSFW Free, since those are self-ratings not binary acts).
+    let done = 0, total = 0;
+    DAILY_ITEMS.forEach(i => {
+      if (i.rateOnly) return;
+      total++;
+      if (entry.daily && entry.daily[i.id] === true) done++;
+    });
+    document.getElementById('chipPractices').textContent = done + ' / ' + total;
+    document.getElementById('chipScore').textContent = Math.round(r.total) + ' / 100';
+    chip.classList.add('show');
+  } catch (e) {
+    chip.classList.remove('show');
+  }
+}
+
+/* ── "Don't miss twice" banner ──
+   Surfaces yesterday's missed daily practices with streak counters, and
+   updates live as the user marks them as done today. */
+
+// A "miss" for a yes/no practice = explicit "No" was clicked yesterday.
+// A "miss" for a rate-only practice (e.g. Anger Mgmt, NSFW Free) = rating 1.
+// Unfilled days don't count — could just mean "didn't journal".
+function _practiceMissedOn(item, entry) {
+  if (!entry || !entry.daily) return false;
+  if (item.rateOnly) {
+    const r = (entry.daily[item.id + 'Rating']) || 0;
+    return r > 0 && r <= 1;
+  }
+  return !!(entry.dailyNo && entry.dailyNo[item.id]);
+}
+
+// Same but for "recovered today" — practice marked Yes (or rateOnly rated ≥ 3)
+function _practiceRecoveredOn(item, entry) {
+  if (!entry || !entry.daily) return false;
+  if (item.rateOnly) {
+    const r = (entry.daily[item.id + 'Rating']) || 0;
+    return r >= 3;
+  }
+  return entry.daily[item.id] === true;
+}
+
+// Walk backwards from `fromDate` counting consecutive days the practice was missed.
+function _missStreak(item, fromDateStr, allEntries) {
+  let streak = 0;
+  let cur = parseISODate(fromDateStr);
+  while (true) {
+    const ds = isoDate(cur);
+    const e = allEntries[ds];
+    if (!e) break;
+    if (_practiceMissedOn(item, e)) {
+      streak++;
+      cur = addDays(cur, -1);
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function renderNeverMissTwice(currentDate) {
+  const card = document.getElementById('neverMissTwiceCard');
+  if (!card) return;
+  const dateStr = currentDate || (document.getElementById('entryDate').value || todayISO());
+
+  const all = getAllEntries();
+  const ydate = isoDate(addDays(parseISODate(dateStr), -1));
+  const yEntry = all[ydate];
+  if (!yEntry || !yEntry.daily) { card.innerHTML = ''; return; }
+
+  // Find yesterday's missed practices (skip section markers and items with no scoring)
+  const misses = [];
+  DAILY_ITEMS.forEach(item => {
+    if (_practiceMissedOn(item, yEntry)) {
+      misses.push({
+        item,
+        streak: _missStreak(item, ydate, all)
+      });
+    }
+  });
+  if (misses.length === 0) { card.innerHTML = ''; return; }
+
+  // Today's state for each miss. Prefer live readForm state when its date matches
+  // the one we're displaying, so chips flip green immediately when the user marks
+  // a practice as Yes — without waiting for autosave to persist.
+  let liveEntry = null;
+  try { liveEntry = readForm(); } catch (e) { liveEntry = null; }
+  const tEntry = all[dateStr] || {};
+  const effectiveToday = (liveEntry && liveEntry.date === dateStr) ? liveEntry : tEntry;
+
+  let recoveredCount = 0;
+  misses.forEach(m => {
+    m.recoveredToday = _practiceRecoveredOn(m.item, effectiveToday);
+    m.missedAgainToday = _practiceMissedOn(m.item, effectiveToday);
+    if (m.recoveredToday) recoveredCount++;
+  });
+
+  const allRecovered = recoveredCount === misses.length;
+  let html = '<div class="card never-miss-card' + (allRecovered ? ' all-recovered' : '') + '">';
+  if (allRecovered) {
+    html += '<h2 class="nm-title">🎉 All recovered — well done</h2>';
+    html += '<p class="nm-sub">You picked back up everything you missed yesterday. That\'s how habits survive.</p>';
+  } else {
+    html += '<h2 class="nm-title">🎯 Don\'t miss twice</h2>';
+    html += '<p class="nm-sub">Yesterday you missed these. One slip is an accident — two in a row starts a habit.</p>';
+  }
+
+  html += '<div class="nm-chips">';
+  misses.forEach(m => {
+    let cls = 'nm-chip';
+    let icon = '○';
+    if (m.recoveredToday)        { cls += ' recovered';    icon = '✓'; }
+    else if (m.missedAgainToday) { cls += ' missed-again'; icon = '✗'; }
+    else if (m.streak >= 2)      { cls += ' danger';       icon = '⚠'; }
+    else                         { cls += ' caution';      icon = '○'; }
+
+    html += '<button type="button" class="' + cls + '"';
+    html += ' onclick="scrollToPractice(\'' + m.item.id + '\')"';
+    html += ' title="' + (m.recoveredToday ? 'Recovered today' :
+                          m.missedAgainToday ? 'Missed today too — pay attention' :
+                          m.streak >= 2 ? (m.streak + ' days in a row') :
+                          'Missed yesterday') + '">';
+    html += '<span class="nm-chip-icon">' + icon + '</span>';
+    html += '<span>' + esc(m.item.label) + '</span>';
+    if ((m.streak >= 2 || m.missedAgainToday) && !m.recoveredToday) {
+      const streakDisplay = m.missedAgainToday ? (m.streak + 1) : m.streak;
+      html += '<span class="nm-chip-streak">' + streakDisplay + 'd</span>';
+    }
+    html += '</button>';
+  });
+  html += '</div>';
+
+  if (!allRecovered) {
+    const stillPending = misses.length - recoveredCount;
+    html += '<div class="nm-progress-line">';
+    if (recoveredCount > 0) {
+      html += recoveredCount + ' recovered · ' + stillPending + ' still to recover today.';
+    } else {
+      html += stillPending + ' to recover today.';
+    }
+    html += '</div>';
+  }
+
+  html += '</div>';
+  card.innerHTML = html;
+}
+
+function scrollToPractice(itemId) {
+  const target = document.getElementById('pitem_' + itemId);
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Briefly highlight the practice row
+  target.style.transition = 'box-shadow 0.3s';
+  target.style.boxShadow = '0 0 0 3px var(--accent-soft)';
+  setTimeout(() => { target.style.boxShadow = ''; }, 1400);
+}
+
+/* ── Section quick-jump rail ── */
+const TODAY_SECTIONS = [
+  { id: 'sec-plan',       label: 'Morning Plan' },
+  { id: 'sec-practices',  label: 'Daily Practices' },
+  { id: 'sec-time',       label: 'Time Allocation' },
+  { id: 'sec-week',       label: 'This Week' },
+  { id: 'sec-month',      label: 'This Month' },
+  { id: 'sec-reflection', label: 'Reflection' }
+];
+let _sectionObserver = null;
+
+function buildSectionRail() {
+  const rail = document.getElementById('sectionRail');
+  if (!rail) return;
+  let html = '';
+  TODAY_SECTIONS.forEach(s => {
+    html += '<button type="button" class="rail-dot" data-target="' + s.id
+         + '" onclick="scrollToSection(\'' + s.id + '\')" title="' + s.label + '">';
+    html += '<span class="rail-tip">' + s.label + '</span>';
+    html += '</button>';
+  });
+  rail.innerHTML = html;
+  setupSectionObserver();
+}
+
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function setupSectionObserver() {
+  if (_sectionObserver) { _sectionObserver.disconnect(); _sectionObserver = null; }
+  if (!('IntersectionObserver' in window)) return;
+  _sectionObserver = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (en.isIntersecting) {
+        document.querySelectorAll('.section-rail .rail-dot').forEach(a => {
+          a.classList.toggle('active', a.dataset.target === en.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+  TODAY_SECTIONS.forEach(s => {
+    const el = document.getElementById(s.id);
+    if (el) _sectionObserver.observe(el);
+  });
+}
+
+function setSectionRailVisible(visible) {
+  const rail = document.getElementById('sectionRail');
+  if (rail) rail.classList.toggle('show', !!visible);
+}
+
 function todayISO() {
   const d = new Date();
   const off = d.getTimezoneOffset();
@@ -2161,6 +2900,7 @@ function buildChecklist(containerId, items, kind) {
     // rate-only items have no checkbox — just label + always-visible stars
     if (item.rateOnly) {
       div.classList.add('rate-only');
+      div.id = 'pitem_' + item.id;
       const lab = document.createElement('label');
       lab.textContent = item.label;
       lab.style.cursor = 'default';
@@ -2254,7 +2994,7 @@ function buildChecklist(containerId, items, kind) {
         noteInp.type = 'text';
         noteInp.className = 'meal-note-input';
         noteInp.id = 'yesNote_' + item.id;
-        noteInp.placeholder = 'How did you make them happy?';
+        noteInp.placeholder = item.yesNotePlaceholder || 'How did you make them happy?';
         noteInp.style.display = 'none';
         noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
@@ -2747,6 +3487,7 @@ function writeForm(entry) {
   });
   renderTodayMedicines(_dateVal);
   renderBirthdayReminders(_dateVal);
+  renderNeverMissTwice(_dateVal);
 }
 
 function saveEntry() {
@@ -4786,7 +5527,12 @@ function confirmResetWeights() {
 /* ---------- DATA TAB ---------- */
 function exportJSON() {
   const payload = Object.assign({}, getAllEntries(), {
-    __meta: { courses: getCourses(), medlogs: getMedLogs(), social: getSocial() }
+    __meta: {
+      courses: getCourses(),
+      medlogs: getMedLogs(),
+      social:  getSocial(),
+      finance: getFinanceData()
+    }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
@@ -4806,11 +5552,12 @@ function importJSON(ev) {
     try {
       const data = JSON.parse(reader.result);
       if (typeof data !== 'object') throw new Error('bad format');
-      // Restore medicines data if present
+      // Restore non-entry data if present (medicines, social circle, finance)
       if (data.__meta) {
         if (data.__meta.courses) setCourses(data.__meta.courses);
         if (data.__meta.medlogs) setMedLogs(data.__meta.medlogs);
         if (data.__meta.social)  setSocial(data.__meta.social);
+        if (data.__meta.finance) setFinanceData(data.__meta.finance);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
@@ -4829,15 +5576,16 @@ function importJSON(ev) {
 
 function confirmReset() {
   if (confirm('This will erase ALL diary entries from this browser. Did you export a backup? Continue?')) {
-    const keepMeds = confirm('Also erase your medicine courses and dose logs?\n(Cancel to keep medicine data.)');
+    const eraseOther = confirm('Also erase your medicine courses, dose logs, and financial data?\n(Cancel to keep them.)');
     localStorage.removeItem(STORAGE_KEY);
-    if (keepMeds) {
+    if (eraseOther) {
       localStorage.removeItem(MED_COURSES_KEY);
       localStorage.removeItem(MED_LOG_KEY);
+      localStorage.removeItem(FINANCE_KEY);
     }
     refreshHistoryList();
     clearForm();
-    showMsg('dataMsg', 'All entries erased.' + (keepMeds ? ' Medicine data erased.' : ''), 'warn');
+    showMsg('dataMsg', 'All entries erased.' + (eraseOther ? ' Medicine & financial data erased.' : ''), 'warn');
   }
 }
 
@@ -4856,6 +5604,12 @@ function showTab(name) {
   if (name === 'goals-scoring')  renderScoringTab();
   if (name === 'medicines') renderMedicinesTab();
   if (name === 'social')    renderSocialTab();
+  if (name === 'financial') renderFinancialTab();
+  // Day-summary chip and section rail are only useful on Today
+  const onToday = (name === 'today');
+  setSectionRailVisible(onToday);
+  if (onToday) updateDaySummaryChip();
+  else { const c = document.getElementById('daySummaryChip'); if (c) c.classList.remove('show'); }
 }
 
 /* ---------- AUTOSAVE ---------- */
@@ -4879,6 +5633,8 @@ function autosave() {
   ind.textContent = '✓ Autosaved at ' + hhmm;
   ind.style.opacity = '1';
   setTimeout(() => { ind.style.opacity = '0'; }, 3000);
+  updateDaySummaryChip();
+  renderNeverMissTwice();
 }
 
 function setupAutosave() {
@@ -5019,7 +5775,7 @@ function renderTodayMedicines(dateStr) {
     if (medLog[s.slotId] === true) takenSlots++;
   });
 
-  let html = '<div class="card" style="padding-bottom:16px;">';
+  let html = '<div class="card card-log" style="padding-bottom:16px;">';
   html += '<h2 style="margin-bottom:12px;">💊 Today\'s Medicines</h2>';
   html += '<table class="med-log-table"><tbody>';
 
@@ -5902,6 +6658,286 @@ function toggleConnect(id, platform) {
     tmp.innerHTML = renderPersonRow(p);
     row.replaceWith(tmp.firstElementChild);
   }
+}
+
+/* ========== FINANCIAL TAB ========== */
+
+const FINANCE_KEY = 'dear-diary-finance';
+const DEFAULT_FINANCE_CATEGORIES = [
+  { id: 'groceries',    label: 'Grocery & Essentials' },
+  { id: 'food',         label: 'Food & Dining' },
+  { id: 'health',       label: 'Healthcare & Pharmacy' },
+  { id: 'electricity',  label: 'Electricity Bill (DHBVN)' },
+  { id: 'internet',     label: 'Internet & Phone (Airtel)' },
+  { id: 'streaming',    label: 'Streaming & Digital Subscriptions', hint: 'Google One, YouTube, etc.' },
+  { id: 'shopping',     label: 'Shopping & Lifestyle' },
+  { id: 'creditCard',   label: 'Credit Card Payment' },
+  { id: 'construction', label: 'Construction & Home Repairs' },
+  { id: 'domesticHelp', label: 'Domestic Help' },
+  { id: 'fuel',         label: 'Fuel' },
+  { id: 'vehicleMain',  label: 'Vehicle Maintenance' },
+  { id: 'social',       label: 'Social Relationships & Events' },
+  { id: 'others',       label: 'Others' }
+];
+
+// --- Storage ---
+// {
+//   categories: [{ id, label, hint, budget }, ...],
+//   actuals:    { "YYYY-MM": { catId: { actual, remarks } } }
+// }
+function getFinanceData() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(FINANCE_KEY) || '{}');
+    if (!raw.categories) raw.categories = DEFAULT_FINANCE_CATEGORIES.map(c => ({ ...c, budget: 0 }));
+    // Backfill any newly-added default categories
+    DEFAULT_FINANCE_CATEGORIES.forEach(def => {
+      if (!raw.categories.find(c => c.id === def.id)) {
+        raw.categories.push({ ...def, budget: 0 });
+      }
+    });
+    if (!raw.actuals) raw.actuals = {};
+    return raw;
+  } catch (e) {
+    return {
+      categories: DEFAULT_FINANCE_CATEGORIES.map(c => ({ ...c, budget: 0 })),
+      actuals: {}
+    };
+  }
+}
+
+function setFinanceData(data) {
+  localStorage.setItem(FINANCE_KEY, JSON.stringify(data));
+}
+
+// --- State for current view ---
+let _finViewYear  = new Date().getFullYear();
+let _finViewMonth = new Date().getMonth(); // 0-indexed
+
+function _finCurrentKey() {
+  return _finViewYear + '-' + String(_finViewMonth + 1).padStart(2, '0');
+}
+
+function _finFormatINR(n) {
+  if (typeof n !== 'number' || isNaN(n)) n = 0;
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+
+function renderFinancialTab() {
+  const el = document.getElementById('financialContent');
+  if (!el) return;
+  const data = getFinanceData();
+  const monthKey = _finCurrentKey();
+  const monthActuals = data.actuals[monthKey] || {};
+
+  // Compute totals
+  let totalBudget = 0, totalActual = 0;
+  data.categories.forEach(c => {
+    totalBudget += (Number(c.budget) || 0);
+    const a = monthActuals[c.id];
+    totalActual += (a && Number(a.actual)) || 0;
+  });
+  const variance = totalActual - totalBudget;
+  const varClass = variance > 0 ? 'over' : (variance < 0 ? 'under' : '');
+
+  let html = '';
+
+  // Header card with month nav + summary
+  html += '<div class="card">';
+  html += '<div class="fin-month-bar">';
+  html += '<h2>💰 Financial Tracking</h2>';
+  html += '<div class="fin-month-nav">';
+  html += '<button class="fin-nav-btn" onclick="finPrevMonth()">◀ Prev</button>';
+  html += '<span class="fin-month-label" id="finMonthLabel">' + MONTH_NAMES_FULL[_finViewMonth] + ' ' + _finViewYear + '</span>';
+  html += '<button class="fin-nav-btn" onclick="finNextMonth()">Next ▶</button>';
+  html += '</div>';
+  html += '</div>';
+  html += '<p style="color:var(--soft); margin:8px 0 0; font-size:0.9em;">Set expected budgets per category (one-time setup, edit any time). Then log your actual spend &amp; remarks per month.</p>';
+
+  // Summary grid
+  html += '<div class="fin-summary-grid">';
+  html += '<div class="fin-summary-box"><div class="fin-summary-num">' + _finFormatINR(totalBudget) + '</div><div class="fin-summary-label">Expected</div></div>';
+  html += '<div class="fin-summary-box"><div class="fin-summary-num">' + _finFormatINR(totalActual) + '</div><div class="fin-summary-label">Actual</div></div>';
+  const varSign = variance > 0 ? '+' : (variance < 0 ? '−' : '');
+  html += '<div class="fin-summary-box"><div class="fin-summary-num ' + varClass + '">'
+        + varSign + _finFormatINR(Math.abs(variance))
+        + '</div><div class="fin-summary-label">' + (variance > 0 ? 'Over Budget' : variance < 0 ? 'Under Budget' : 'On Budget') + '</div></div>';
+  html += '</div>';
+  html += '<div id="finSaveMsg" class="fin-savemsg">✓ Saved</div>';
+  html += '</div>';
+
+  // Table card
+  html += '<div class="card">';
+  html += '<div class="fin-table-wrap"><table class="fin-table"><thead><tr>';
+  html += '<th>Category</th>';
+  html += '<th class="fin-num-col">Expected (₹)</th>';
+  html += '<th class="fin-num-col">Actual (₹)</th>';
+  html += '<th class="fin-num-col">Variance</th>';
+  html += '<th>Remarks</th>';
+  html += '</tr></thead><tbody>';
+
+  data.categories.forEach(c => {
+    const a = monthActuals[c.id] || {};
+    const actualVal = Number(a.actual) || 0;
+    const budgetVal = Number(c.budget) || 0;
+    const cVar = actualVal - budgetVal;
+    let cVarClass = 'zero';
+    let cVarStr = '—';
+    if (cVar > 0)      { cVarClass = 'over';  cVarStr = '+' + _finFormatINR(cVar); }
+    else if (cVar < 0) { cVarClass = 'under'; cVarStr = '−' + _finFormatINR(Math.abs(cVar)); }
+    else if (actualVal > 0 || budgetVal > 0) { cVarClass = 'zero'; cVarStr = '₹0'; }
+
+    html += '<tr>';
+    html += '<td class="fin-cat-cell">' + esc(c.label);
+    if (c.hint) html += '<span class="fin-cat-hint">' + esc(c.hint) + '</span>';
+    html += '</td>';
+    html += '<td><input type="number" min="0" step="100" class="fin-num-input" '
+          + 'value="' + (budgetVal || '') + '" '
+          + 'placeholder="0" '
+          + 'oninput="finUpdateBudget(\'' + c.id + '\', this.value)"></td>';
+    html += '<td><input type="number" min="0" step="100" class="fin-num-input" '
+          + 'value="' + (actualVal || '') + '" '
+          + 'placeholder="0" '
+          + 'oninput="finUpdateActual(\'' + c.id + '\', this.value)"></td>';
+    html += '<td class="fin-variance-cell ' + cVarClass + '">' + cVarStr + '</td>';
+    html += '<td><input type="text" class="fin-remarks-input" '
+          + 'value="' + esc(a.remarks || '') + '" '
+          + 'placeholder="Optional notes…" '
+          + 'oninput="finUpdateRemarks(\'' + c.id + '\', this.value)"></td>';
+    html += '</tr>';
+  });
+
+  // Totals row
+  html += '<tr class="fin-totals-row">';
+  html += '<td>Total</td>';
+  html += '<td style="text-align:right;">' + _finFormatINR(totalBudget) + '</td>';
+  html += '<td style="text-align:right;">' + _finFormatINR(totalActual) + '</td>';
+  html += '<td class="fin-variance-cell ' + varClass + '">' + (variance === 0 ? '₹0' : (varSign + _finFormatINR(Math.abs(variance)))) + '</td>';
+  html += '<td></td>';
+  html += '</tr>';
+
+  html += '</tbody></table></div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+// --- Month navigation ---
+function finPrevMonth() {
+  _finViewMonth--;
+  if (_finViewMonth < 0) { _finViewMonth = 11; _finViewYear--; }
+  renderFinancialTab();
+}
+function finNextMonth() {
+  _finViewMonth++;
+  if (_finViewMonth > 11) { _finViewMonth = 0; _finViewYear++; }
+  renderFinancialTab();
+}
+
+// --- Field update handlers ---
+let _finSaveTimer = null;
+function _finShowSaved() {
+  const el = document.getElementById('finSaveMsg');
+  if (!el) return;
+  el.classList.add('show');
+  clearTimeout(_finSaveTimer);
+  _finSaveTimer = setTimeout(() => { el.classList.remove('show'); }, 2000);
+}
+
+let _finLiveUpdateTimer = null;
+function _finRefreshSummaryLive() {
+  // Light recompute of just the summary boxes + totals without rebuilding inputs
+  // (avoids losing focus while typing)
+  const data = getFinanceData();
+  const monthKey = _finCurrentKey();
+  const monthActuals = data.actuals[monthKey] || {};
+  let totalBudget = 0, totalActual = 0;
+  data.categories.forEach(c => {
+    totalBudget += (Number(c.budget) || 0);
+    const a = monthActuals[c.id];
+    totalActual += (a && Number(a.actual)) || 0;
+  });
+  const variance = totalActual - totalBudget;
+  const summaryBoxes = document.querySelectorAll('.fin-summary-box .fin-summary-num');
+  if (summaryBoxes.length === 3) {
+    summaryBoxes[0].textContent = _finFormatINR(totalBudget);
+    summaryBoxes[1].textContent = _finFormatINR(totalActual);
+    summaryBoxes[2].textContent = (variance > 0 ? '+' : variance < 0 ? '−' : '') + _finFormatINR(Math.abs(variance));
+    summaryBoxes[2].classList.remove('over','under');
+    if (variance > 0) summaryBoxes[2].classList.add('over');
+    else if (variance < 0) summaryBoxes[2].classList.add('under');
+    // Update label
+    const labels = document.querySelectorAll('.fin-summary-box .fin-summary-label');
+    if (labels.length === 3) {
+      labels[2].textContent = variance > 0 ? 'Over Budget' : variance < 0 ? 'Under Budget' : 'On Budget';
+    }
+  }
+  // Update each row's variance cell + the totals row
+  const rows = document.querySelectorAll('.fin-table tbody tr');
+  data.categories.forEach((c, i) => {
+    const row = rows[i];
+    if (!row) return;
+    const a = monthActuals[c.id] || {};
+    const actualVal = Number(a.actual) || 0;
+    const budgetVal = Number(c.budget) || 0;
+    const cVar = actualVal - budgetVal;
+    const cell = row.querySelector('.fin-variance-cell');
+    if (!cell) return;
+    cell.classList.remove('over','under','zero');
+    if (cVar > 0)      { cell.classList.add('over');  cell.textContent = '+' + _finFormatINR(cVar); }
+    else if (cVar < 0) { cell.classList.add('under'); cell.textContent = '−' + _finFormatINR(Math.abs(cVar)); }
+    else if (actualVal > 0 || budgetVal > 0) { cell.classList.add('zero'); cell.textContent = '₹0'; }
+    else { cell.classList.add('zero'); cell.textContent = '—'; }
+  });
+  // Totals row
+  const totalsRow = document.querySelector('.fin-totals-row');
+  if (totalsRow) {
+    const tds = totalsRow.querySelectorAll('td');
+    if (tds.length >= 4) {
+      tds[1].textContent = _finFormatINR(totalBudget);
+      tds[2].textContent = _finFormatINR(totalActual);
+      tds[3].classList.remove('over','under','zero');
+      if (variance > 0) tds[3].classList.add('over');
+      else if (variance < 0) tds[3].classList.add('under');
+      else tds[3].classList.add('zero');
+      tds[3].textContent = variance === 0 ? '₹0' : ((variance > 0 ? '+' : '−') + _finFormatINR(Math.abs(variance)));
+    }
+  }
+}
+
+function _finScheduleLiveUpdate() {
+  clearTimeout(_finLiveUpdateTimer);
+  _finLiveUpdateTimer = setTimeout(_finRefreshSummaryLive, 150);
+}
+
+function finUpdateBudget(catId, value) {
+  const data = getFinanceData();
+  const cat = data.categories.find(c => c.id === catId);
+  if (!cat) return;
+  cat.budget = Number(value) || 0;
+  setFinanceData(data);
+  _finShowSaved();
+  _finScheduleLiveUpdate();
+}
+
+function finUpdateActual(catId, value) {
+  const data = getFinanceData();
+  const key = _finCurrentKey();
+  if (!data.actuals[key]) data.actuals[key] = {};
+  if (!data.actuals[key][catId]) data.actuals[key][catId] = {};
+  data.actuals[key][catId].actual = Number(value) || 0;
+  setFinanceData(data);
+  _finShowSaved();
+  _finScheduleLiveUpdate();
+}
+
+function finUpdateRemarks(catId, value) {
+  const data = getFinanceData();
+  const key = _finCurrentKey();
+  if (!data.actuals[key]) data.actuals[key] = {};
+  if (!data.actuals[key][catId]) data.actuals[key][catId] = {};
+  data.actuals[key][catId].remarks = value;
+  setFinanceData(data);
+  _finShowSaved();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
