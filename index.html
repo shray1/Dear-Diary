@@ -1597,6 +1597,159 @@
   .food-status.fs-no   { background: #d98060;      color: #fff; }
   .food-status.fs-open { background: var(--line);  color: var(--soft); }
 
+  /* ──────────────────────────────────────────────────────────────────
+     Desktop ≥1500px — declutter the Today panel by moving two pieces
+     of context into the side margins.
+       LEFT  : Month Plan + Week Plan rendered as pinned sticky notes
+       RIGHT : "Don't miss twice" banner pinned as a today's-focus card
+     Medicines stay in the main content flow.
+     ────────────────────────────────────────────────────────────────── */
+  @media (min-width: 1500px) {
+    /* Hide the section rail at this width — side panels are the new context */
+    .section-rail { display: none !important; }
+
+    /* ── LEFT: Plan memo cards (theme-matching, mirrors the right side) ──
+       The wrapper #leftPinnedSidebar is the fixed-position container; the
+       banners flow inside it as flex children with a real 22px gap. This
+       means the two cards never overlap regardless of plan text length —
+       and when one is hidden (e.g. Monday hides the week banner), there's
+       no awkward empty space. */
+    #leftPinnedSidebar {
+      position: fixed;
+      /* Width = 75% of available white space; centered with 12.5% margin each side.
+         White space per side = (100vw - 1080px) / 2 (container max-width is 1080px).
+         So width = 0.75 × W = (100vw - 1080px) × 0.375
+         And left  = 0.125 × W = (100vw - 1080px) × 0.0625 (centers it in W) */
+      left: calc((100vw - 1080px) * 0.0625);
+      width: calc((100vw - 1080px) * 0.375);
+      top: 180px;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      padding-right: 4px; /* breathing room for the scrollbar */
+    }
+    #leftPinnedSidebar::-webkit-scrollbar { width: 4px; }
+    #leftPinnedSidebar::-webkit-scrollbar-thumb {
+      background: var(--accent-soft);
+      border-radius: 2px;
+    }
+
+    #monthPlanBanner,
+    #weekPlanBanner {
+      position: relative !important;
+      width: 100%;
+      padding: 18px 20px 20px !important;
+      margin: 0 !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 8px !important;
+      box-shadow:
+        0 2px 4px rgba(60, 50, 35, 0.04),
+        0 4px 16px rgba(60, 50, 35, 0.06) !important;
+      transition: box-shadow 0.25s ease, transform 0.25s ease;
+      font-family: 'Georgia', 'Cambria', serif;
+    }
+    /* Month Plan — warm terracotta accent (matches the inline color #c97a4f) */
+    #monthPlanBanner {
+      background: linear-gradient(180deg, #fdf8f2 0%, #fbf2e4 100%) !important;
+      border-left: 4px solid #c97a4f !important;
+    }
+    /* Week Plan — primary accent brown */
+    #weekPlanBanner {
+      background: linear-gradient(180deg, #f9f4ed 0%, #f3eadd 100%) !important;
+      border-left: 4px solid var(--accent) !important;
+    }
+    /* Subtle hover lift — feels alive but stays elegant */
+    #monthPlanBanner:hover,
+    #weekPlanBanner:hover {
+      transform: translateY(-1px);
+      box-shadow:
+        0 4px 8px rgba(60, 50, 35, 0.06),
+        0 8px 24px rgba(60, 50, 35, 0.10) !important;
+    }
+    /* Header label — same uppercase tracked style as the rest of the diary */
+    #monthPlanBanner > div:first-child,
+    #weekPlanBanner  > div:first-child {
+      font-family: 'Georgia', serif !important;
+      letter-spacing: 0.5px !important;
+      font-size: 0.74em !important;
+      padding-bottom: 8px !important;
+      margin-bottom: 10px !important;
+      border-bottom: 1px solid var(--line);
+    }
+    /* Body text — warm dark ink, generous line-height for readable plan text */
+    #monthPlanBannerText,
+    #weekPlanBannerText {
+      color: var(--ink) !important;
+      font-size: 0.9em !important;
+      line-height: 1.6 !important;
+      font-family: 'Georgia', serif !important;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+    /* Scrollbar uses the warm accent palette, not browser default */
+    #monthPlanBannerText::-webkit-scrollbar,
+    #weekPlanBannerText::-webkit-scrollbar { width: 4px; }
+    #monthPlanBannerText::-webkit-scrollbar-thumb,
+    #weekPlanBannerText::-webkit-scrollbar-thumb {
+      background: var(--accent-soft);
+      border-radius: 2px;
+    }
+
+    /* ── RIGHT: "Don't miss twice" pinned card ──
+       Mirrors the left sidebar's responsive sizing: 75% of right-side white space. */
+    #neverMissTwiceCard {
+      position: fixed !important;
+      right: calc((100vw - 1080px) * 0.0625);
+      width: calc((100vw - 1080px) * 0.375);
+      top: 180px;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      margin: 0 !important;
+      z-index: 55;
+    }
+    #neverMissTwiceCard:empty { display: none; }
+    /* Compact the banner's internal card for sidebar context */
+    #neverMissTwiceCard .never-miss-card {
+      padding: 18px 18px 16px !important;
+      margin-bottom: 0 !important;
+      border-left-width: 4px !important;
+    }
+    #neverMissTwiceCard .never-miss-card .nm-title {
+      font-size: 1.05em !important;
+      line-height: 1.3;
+    }
+    #neverMissTwiceCard .never-miss-card .nm-sub {
+      font-size: 0.82em !important;
+      line-height: 1.4;
+      margin-top: 4px !important;
+    }
+    #neverMissTwiceCard .nm-chips {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    #neverMissTwiceCard .nm-chip {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 6px 10px;
+      font-size: 0.84em;
+    }
+    #neverMissTwiceCard .nm-progress-line {
+      font-size: 0.78em;
+      margin-top: 10px;
+    }
+    /* Subtle scrollbar */
+    #neverMissTwiceCard::-webkit-scrollbar { width: 5px; }
+    #neverMissTwiceCard::-webkit-scrollbar-thumb {
+      background: rgba(192, 122, 79, 0.3);
+      border-radius: 3px;
+    }
+  }
+
   /* ── 2026 UI refresh: sticky tabs, compact header, hierarchy, chip, rail ── */
 
   /* Sticky tab nav */
@@ -1717,6 +1870,11 @@
   @media (max-width: 800px) {
     .day-summary-chip { display: none; }
   }
+  /* Once the user scrolls past the page header, the tab nav becomes sticky at
+     the top of the viewport. The chip then drops down to sit cleanly BELOW the
+     tab bar so they never collide — especially important on narrower desktops
+     (≈900–1300px) where the rightmost tabs and chip share horizontal space. */
+  .day-summary-chip.chip-scrolled { top: 68px; }
 
   /* Section quick-jump rail (right side, desktop only) */
   .section-rail {
@@ -2111,16 +2269,21 @@
   <!-- "Don't miss twice" banner — rendered dynamically when yesterday had any misses -->
   <div id="neverMissTwiceCard"></div>
 
-  <!-- Month Plan Banner — shown on all days that have a plan for this month -->
-  <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid #c97a4f; border-radius:8px; padding:14px 18px; margin-bottom:12px;">
-    <div style="font-size:0.78em; color:#c97a4f; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📅 This Month's Plan</div>
-    <div id="monthPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
-  </div>
+  <!-- Plan banners — flow naturally in mobile/narrow desktop; on wide desktop
+       this wrapper becomes a fixed left-margin sidebar so the two cards stack
+       with a real gap regardless of content length. -->
+  <div id="leftPinnedSidebar">
+    <!-- Month Plan Banner — shown on all days that have a plan for this month -->
+    <div id="monthPlanBanner" style="display:none; background:#fdf8f2; border:1px solid var(--accent-soft); border-left:3px solid #c97a4f; border-radius:8px; padding:14px 18px; margin-bottom:12px;">
+      <div style="font-size:0.78em; color:#c97a4f; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">📅 This Month's Plan</div>
+      <div id="monthPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+    </div>
 
-  <!-- Week Plan Banner — shown Tue–Sun when a week plan exists -->
-  <div id="weekPlanBanner" style="display:none; background:#f8f5ff; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px; margin-bottom:20px;">
-    <div style="font-size:0.78em; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🗓 This Week's Plan</div>
-    <div id="weekPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+    <!-- Week Plan Banner — shown Tue–Sun when a week plan exists -->
+    <div id="weekPlanBanner" style="display:none; background:#f8f5ff; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:8px; padding:14px 18px; margin-bottom:20px;">
+      <div style="font-size:0.78em; color:var(--accent); font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">🗓 This Week's Plan</div>
+      <div id="weekPlanBannerText" style="white-space:pre-line; color:var(--ink); font-size:0.95em; line-height:1.6;"></div>
+    </div>
   </div>
 
   <!-- Birthday reminders — rendered dynamically -->
@@ -2130,7 +2293,7 @@
   <div id="todayMedicinesCard"></div>
 
   <!-- One-off Medicines (self-administered, not part of any course) -->
-  <div class="card card-log">
+  <div class="card card-log" id="oneOffMedsCard">
     <h2>🩹 One-off Medicines</h2>
     <p style="color:var(--soft); margin-top:0; font-size:0.92em;">For medicines taken outside any tracked course — e.g. paracetamol for a fever, cough syrup for a cough.</p>
     <div class="adhoc-med-input-row">
@@ -2661,6 +2824,15 @@ function init() {
   setSectionRailVisible(true);
   updateDaySummaryChip();
   renderNeverMissTwice();
+  // Move the day-summary chip below the sticky tab bar once the user has
+  // scrolled past the page header — prevents it from sitting on top of the
+  // rightmost tabs on narrower desktop viewports.
+  const _chipScrollHandler = () => {
+    const chip = document.getElementById('daySummaryChip');
+    if (chip) chip.classList.toggle('chip-scrolled', window.scrollY > 80);
+  };
+  window.addEventListener('scroll', _chipScrollHandler, { passive: true });
+  _chipScrollHandler(); // set correct state on initial load
   // Any click inside the Today panel may have changed practice/star state — refresh
   const todayPanel = document.getElementById('today');
   if (todayPanel) {
