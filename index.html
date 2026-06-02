@@ -717,6 +717,95 @@
     font-style: normal;
   }
   .goal-item.done .goal-duration-badge { opacity: 0.5; }
+  /* Office-Work marker */
+  .goal-office-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.72em;
+    color: #3a5fa0;
+    background: #e8f0fb;
+    border: 1px solid #b8cef0;
+    border-radius: 10px;
+    padding: 2px 7px 2px 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-style: normal;
+    font-weight: bold;
+    letter-spacing: 0.2px;
+  }
+  .goal-item.done .goal-office-badge { opacity: 0.55; }
+  .goal-office-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--soft);
+    font-size: 0.85em;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--card);
+    transition: all 0.12s;
+  }
+  .goal-office-check:hover { border-color: #b8cef0; background: #f4f8ff; }
+  .goal-office-check input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+    accent-color: #3a5fa0;
+    width: 14px;
+    height: 14px;
+  }
+  .goal-office-check.active {
+    background: #e8f0fb;
+    border-color: #b8cef0;
+    color: #3a5fa0;
+    font-weight: bold;
+  }
+  .goal-btn.goal-office-btn.active {
+    background: #e8f0fb;
+    border-color: #b8cef0;
+    color: #3a5fa0;
+  }
+  .goal-btn.goal-office-btn:hover { border-color: #b8cef0; color: #3a5fa0; }
+  /* Office Work report card */
+  .office-work-card .progress-row span:first-child { color: var(--ink); }
+  .office-work-empty {
+    color: var(--soft);
+    font-style: italic;
+    text-align: center;
+    padding: 14px 0;
+  }
+  .office-goals-list {
+    margin-top: 12px;
+  }
+  .office-goal-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92em;
+  }
+  .office-goal-row:last-child { border-bottom: none; }
+  .office-goal-date {
+    color: var(--soft);
+    font-size: 0.82em;
+    white-space: nowrap;
+    min-width: 90px;
+  }
+  .office-goal-text { flex: 1; color: var(--ink); }
+  .office-goal-text.done { text-decoration: line-through; color: var(--soft); }
+  .office-goal-dur {
+    font-size: 0.78em;
+    color: var(--soft);
+    background: var(--line);
+    border-radius: 8px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
   /* Meal note input (inside daily practice rows) */
   .meal-note-input {
     flex: 1;
@@ -2081,6 +2170,10 @@
           <option value="5.5">5.5 hr</option>
           <option value="6">6 hr</option>
         </select>
+        <label class="goal-office-check" id="goalOfficeCheckLabel" title="Mark this goal as Office Work">
+          <input type="checkbox" id="goalOfficeFlag" onchange="document.getElementById('goalOfficeCheckLabel').classList.toggle('active', this.checked);">
+          🏢 Office
+        </label>
         <button class="secondary" onclick="addGoal()" style="white-space:nowrap;">+ Add Goal</button>
       </div>
       <div id="goalsList"></div>
@@ -3252,7 +3345,7 @@ function readForm() {
     bedTime: document.getElementById('bedTime').value,
     screenTime: document.getElementById('screenTime').value,
     plan: document.getElementById('planText').value,
-    goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done })),
+    goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done, isOfficeWork: !!g.isOfficeWork })),
     adHocMeds: currentAdHocMeds.map(m => ({
       id: m.id,
       name: m.name || '',
@@ -3341,7 +3434,7 @@ function writeForm(entry) {
   document.getElementById('bedTime').value = entry.bedTime || '';
   document.getElementById('screenTime').value = entry.screenTime || '';
   document.getElementById('planText').value = entry.plan || '';
-  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, _editing: false }));
+  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, isOfficeWork: !!g.isOfficeWork, _editing: false }));
   renderGoalsList();
   currentAdHocMeds = (entry.adHocMeds || []).map(m => ({
     id: m.id || ('adhoc_' + Date.now() + '_' + Math.floor(Math.random() * 9999)),
@@ -3616,12 +3709,16 @@ function renderGoalsList() {
         </div>
       </div>`;
     }
+    const officeBadge = goal.isOfficeWork ? '<span class="goal-office-badge">🏢 Office</span>' : '';
     return `<div class="goal-item ${goal.done ? 'done' : ''}">
       <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})"
         title="${goal.done ? 'Mark as not done' : 'Mark as done'}">
       <span class="goal-text">${esc(goal.text)}</span>
+      ${officeBadge}
       <span class="goal-duration-badge">${durationLabel(dur)}</span>
       <div class="goal-actions">
+        <button class="goal-btn goal-office-btn ${goal.isOfficeWork ? 'active' : ''}" onclick="toggleGoalOffice(${idx})"
+          title="${goal.isOfficeWork ? 'Unmark as Office Work' : 'Mark as Office Work'}">🏢</button>
         <button class="goal-btn" onclick="editGoal(${idx})" title="Edit goal">✎</button>
         <button class="goal-btn goal-danger" onclick="removeGoal(${idx})" title="Remove goal">✕</button>
       </div>
@@ -3647,13 +3744,24 @@ function renderGoalsList() {
 function addGoal() {
   const input    = document.getElementById('goalInput');
   const durSel   = document.getElementById('goalDuration');
+  const officeEl = document.getElementById('goalOfficeFlag');
+  const officeLbl = document.getElementById('goalOfficeCheckLabel');
   const text     = (input.value || '').trim();
   if (!text) { input.focus(); return; }
   const duration = parseFloat(durSel ? durSel.value : 1) || 1;
-  currentGoals.push({ id: Date.now(), text, duration, done: false, _editing: false });
+  const isOfficeWork = !!(officeEl && officeEl.checked);
+  currentGoals.push({ id: Date.now(), text, duration, done: false, isOfficeWork, _editing: false });
   input.value = '';
   if (durSel) durSel.value = '1'; // reset to default
+  if (officeEl) officeEl.checked = false;
+  if (officeLbl) officeLbl.classList.remove('active');
   input.focus();
+  renderGoalsList();
+  autosave();
+}
+
+function toggleGoalOffice(idx) {
+  currentGoals[idx].isOfficeWork = !currentGoals[idx].isOfficeWork;
   renderGoalsList();
   autosave();
 }
@@ -4390,9 +4498,12 @@ function renderDayReport(c) {
     html += '</div>';
     entry.goals.forEach(g => {
       const style = g.done ? 'text-decoration:line-through; color:var(--soft);' : 'color:var(--ink);';
+      const officeBadge = g.isOfficeWork
+        ? '<span class="goal-office-badge" style="margin-left:6px;">🏢 Office</span>'
+        : '';
       html += '<div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); font-size:0.95em;">';
       html += '<span style="color:' + (g.done ? 'var(--good)' : 'var(--line)') + '; font-size:1.1em;">' + (g.done ? '✓' : '○') + '</span>';
-      html += '<span style="' + style + '">' + esc(g.text) + '</span>';
+      html += '<span style="' + style + '">' + esc(g.text) + '</span>' + officeBadge;
       html += '</div>';
     });
     html += '</div>';
@@ -5153,7 +5264,94 @@ function renderMonthReport(c) {
     html += '</div>';
   }
 
+  // Office work for the month
+  html += renderOfficeWorkCardForRange(_allM, r.monthStart, r.monthEnd, true);
+
   c.innerHTML = html;
+}
+
+/* ── Office Work helpers ── */
+function collectOfficeGoalsInRange(allEntries, startStr, endStr) {
+  const start = parseISODate(startStr);
+  const end   = parseISODate(endStr);
+  const out = [];
+  Object.keys(allEntries).forEach(dateStr => {
+    const d = parseISODate(dateStr);
+    if (d < start || d > end) return;
+    const e = allEntries[dateStr];
+    if (!e || !Array.isArray(e.goals)) return;
+    e.goals.forEach(g => {
+      if (g.isOfficeWork) out.push({ ...g, date: dateStr });
+    });
+  });
+  out.sort((a, b) => a.date.localeCompare(b.date));
+  return out;
+}
+
+function renderOfficeWorkCardForRange(allEntries, startStr, endStr, showList) {
+  const office = collectOfficeGoalsInRange(allEntries, startStr, endStr);
+  let html = '<div class="card office-work-card">';
+  html += '<h2>🏢 Office Work</h2>';
+  if (office.length === 0) {
+    html += '<div class="office-work-empty">No office-work goals logged in this period.</div>';
+    html += '</div>';
+    return html;
+  }
+  const total = office.length;
+  const done  = office.filter(g => g.done).length;
+  const totalHrs = office.reduce((s, g) => s + (Number(g.duration) || 1), 0);
+  const doneHrs  = office.filter(g => g.done).reduce((s, g) => s + (Number(g.duration) || 1), 0);
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+
+  html += '<div class="stat-grid">';
+  html += statBoxHtml(total, 'Office Goals');
+  html += statBoxHtml(done + ' / ' + total, 'Completed');
+  html += statBoxHtml(totalHrs.toFixed(1) + ' h', 'Total Hours');
+  html += statBoxHtml(pct + '%', 'Done Rate');
+  html += '</div>';
+
+  // Monthly breakdown (only useful when the range spans multiple months — i.e. year report)
+  const byMonth = {};
+  office.forEach(g => {
+    const ym = g.date.slice(0, 7);
+    if (!byMonth[ym]) byMonth[ym] = [];
+    byMonth[ym].push(g);
+  });
+  const monthKeys = Object.keys(byMonth).sort();
+  if (monthKeys.length > 1) {
+    html += '<h3 style="margin-top:18px;">By month</h3>';
+    monthKeys.forEach(ym => {
+      const list = byMonth[ym];
+      const mDone = list.filter(g => g.done).length;
+      const mHrs  = list.reduce((s, g) => s + (Number(g.duration) || 1), 0);
+      const [yy, mm] = ym.split('-');
+      const label = MONTH_NAMES_SHORT[parseInt(mm) - 1] + ' ' + yy;
+      const monthPct = list.length > 0 ? Math.round(mDone / list.length * 100) : 0;
+      html += '<div class="progress-row"><span>' + label + ' &nbsp;<span style="color:var(--soft); font-size:0.85em;">(' + mDone + ' / ' + list.length + ' done · ' + mHrs.toFixed(1) + 'h)</span></span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + monthPct + '%"></div></div>';
+      html += '<span class="pct">' + monthPct + '%</span></div>';
+    });
+  }
+
+  if (showList) {
+    html += '<details style="margin-top:14px;"><summary style="cursor:pointer; color:var(--accent); font-weight:bold;">All ' + total + ' office goals</summary>';
+    html += '<div class="office-goals-list">';
+    office.forEach(g => {
+      const icon = g.done ? '✓' : '○';
+      const iconColor = g.done ? 'var(--good)' : 'var(--soft)';
+      const cls = g.done ? 'done' : '';
+      html += '<div class="office-goal-row">';
+      html += '<span style="color:' + iconColor + '; font-size:1.05em; width:14px;">' + icon + '</span>';
+      html += '<span class="office-goal-date">' + g.date + '</span>';
+      html += '<span class="office-goal-text ' + cls + '">' + esc(g.text || '') + '</span>';
+      html += '<span class="office-goal-dur">' + (Number(g.duration) || 1) + 'h</span>';
+      html += '</div>';
+    });
+    html += '</div></details>';
+  }
+
+  html += '</div>';
+  return html;
 }
 
 function renderYearReport(c) {
@@ -5195,6 +5393,9 @@ function renderYearReport(c) {
     html += statBoxHtml(yBed.length,  'Days with bedtime');
     html += '</div></div>';
   }
+
+  // Office work across the year (Jan 1 – Dec 31 of the selected year)
+  html += renderOfficeWorkCardForRange(_allY, year + '-01-01', year + '-12-31', true);
 
   c.innerHTML = html;
 }
