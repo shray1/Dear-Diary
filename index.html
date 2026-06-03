@@ -2646,6 +2646,7 @@ const DAILY_ITEMS = [
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    mealKey: 'eveningSnack' },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
+  { id: 'reciteShabad', label: 'Recite Shabad for the Week', hint: 'A short evening recitation — anchors the week\'s ShabadVani' },
   { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
   { id: 'cyberMindMap',  label: 'Went through Cybersecurity MindMaps', hint: 'Review mind maps to keep the knowledge fresh' },
   { id: 'brushNight',    label: 'Brushed teeth at night', hint: 'A small discipline that protects the day from carrying over' },
@@ -2659,6 +2660,7 @@ const DAILY_ITEMS = [
   { id: 'forgave',    label: 'Forgave others for their mistakes' },
   { id: 'crackJoke',  label: 'Did you crack a joke today?', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
   { id: 'sayNoCommit', label: 'I learnt to say no, and commit', hint: 'Caring about fewer things means rejecting more, and depth in a few commitments beats shallow involvement in many' },
+  { id: 'dontTalkMoney', label: 'Don\'t talk money', hint: 'Kept conversations off finances — wealth, prices, debts, salaries' },
 
   // ── Spirit ──
   { id: 'morningPrayer', section: 'Spirit', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
@@ -2731,6 +2733,7 @@ const DEFAULT_DAILY_SCORING = {
   homemadeLunch:        { weight: 3 },
   homemadeEveningSnack: { weight: 3 },
   homemadeDinner:          { weight: 3 },
+  reciteShabad:  { weight: 2 },
   waterSumiran1: { weight: 1 },
   waterSumiran2: { weight: 1 },
   readHN:        { weight: 1 },
@@ -2750,6 +2753,7 @@ const DEFAULT_DAILY_SCORING = {
   forgave:            { weight: 4 },
   crackJoke:          { weight: 2 },
   sayNoCommit:        { weight: 3 },
+  dontTalkMoney:      { weight: 3 },
   grateful:           { weight: 4 },
   madeHappy:          { weight: 5 },
   familyTime:         { weight: 5 },
