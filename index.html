@@ -2203,6 +2203,10 @@
 </head>
 <body>
 
+<!-- Shared datalist populated from Social Circle — used by daily practices
+     like "Called a friend" to autocomplete people the user already tracks. -->
+<datalist id="socialCirclePeople"></datalist>
+
 <!-- Floating day summary chip (top-right, desktop only) -->
 <div class="day-summary-chip" id="daySummaryChip">
   <span class="chip-practices" id="chipPractices">0 / 16</span>
@@ -2643,6 +2647,7 @@ const DAILY_ITEMS = [
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
   { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
+  { id: 'cyberMindMap',  label: 'Went through Cybersecurity MindMaps', hint: 'Review mind maps to keep the knowledge fresh' },
   { id: 'brushNight',    label: 'Brushed teeth at night', hint: 'A small discipline that protects the day from carrying over' },
 
   // ── Mind & Self-Discipline ──
@@ -2653,6 +2658,7 @@ const DAILY_ITEMS = [
   { id: 'spokeLess',  label: 'Spoke less than usual — conserved energy' },
   { id: 'forgave',    label: 'Forgave others for their mistakes' },
   { id: 'crackJoke',  label: 'Did you crack a joke today?', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
+  { id: 'sayNoCommit', label: 'I learnt to say no, and commit', hint: 'Caring about fewer things means rejecting more, and depth in a few commitments beats shallow involvement in many' },
 
   // ── Spirit ──
   { id: 'morningPrayer', section: 'Spirit', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
@@ -2662,9 +2668,13 @@ const DAILY_ITEMS = [
   // ── Relationships ──
   { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this', yesNote: true },
   { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
+  { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', yesNote: true, yesNotePlaceholder: 'Who did you call? (start typing to search)', yesNoteDatalist: 'socialCirclePeople' },
   { id: 'doGood',      label: 'Did good / heard good / spoke good / watched good' },
   { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
-  { id: 'apologized',  label: 'Apologized for my mistakes (where needed)' },
+  { id: 'apologized',  label: 'I admitted my mistakes fast & openly', hint: 'It disarms people and builds trust' },
+  { id: 'treatWithDignity', label: 'I treat every person with dignity and I give people a good reputation to live up to' },
+  { id: 'goodListener',     label: 'I am a good listener and I encourage others to talk about themselves', hint: 'I let the other person do most of the talking' },
+  { id: 'noFlatWrong',      label: 'I do not flatly tell someone they are wrong', hint: 'Instead I called attention to mistakes indirectly' },
 ];
 
 const WEEKLY_ITEMS = [
@@ -2728,6 +2738,7 @@ const DEFAULT_DAILY_SCORING = {
   waterSumiran4: { weight: 1 },
   waterSumiran5: { weight: 1 },
   waterSumiran6: { weight: 1 },
+  cyberMindMap:  { weight: 2 },
   brushNight:    { weight: 2 },
   morningPrayer:      { weight: 3, starsWeight: 5 },
   eveningPrayer:      { weight: 3, starsWeight: 5 },
@@ -2738,12 +2749,17 @@ const DEFAULT_DAILY_SCORING = {
   spokeLess:          { weight: 3 },
   forgave:            { weight: 4 },
   crackJoke:          { weight: 2 },
+  sayNoCommit:        { weight: 3 },
   grateful:           { weight: 4 },
   madeHappy:          { weight: 5 },
   familyTime:         { weight: 5 },
+  calledFriend:       { weight: 3 },
   doGood:             { weight: 4 },
   helpedSomeone:      { weight: 5 },
-  apologized:         { weight: 3 }
+  apologized:         { weight: 3 },
+  treatWithDignity:   { weight: 3 },
+  goodListener:       { weight: 3 },
+  noFlatWrong:        { weight: 3 }
 };
 // Default weekly tasks — sum to 20
 const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5, shabadVani: 5 };
@@ -2819,6 +2835,7 @@ function init() {
   initReportSelectors();
   renderTodayMedicines(todayISO());
   renderBirthdayReminders(todayISO());
+  refreshSocialCircleDatalist();
   // UI refresh: floating chip + section rail + "don't miss twice" banner
   buildSectionRail();
   setSectionRailVisible(true);
@@ -3265,6 +3282,11 @@ function buildChecklist(containerId, items, kind) {
         noteInp.id = 'yesNote_' + item.id;
         noteInp.placeholder = item.yesNotePlaceholder || 'How did you make them happy?';
         noteInp.style.display = 'none';
+        // Optional: bind to a shared <datalist> for autocomplete (e.g. Social Circle)
+        if (item.yesNoteDatalist) {
+          noteInp.setAttribute('list', item.yesNoteDatalist);
+          noteInp.setAttribute('autocomplete', 'off');
+        }
         noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
         div.appendChild(rowWrap);
@@ -6611,9 +6633,37 @@ function getSocial() {
 }
 function setSocial(list) {
   localStorage.setItem(SOCIAL_KEY, JSON.stringify(list));
+  // Keep the autocomplete datalist used by "Called a friend" in sync.
+  refreshSocialCircleDatalist();
 }
 function socialGenId() {
   return 'p_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+/* Populate the shared #socialCirclePeople datalist so daily-entry autocomplete
+   inputs (e.g. "Called a friend") can suggest the people you actually track.
+   Sorted by category closeness (Close > Good > Casual > Wider) then name. */
+function refreshSocialCircleDatalist() {
+  const dl = document.getElementById('socialCirclePeople');
+  if (!dl) return;
+  const people = getSocial();
+  const order = { close: 0, good: 1, casual: 2, wsn: 3 };
+  const sorted = people.slice().sort((a, b) => {
+    const oa = order[a.category] != null ? order[a.category] : 99;
+    const ob = order[b.category] != null ? order[b.category] : 99;
+    if (oa !== ob) return oa - ob;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+  // Rebuild
+  dl.innerHTML = '';
+  sorted.forEach(p => {
+    if (!p.name) return;
+    const opt = document.createElement('option');
+    opt.value = p.name;
+    const cat = SOCIAL_CATS.find(c => c.id === p.category);
+    if (cat) opt.label = cat.label;       // shown as the description in some browsers
+    dl.appendChild(opt);
+  });
 }
 
 /* ---- Main render ---- */
