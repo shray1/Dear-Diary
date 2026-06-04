@@ -1611,6 +1611,175 @@
   .food-status.fs-no   { background: #d98060;      color: #fff; }
   .food-status.fs-open { background: var(--line);  color: var(--soft); }
 
+  /* ── Calendar / Day Type styling (used in Data & History tab) ── */
+  .cal-event-form {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    align-items: end;
+    padding: 14px;
+    background: var(--bg);
+    border-radius: 6px;
+    border: 1px solid var(--line);
+  }
+  .cal-event-form > div { display: flex; flex-direction: column; gap: 4px; }
+  .cal-event-form label {
+    font-size: 0.78em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin: 0;
+  }
+  .cal-event-form input,
+  .cal-event-form select {
+    padding: 7px 9px;
+    font-size: 0.92em;
+  }
+  .cal-event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cal-event-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .cal-event-info { flex: 1; min-width: 0; line-height: 1.4; }
+  .cal-event-name { font-weight: bold; color: var(--ink); }
+  .cal-event-date { color: var(--soft); font-size: 0.85em; display: block; margin-top: 2px; }
+  .cal-event-remarks {
+    display: block;
+    color: var(--soft);
+    font-size: 0.85em;
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .cal-gazetted-badge {
+    display: inline-block;
+    font-size: 0.7em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #fbe7df;
+    color: #8b3a17;
+    font-weight: bold;
+    margin-left: 8px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .cal-empty {
+    color: var(--soft);
+    font-style: italic;
+    text-align: center;
+    padding: 14px 0;
+    font-size: 0.92em;
+  }
+  /* Mini calendar grid */
+  .cal-mini-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .cal-mini-header button {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--accent);
+    border-radius: 6px;
+    padding: 4px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.95em;
+  }
+  .cal-mini-header button:hover { background: var(--accent-soft); color: white; }
+  .cal-mini-month-label {
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 1.1em;
+  }
+  .cal-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .cal-mini-day-label {
+    text-align: center;
+    font-size: 0.7em;
+    color: var(--soft);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 4px 0;
+    font-weight: bold;
+  }
+  .cal-mini-cell {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85em;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    position: relative;
+    cursor: default;
+    transition: transform 0.1s;
+  }
+  .cal-mini-cell.empty { background: transparent; border: none; }
+  .cal-mini-cell.is-today {
+    border-color: var(--accent);
+    border-width: 2px;
+    font-weight: bold;
+  }
+  .cal-mini-cell.t-office { background: #fdf6ec; color: #8b5a2b; }
+  .cal-mini-cell.t-home   { background: #f0f5ed; color: #4a7a4a; }
+  .cal-mini-cell.t-night  { background: #ebe7f5; color: #5a4a8a; }
+  .cal-mini-cell.t-tour   { background: #e8f0fb; color: #3a5fa0; }
+  .cal-mini-cell.is-gazetted { box-shadow: inset 0 -4px 0 #d63535; }
+  .cal-mini-cell:hover:not(.empty) {
+    transform: scale(1.05);
+    z-index: 1;
+  }
+  .cal-mini-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    font-size: 0.82em;
+    color: var(--soft);
+  }
+  .cal-mini-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .cal-mini-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  /* Day type pill (used in reports) */
+  .daytype-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 0.82em;
+    font-weight: bold;
+  }
+  .daytype-pill.t-office { background: #fdf6ec; color: #8b5a2b; }
+  .daytype-pill.t-home   { background: #f0f5ed; color: #4a7a4a; }
+  .daytype-pill.t-night  { background: #ebe7f5; color: #5a4a8a; }
+  .daytype-pill.t-tour   { background: #e8f0fb; color: #3a5fa0; }
+
   /* ──────────────────────────────────────────────────────────────────
      Desktop ≥1500px — declutter the Today panel by moving two pieces
      of context into the side margins.
@@ -2260,6 +2429,15 @@
       <input type="date" id="entryDate">
     </div>
     <div class="ehs-field">
+      <label for="dayType">📍 Day Type</label>
+      <select id="dayType">
+        <option value="office">🏢 Office</option>
+        <option value="night">🌙 Night Duty</option>
+        <option value="home">🏠 Home</option>
+        <option value="tour">✈️ Tour</option>
+      </select>
+    </div>
+    <div class="ehs-field">
       <label for="dayMood">😌 Mood</label>
       <select id="dayMood">
         <option value="">—</option>
@@ -2715,6 +2893,9 @@
       <span style="margin-left:8px; color:var(--soft);">· Click any cell to open that entry</span>
     </div>
   </div>
+
+  <!-- Holidays / Leaves / Tours + Calendar Preview -->
+  <div id="calendarSection"></div>
 
   <!-- Entry List -->
   <div class="card">
@@ -3685,6 +3866,7 @@ function isSunday(dateStr)  { return new Date(dateStr + 'T00:00:00').getDay() ==
 function readForm() {
   const entry = {
     date: document.getElementById('entryDate').value,
+    dayType: document.getElementById('dayType').value,
     mood: document.getElementById('dayMood').value,
     wakeTime: document.getElementById('wakeTime').value,
     bedTime: document.getElementById('bedTime').value,
@@ -3783,6 +3965,8 @@ function readForm() {
 
 function writeForm(entry) {
   document.getElementById('entryDate').value = entry.date || todayISO();
+  // Day type — use saved value if any, otherwise compute default from holidays/leaves/tours/weekday
+  document.getElementById('dayType').value = entry.dayType || getDefaultDayType(entry.date || todayISO());
   document.getElementById('dayMood').value = entry.mood || '';
   document.getElementById('wakeTime').value = entry.wakeTime || '';
   document.getElementById('bedTime').value = entry.bedTime || '';
@@ -5681,6 +5865,9 @@ function renderMonthReport(c) {
   // Office work for the month
   html += renderOfficeWorkCardForRange(_allM, r.monthStart, r.monthEnd, true);
 
+  // Day type distribution for the month range
+  html += renderDayTypeStatsCard(r.monthStart, r.monthEnd);
+
   c.innerHTML = html;
 }
 
@@ -5810,6 +5997,9 @@ function renderYearReport(c) {
 
   // Office work across the year (Jan 1 – Dec 31 of the selected year)
   html += renderOfficeWorkCardForRange(_allY, year + '-01-01', year + '-12-31', true);
+
+  // Day type distribution across the year
+  html += renderDayTypeStatsCard(year + '-01-01', year + '-12-31');
 
   c.innerHTML = html;
 }
@@ -6143,10 +6333,11 @@ function confirmResetWeights() {
 function exportJSON() {
   const payload = Object.assign({}, getAllEntries(), {
     __meta: {
-      courses: getCourses(),
-      medlogs: getMedLogs(),
-      social:  getSocial(),
-      finance: getFinanceData()
+      courses:  getCourses(),
+      medlogs:  getMedLogs(),
+      social:   getSocial(),
+      finance:  getFinanceData(),
+      calendar: getCalendarData()
     }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -6171,8 +6362,9 @@ function importJSON(ev) {
       if (data.__meta) {
         if (data.__meta.courses) setCourses(data.__meta.courses);
         if (data.__meta.medlogs) setMedLogs(data.__meta.medlogs);
-        if (data.__meta.social)  setSocial(data.__meta.social);
-        if (data.__meta.finance) setFinanceData(data.__meta.finance);
+        if (data.__meta.social)   setSocial(data.__meta.social);
+        if (data.__meta.finance)  setFinanceData(data.__meta.finance);
+        if (data.__meta.calendar) setCalendarData(data.__meta.calendar);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
@@ -6191,16 +6383,17 @@ function importJSON(ev) {
 
 function confirmReset() {
   if (confirm('This will erase ALL diary entries from this browser. Did you export a backup? Continue?')) {
-    const eraseOther = confirm('Also erase your medicine courses, dose logs, and financial data?\n(Cancel to keep them.)');
+    const eraseOther = confirm('Also erase your medicine courses, dose logs, financial data, and calendar (holidays/leaves/tours)?\n(Cancel to keep them.)');
     localStorage.removeItem(STORAGE_KEY);
     if (eraseOther) {
       localStorage.removeItem(MED_COURSES_KEY);
       localStorage.removeItem(MED_LOG_KEY);
       localStorage.removeItem(FINANCE_KEY);
+      localStorage.removeItem(CALENDAR_KEY);
     }
     refreshHistoryList();
     clearForm();
-    showMsg('dataMsg', 'All entries erased.' + (eraseOther ? ' Medicine & financial data erased.' : ''), 'warn');
+    showMsg('dataMsg', 'All entries erased.' + (eraseOther ? ' Medicine, financial & calendar data erased.' : ''), 'warn');
   }
 }
 
@@ -6215,7 +6408,7 @@ function showTab(name) {
   });
   document.getElementById(name).classList.add('active');
   if (name === 'reports')   renderReport();
-  if (name === 'data-history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); }
+  if (name === 'data-history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); renderCalendarSection(); }
   if (name === 'goals-scoring')  renderScoringTab();
   if (name === 'medicines') renderMedicinesTab();
   if (name === 'social')    renderSocialTab();
@@ -6254,7 +6447,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','lessonText','shareText'];
+  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','lessonText','shareText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
@@ -7581,6 +7774,354 @@ function finUpdateRemarks(catId, value) {
   data.actuals[key][catId].remarks = value;
   setFinanceData(data);
   _finShowSaved();
+}
+
+/* ========== DAY TYPE + CALENDAR (Holidays / Leaves / Tours) ========== */
+
+const DAY_TYPES = [
+  { id: 'office', label: '🏢 Office',     shortLabel: 'Office'     },
+  { id: 'night',  label: '🌙 Night Duty', shortLabel: 'Night Duty' },
+  { id: 'home',   label: '🏠 Home',       shortLabel: 'Home'       },
+  { id: 'tour',   label: '✈️ Tour',       shortLabel: 'Tour'       }
+];
+
+const CALENDAR_KEY = 'dear-diary-calendar';
+
+function getCalendarData() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CALENDAR_KEY) || '{}');
+    return {
+      holidays: raw.holidays || [],
+      leaves:   raw.leaves   || [],
+      tours:    raw.tours    || []
+    };
+  } catch {
+    return { holidays: [], leaves: [], tours: [] };
+  }
+}
+function setCalendarData(data) {
+  localStorage.setItem(CALENDAR_KEY, JSON.stringify(data));
+}
+function calGenId(prefix) {
+  return prefix + '_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+// Compute the default day type from calendar + weekday rules.
+//   Tour overlap  → tour
+//   Holiday       → home
+//   Leave overlap → home
+//   Mon–Fri       → office
+//   Sat / Sun     → home
+function getDefaultDayType(dateStr) {
+  if (!dateStr) dateStr = todayISO();
+  const data = getCalendarData();
+  if (data.tours.some(t => dateStr >= t.startDate && dateStr <= t.endDate))   return 'tour';
+  if (data.holidays.some(h => h.date === dateStr))                              return 'home';
+  if (data.leaves.some(l => dateStr >= l.startDate && dateStr <= l.endDate))   return 'home';
+  const d = new Date(dateStr + 'T00:00:00');
+  const wd = d.getDay();
+  return (wd === 0 || wd === 6) ? 'home' : 'office';
+}
+
+// Effective type for an entry — explicit saved value wins, otherwise default.
+function getEffectiveDayType(entry) {
+  if (entry && entry.dayType) return entry.dayType;
+  const ds = entry && entry.date;
+  return getDefaultDayType(ds);
+}
+
+/* ---- Data & History — Calendar section render ---- */
+function renderCalendarSection() {
+  const el = document.getElementById('calendarSection');
+  if (!el) return;
+
+  let html = '';
+
+  // 1. Holidays
+  html += '<div class="card"><h2>🎉 Holidays</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Days that default to <strong>Home Day</strong> on Daily Entry. Mark Gazetted ones for an indicator.</p>';
+  html += '<div class="cal-event-form">';
+  html += '<div><label for="holidayDate">Date</label><input type="date" id="holidayDate"></div>';
+  html += '<div><label for="holidayName">Name</label><input type="text" id="holidayName" placeholder="e.g. Diwali, Christmas"></div>';
+  html += '<div><label>&nbsp;</label><label style="display:flex; align-items:center; gap:6px; text-transform:none; color:var(--ink); font-size:0.92em;"><input type="checkbox" id="holidayGazetted" style="width:14px; height:14px; cursor:pointer;"> Gazetted Holiday</label></div>';
+  html += '<div><label>&nbsp;</label><button class="primary" onclick="addHoliday()">+ Add</button></div>';
+  html += '</div>';
+  html += '<div class="cal-event-list" style="margin-top:14px;" id="holidaysList"></div>';
+  html += '</div>';
+
+  // 2. Leaves
+  html += '<div class="card"><h2>🛌 Leaves Applied</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Date ranges you applied for leave. Default to <strong>Home Day</strong> on Daily Entry.</p>';
+  html += '<div class="cal-event-form">';
+  html += '<div><label for="leaveStart">Start date</label><input type="date" id="leaveStart"></div>';
+  html += '<div><label for="leaveEnd">End date</label><input type="date" id="leaveEnd" title="Leave blank for single-day leave"></div>';
+  html += '<div><label for="leaveRemarks">Remarks</label><input type="text" id="leaveRemarks" placeholder="Why? (optional)"></div>';
+  html += '<div><label>&nbsp;</label><button class="primary" onclick="addLeave()">+ Add</button></div>';
+  html += '</div>';
+  html += '<div class="cal-event-list" style="margin-top:14px;" id="leavesList"></div>';
+  html += '</div>';
+
+  // 3. Tours
+  html += '<div class="card"><h2>✈️ Tours</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Travel dates. Default to <strong>Tour Day</strong> on Daily Entry.</p>';
+  html += '<div class="cal-event-form">';
+  html += '<div><label for="tourStart">Start date</label><input type="date" id="tourStart"></div>';
+  html += '<div><label for="tourEnd">End date</label><input type="date" id="tourEnd" title="Leave blank for single-day tour"></div>';
+  html += '<div><label for="tourRemarks">Remarks</label><input type="text" id="tourRemarks" placeholder="Where? (optional)"></div>';
+  html += '<div><label>&nbsp;</label><button class="primary" onclick="addTour()">+ Add</button></div>';
+  html += '</div>';
+  html += '<div class="cal-event-list" style="margin-top:14px;" id="toursList"></div>';
+  html += '</div>';
+
+  // 4. Calendar preview
+  html += '<div class="card"><h2>🗓 Calendar Preview</h2>';
+  html += '<div class="cal-mini-header">';
+  html += '<button onclick="calShiftMonth(-1)" title="Previous month">◀</button>';
+  html += '<span class="cal-mini-month-label" id="calMiniLabel">—</span>';
+  html += '<button onclick="calShiftMonth(1)" title="Next month">▶</button>';
+  html += '</div>';
+  html += '<div id="calMiniGrid"></div>';
+  html += '<div class="cal-mini-legend">';
+  html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#fdf6ec;"></span>Office</div>';
+  html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#f0f5ed;"></span>Home</div>';
+  html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#ebe7f5;"></span>Night Duty</div>';
+  html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#e8f0fb;"></span>Tour</div>';
+  html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="border-bottom:3px solid #d63535;"></span>Gazetted Holiday</div>';
+  html += '</div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  renderHolidaysList();
+  renderLeavesList();
+  renderToursList();
+  renderCalMiniGrid();
+}
+
+/* ---- Lists ---- */
+function renderHolidaysList() {
+  const el = document.getElementById('holidaysList');
+  if (!el) return;
+  const data = getCalendarData();
+  const sorted = data.holidays.slice().sort((a, b) => a.date.localeCompare(b.date));
+  if (sorted.length === 0) { el.innerHTML = '<div class="cal-empty">No holidays added yet.</div>'; return; }
+  let html = '';
+  sorted.forEach(h => {
+    html += '<div class="cal-event-item">';
+    html += '<div class="cal-event-info">';
+    html += '<span class="cal-event-name">' + esc(h.name) + '</span>';
+    if (h.gazetted) html += '<span class="cal-gazetted-badge">Gazetted</span>';
+    html += '<span class="cal-event-date">' + h.date + '</span>';
+    html += '</div>';
+    html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteHoliday(\'' + h.id + '\')">Remove</button>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderLeavesList() {
+  const el = document.getElementById('leavesList');
+  if (!el) return;
+  const data = getCalendarData();
+  const sorted = data.leaves.slice().sort((a, b) => a.startDate.localeCompare(b.startDate));
+  if (sorted.length === 0) { el.innerHTML = '<div class="cal-empty">No leaves added yet.</div>'; return; }
+  let html = '';
+  sorted.forEach(l => {
+    const range = l.startDate + (l.endDate !== l.startDate ? ' → ' + l.endDate : '');
+    html += '<div class="cal-event-item">';
+    html += '<div class="cal-event-info">';
+    html += '<span class="cal-event-name">' + range + '</span>';
+    if (l.remarks) html += '<span class="cal-event-remarks">' + esc(l.remarks) + '</span>';
+    html += '</div>';
+    html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteLeave(\'' + l.id + '\')">Remove</button>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+function renderToursList() {
+  const el = document.getElementById('toursList');
+  if (!el) return;
+  const data = getCalendarData();
+  const sorted = data.tours.slice().sort((a, b) => a.startDate.localeCompare(b.startDate));
+  if (sorted.length === 0) { el.innerHTML = '<div class="cal-empty">No tours added yet.</div>'; return; }
+  let html = '';
+  sorted.forEach(t => {
+    const range = t.startDate + (t.endDate !== t.startDate ? ' → ' + t.endDate : '');
+    html += '<div class="cal-event-item">';
+    html += '<div class="cal-event-info">';
+    html += '<span class="cal-event-name">' + range + '</span>';
+    if (t.remarks) html += '<span class="cal-event-remarks">' + esc(t.remarks) + '</span>';
+    html += '</div>';
+    html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteTour(\'' + t.id + '\')">Remove</button>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+/* ---- Add / Delete ---- */
+function addHoliday() {
+  const date = document.getElementById('holidayDate').value;
+  const name = (document.getElementById('holidayName').value || '').trim();
+  const gazetted = document.getElementById('holidayGazetted').checked;
+  if (!date) { alert('Please pick a date for the holiday.'); return; }
+  if (!name) { alert('Please enter a name for the holiday.'); return; }
+  const data = getCalendarData();
+  data.holidays.push({ id: calGenId('h'), date, name, gazetted });
+  setCalendarData(data);
+  document.getElementById('holidayDate').value = '';
+  document.getElementById('holidayName').value = '';
+  document.getElementById('holidayGazetted').checked = false;
+  renderHolidaysList();
+  renderCalMiniGrid();
+}
+function deleteHoliday(id) {
+  if (!confirm('Remove this holiday?')) return;
+  const data = getCalendarData();
+  data.holidays = data.holidays.filter(h => h.id !== id);
+  setCalendarData(data);
+  renderHolidaysList();
+  renderCalMiniGrid();
+}
+
+function addLeave() {
+  const startDate = document.getElementById('leaveStart').value;
+  const endDate   = document.getElementById('leaveEnd').value || startDate;
+  const remarks   = (document.getElementById('leaveRemarks').value || '').trim();
+  if (!startDate) { alert('Please pick a start date.'); return; }
+  if (endDate < startDate) { alert('End date must be on or after start date.'); return; }
+  const data = getCalendarData();
+  data.leaves.push({ id: calGenId('l'), startDate, endDate, remarks });
+  setCalendarData(data);
+  document.getElementById('leaveStart').value = '';
+  document.getElementById('leaveEnd').value   = '';
+  document.getElementById('leaveRemarks').value = '';
+  renderLeavesList();
+  renderCalMiniGrid();
+}
+function deleteLeave(id) {
+  if (!confirm('Remove this leave entry?')) return;
+  const data = getCalendarData();
+  data.leaves = data.leaves.filter(l => l.id !== id);
+  setCalendarData(data);
+  renderLeavesList();
+  renderCalMiniGrid();
+}
+
+function addTour() {
+  const startDate = document.getElementById('tourStart').value;
+  const endDate   = document.getElementById('tourEnd').value || startDate;
+  const remarks   = (document.getElementById('tourRemarks').value || '').trim();
+  if (!startDate) { alert('Please pick a start date.'); return; }
+  if (endDate < startDate) { alert('End date must be on or after start date.'); return; }
+  const data = getCalendarData();
+  data.tours.push({ id: calGenId('t'), startDate, endDate, remarks });
+  setCalendarData(data);
+  document.getElementById('tourStart').value = '';
+  document.getElementById('tourEnd').value   = '';
+  document.getElementById('tourRemarks').value = '';
+  renderToursList();
+  renderCalMiniGrid();
+}
+function deleteTour(id) {
+  if (!confirm('Remove this tour?')) return;
+  const data = getCalendarData();
+  data.tours = data.tours.filter(t => t.id !== id);
+  setCalendarData(data);
+  renderToursList();
+  renderCalMiniGrid();
+}
+
+/* ---- Mini-calendar grid ---- */
+let _calMiniYear  = new Date().getFullYear();
+let _calMiniMonth = new Date().getMonth();
+
+function calShiftMonth(delta) {
+  _calMiniMonth += delta;
+  if (_calMiniMonth < 0)  { _calMiniMonth = 11; _calMiniYear--; }
+  if (_calMiniMonth > 11) { _calMiniMonth = 0;  _calMiniYear++; }
+  renderCalMiniGrid();
+}
+
+function renderCalMiniGrid() {
+  const grid  = document.getElementById('calMiniGrid');
+  const label = document.getElementById('calMiniLabel');
+  if (!grid || !label) return;
+  label.textContent = MONTH_NAMES_FULL[_calMiniMonth] + ' ' + _calMiniYear;
+
+  let html = '<div class="cal-mini-grid">';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+    html += '<div class="cal-mini-day-label">' + d + '</div>';
+  });
+
+  const firstOfMonth = new Date(_calMiniYear, _calMiniMonth, 1);
+  const firstDay     = firstOfMonth.getDay(); // 0=Sun..6=Sat
+  const startOffset  = firstDay === 0 ? 6 : firstDay - 1; // shift so Monday is column 0
+
+  for (let i = 0; i < startOffset; i++) {
+    html += '<div class="cal-mini-cell empty"></div>';
+  }
+
+  const data    = getCalendarData();
+  const today   = todayISO();
+  const lastDay = new Date(_calMiniYear, _calMiniMonth + 1, 0).getDate();
+  const all     = getAllEntries();
+
+  for (let day = 1; day <= lastDay; day++) {
+    const dateStr = _calMiniYear + '-' + String(_calMiniMonth + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+    // Prefer explicit saved type if any; else default from calendar
+    const entry   = all[dateStr];
+    const dayType = (entry && entry.dayType) || getDefaultDayType(dateStr);
+    const isToday   = dateStr === today;
+    const holiday   = data.holidays.find(h => h.date === dateStr);
+    const isGazette = holiday && holiday.gazetted;
+
+    let cls = 'cal-mini-cell t-' + dayType;
+    if (isToday)    cls += ' is-today';
+    if (isGazette)  cls += ' is-gazetted';
+
+    const tip = holiday ? holiday.name : (
+      data.tours.find(t => dateStr >= t.startDate && dateStr <= t.endDate) ? 'Tour: ' + (data.tours.find(t => dateStr >= t.startDate && dateStr <= t.endDate).remarks || '(no remarks)') :
+      data.leaves.find(l => dateStr >= l.startDate && dateStr <= l.endDate) ? 'Leave: ' + (data.leaves.find(l => dateStr >= l.startDate && dateStr <= l.endDate).remarks || '(no remarks)') :
+      ''
+    );
+
+    html += '<div class="' + cls + '" title="' + esc(tip) + '">' + day + '</div>';
+  }
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+/* ---- Day type distribution helper for reports ---- */
+function countDayTypesInRange(startDateStr, endDateStr) {
+  const counts = { office: 0, home: 0, night: 0, tour: 0 };
+  if (!startDateStr || !endDateStr) return counts;
+  const all = getAllEntries();
+  const start = new Date(startDateStr + 'T00:00:00');
+  const end   = new Date(endDateStr   + 'T00:00:00');
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const ds = d.getFullYear() + '-'
+             + String(d.getMonth() + 1).padStart(2, '0') + '-'
+             + String(d.getDate()).padStart(2, '0');
+    const e = all[ds];
+    const dt = (e && e.dayType) || getDefaultDayType(ds);
+    if (counts[dt] !== undefined) counts[dt]++;
+  }
+  return counts;
+}
+
+function renderDayTypeStatsCard(startDateStr, endDateStr) {
+  const counts = countDayTypesInRange(startDateStr, endDateStr);
+  let html = '<div class="card"><h2>📍 Day Type Distribution</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">How many days you were Office / Home / on Night Duty / on Tour during this period.</p>';
+  html += '<div class="stat-grid">';
+  DAY_TYPES.forEach(dt => {
+    html += statBoxHtml(counts[dt.id], dt.label);
+  });
+  html += '</div>';
+  html += '</div>';
+  return html;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
