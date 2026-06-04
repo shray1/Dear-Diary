@@ -822,6 +822,20 @@
   }
   .meal-note-input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 2px rgba(139,111,71,0.08); }
   .meal-note-input::placeholder { color: var(--accent-soft); font-style: italic; font-size: 0.95em; }
+  /* Weekly-shared field in read-only mode (e.g. Recite Shabad's text on Tue–Sun).
+     Looks like a chip rather than an editable field so it's clear it's display-only. */
+  .meal-note-input.week-shared-readonly {
+    background: rgba(139, 111, 71, 0.06);
+    border-color: transparent;
+    color: var(--accent);
+    font-style: italic;
+    cursor: default;
+  }
+  .meal-note-input.week-shared-readonly:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: none;
+  }
   /* Inside the inline meal row, label should shrink-wrap its text */
   .meal-inline-row { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
   .meal-inline-row label { flex: 0 1 auto; white-space: nowrap; }
@@ -2749,7 +2763,7 @@ const DAILY_ITEMS = [
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    mealKey: 'eveningSnack' },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
-  { id: 'reciteShabad', label: 'Recite Shabad for the Week', hint: 'A short evening recitation — anchors the week\'s ShabadVani' },
+  { id: 'reciteShabad', label: 'Recite Shabad for the Week', hint: 'A short evening recitation — anchors the week\'s ShabadVani', weekSharedField: { storeAs: 'weekShabad', placeholder: 'Which Shabad are you learning this week?' } },
   { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
   { id: 'cyberMindMap',  label: 'Went through Cybersecurity MindMaps', hint: 'Review mind maps to keep the knowledge fresh' },
   { id: 'noMilkBeforeSleep', label: 'Did not drink milk before sleeping', hint: 'Drinking milk at night causes acid reflux to you, so don\'t drink milk within 2 hours of sleep' },
@@ -3401,6 +3415,23 @@ function buildChecklist(containerId, items, kind) {
         noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
         div.appendChild(rowWrap);
+      } else if (item.weekSharedField) {
+        // Inline layout: [label] ......... [text input, editable only on Monday]
+        // Stores on Monday's entry under item.weekSharedField.storeAs; other days
+        // show the same value as read-only.
+        const f = item.weekSharedField;
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'meal-inline-row';
+        rowWrap.appendChild(lab);
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.className = 'meal-note-input';
+        inp.id = 'wsf_' + f.storeAs;
+        inp.dataset.storeAs = f.storeAs;
+        inp.placeholder = f.placeholder || '';
+        inp.addEventListener('input', debounce(autosave, 1500));
+        rowWrap.appendChild(inp);
+        div.appendChild(rowWrap);
       } else {
         div.appendChild(lab);
       }
@@ -3644,6 +3675,11 @@ function getWeekPlan(dateStr) {
   const entry  = getAllEntries()[monday];
   return (entry && entry.weekPlan) ? entry.weekPlan.trim() : '';
 }
+function getWeekShabad(dateStr) {
+  const monday = getMondayOf(dateStr);
+  const entry  = getAllEntries()[monday];
+  return (entry && entry.weekShabad) ? entry.weekShabad.trim() : '';
+}
 function isSunday(dateStr)  { return new Date(dateStr + 'T00:00:00').getDay() === 0; }
 
 function readForm() {
@@ -3733,6 +3769,15 @@ function readForm() {
     entry.monthlyOn[i.id] = c.checked ? (c.dataset.performedOn || entry.date) : '';
   });
   TIME_AREAS.forEach(a => entry.minutes[a.id] = parseInt(document.getElementById('min_' + a.id).value) || 0);
+  // Weekly-shared fields (e.g. weekShabad) — only persist on the Monday entry.
+  // Other days read the value from Monday for display but must not write it back.
+  if (entry.date && isMonday(entry.date)) {
+    DAILY_ITEMS.filter(i => i.weekSharedField).forEach(i => {
+      const f = i.weekSharedField;
+      const inp = document.getElementById('wsf_' + f.storeAs);
+      if (inp) entry[f.storeAs] = inp.value;
+    });
+  }
   return entry;
 }
 
@@ -3890,6 +3935,35 @@ function writeForm(entry) {
   renderTodayMedicines(_dateVal);
   renderBirthdayReminders(_dateVal);
   renderNeverMissTwice(_dateVal);
+
+  // Weekly-shared fields (e.g. weekShabad): editable on Monday, read-only & filled
+  // from Monday's entry on Tue–Sun.
+  DAILY_ITEMS.filter(i => i.weekSharedField).forEach(i => {
+    const f = i.weekSharedField;
+    const inp = document.getElementById('wsf_' + f.storeAs);
+    if (!inp) return;
+    const isMon = isMonday(_dateVal);
+    if (isMon) {
+      inp.value = entry[f.storeAs] || '';
+      inp.readOnly = false;
+      inp.classList.remove('week-shared-readonly');
+      inp.placeholder = f.placeholder || '';
+    } else {
+      // Use a getter for the corresponding storeAs field (currently only weekShabad)
+      let mondayValue = '';
+      if (f.storeAs === 'weekShabad') mondayValue = getWeekShabad(_dateVal);
+      else {
+        // Generic fallback: read Monday's entry directly
+        const monday = getMondayOf(_dateVal);
+        const mEntry = getAllEntries()[monday];
+        if (mEntry && mEntry[f.storeAs]) mondayValue = String(mEntry[f.storeAs]).trim();
+      }
+      inp.value = mondayValue;
+      inp.readOnly = true;
+      inp.classList.add('week-shared-readonly');
+      inp.placeholder = mondayValue ? '' : 'Not set this week — visit Monday\'s entry to add';
+    }
+  });
 }
 
 function saveEntry() {
@@ -5223,6 +5297,15 @@ function renderWeekReport(c) {
     html += '<span class="pct">' + (d.hasEntry ? d.total.toFixed(0) + '/100' : '— no entry') + '</span></div>';
   });
 
+  // Shabad of the week — pulled from this week's Monday entry
+  const _wkShabad = getWeekShabad(r.weekStart);
+  if (_wkShabad) {
+    html += '<div style="margin-top:18px; padding:12px 14px; background:rgba(139,111,71,0.06); border-left:3px solid var(--accent-soft); border-radius:6px;">';
+    html += '<div style="font-size:0.78em; color:var(--soft); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px;">📿 Shabad for the Week</div>';
+    html += '<div style="color:var(--ink); font-size:0.95em;">' + esc(_wkShabad) + '</div>';
+    html += '</div>';
+  }
+
   html += '<h3 style="margin-top:18px;">Weekly tasks (20 pts)</h3><ul>';
   // Look up performed-on dates from any entry in this week
   const _allW = getAllEntries();
@@ -5533,6 +5616,28 @@ function renderMonthReport(c) {
     html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
     html += '<span class="pct">' + w.total.toFixed(0) + '/100</span></div>';
   });
+
+  // Shabad per week — pulled from each week's Monday entry
+  const _monthShabads = r.weekResults.map(w => ({ idx: w, shabad: getWeekShabad(w.weekStart) }));
+  if (_monthShabads.some(s => s.shabad)) {
+    html += '<h3 style="margin-top:18px;">📿 Shabads of the month</h3>';
+    html += '<ul style="list-style:none; padding:0;">';
+    r.weekResults.forEach((w, i) => {
+      const shabad = getWeekShabad(w.weekStart);
+      if (shabad) {
+        html += '<li style="padding:6px 0; border-bottom:1px solid var(--line); font-size:0.95em;">';
+        html += '<span style="color:var(--accent); font-weight:bold;">Week ' + (i+1) + '</span> ';
+        html += '<span style="color:var(--soft); font-size:0.85em;">(' + w.weekStart + ')</span> ';
+        html += '<span style="color:var(--ink); margin-left:6px;">' + esc(shabad) + '</span>';
+        html += '</li>';
+      } else {
+        html += '<li style="padding:6px 0; border-bottom:1px solid var(--line); font-size:0.95em; color:var(--soft); font-style:italic;">';
+        html += 'Week ' + (i+1) + ' — no Shabad set';
+        html += '</li>';
+      }
+    });
+    html += '</ul>';
+  }
 
   html += '<h3 style="margin-top:18px;">Monthly tasks (20 pts)</h3><ul>';
   const _allM = getAllEntries();
