@@ -601,6 +601,114 @@
     background: var(--line);
   }
 
+  /* ── Weekly Tasks Review — Not Done rows with actions ── */
+  .wtask-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+  }
+  .wtask-icon { color: var(--soft); font-size: 0.9em; flex-shrink: 0; width: 14px; text-align: center; }
+  .wtask-text { flex: 1 1 110px; font-size: 0.92em; color: var(--ink); min-width: 0; line-height: 1.35; }
+  .wtask-meta { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+  .wtask-day { font-size: 0.75em; color: var(--soft); white-space: nowrap; }
+  .wtask-dur {
+    font-size: 0.75em;
+    background: var(--line);
+    color: var(--soft);
+    border-radius: 10px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+  .wtask-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--card);
+    cursor: pointer;
+    font-size: 0.82em;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--soft);
+    transition: all 0.15s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  .wtask-carry { font-size: 0.95em; font-weight: bold; }
+  .wtask-carry:hover { border-color: var(--accent); color: var(--accent); background: #fdf8f2; transform: translateX(1px); }
+  .wtask-remove:hover { border-color: var(--warn); color: var(--warn); background: #fdf3ec; }
+
+  /* ── Mind & Self-Discipline slot table ── */
+  .mind-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .mind-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 540px;
+  }
+  .mind-table th, .mind-table td {
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+    vertical-align: middle;
+  }
+  .mind-table thead th {
+    font-size: 0.72em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--soft);
+    white-space: nowrap;
+    border-bottom: 2px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: var(--card);
+  }
+  .mind-table th.mind-col-practice, .mind-table td.mind-col-practice {
+    text-align: left;
+    width: 38%;
+    min-width: 150px;
+  }
+  .mind-practice-label {
+    font-size: 0.92em;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .mind-practice-label .mind-hint {
+    display: block;
+    font-size: 0.78em;
+    color: var(--soft);
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .mind-star {
+    font-size: 1.5em;
+    line-height: 1;
+    color: var(--line);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.12s, transform 0.12s;
+    display: inline-block;
+  }
+  .mind-star:hover { transform: scale(1.18); color: #e6c200; }
+  .mind-star.on { color: #e6b800; }
+  .mind-col-total { width: 48px; }
+  .mind-total-badge {
+    font-size: 0.82em;
+    font-weight: bold;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .mind-table tbody tr:hover td { background: rgba(139,111,71,0.035); }
+  @media (max-width: 600px) {
+    .mind-star { font-size: 1.35em; }
+    .mind-table th, .mind-table td { padding: 7px 4px; }
+  }
+
   /* ── Daily Goals ── */
   .goals-section {
     margin-top: 18px;
@@ -2630,6 +2738,12 @@
     <div class="checklist" id="dailyChecklist"></div>
   </div>
 
+  <div class="card card-core" id="sec-mind">
+    <h2>Mind &amp; Self-Discipline</h2>
+    <p style="color:var(--soft); margin-top:0;">Tap a star for each time slot you upheld the practice. More slots = more stars (max 5).</p>
+    <div id="mindSlotTable"></div>
+  </div>
+
   <div class="card card-log" id="sec-time">
     <button class="collapsible-toggle" id="timeAllocToggle" onclick="toggleSection('timeAllocBody','timeAllocToggle')" aria-expanded="false">
       <span>Time Allocation (minutes)</span>
@@ -3014,25 +3128,36 @@ const DAILY_ITEMS = [
   { id: 'noMilkBeforeSleep', label: 'Did not drink milk before sleeping', hint: 'Drinking milk at night causes acid reflux to you, so don\'t drink milk within 2 hours of sleep' },
   { id: 'brushNight',    label: 'Brushed teeth at night', hint: 'A small discipline that protects the day from carrying over' },
 
-  // ── Mind & Self-Discipline ──
-  { id: 'noAnger',    section: 'Mind & Self-Discipline', label: 'Anger Management', hint: '0 stars = got angry · 5 stars = fully peaceful all day', rateOnly: true, starLabels: ["Couldn't manage anger", 'Often angry', 'Sometimes angry', 'Mostly calm', 'Very calm', 'Fully peaceful'] },
-  { id: 'nsfwFree',   label: 'NSFW Free', hint: '1★ = Fail · 3★ = Pure Watching · 5★ = Pure Thoughts', rateOnly: true, starLabels: ['Major slip', 'Fail', 'Slipped', 'Pure Watching', 'Pure-minded', 'Pure Thoughts'] },
-  { id: 'noIllSpeak', label: 'Did not ill-speak about anyone', hint: '5★ = 0 times · 4★ = 1 time · 3★ = 2 times · 2★ = 3 times · 1★ = 4+ times', rateOnly: true, starLabels: ['4+ times', '4 times', '3 times', '2 times', '1 time', '0 times'] },
-  { id: 'chillSmile', label: 'Chill & Smile', hint: 'How much did you chill & smile in the day?', rateOnly: true, starLabels: ['Stressed all day', 'Barely smiled', 'A few moments', 'Decent vibe', 'Light & playful', 'Pure ease & joy'] },
-  { id: 'spokeLess',  label: 'Speak Less, Listen More', hint: 'Encourage others to talk about themselves' },
-  { id: 'forgave',    label: 'Forgive & Forget' },
-  { id: 'crackJoke',  label: 'Did you laugh & made others laugh? 😂', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
-  { id: 'sayNoCommit', label: 'I learnt to say no, and commit', hint: 'Caring about fewer things means rejecting more, and depth in a few commitments beats shallow involvement in many' },
-  { id: 'dontTalkMoney', label: 'Don\'t talk money', hint: 'Kept conversations off finances — wealth, prices, debts, salaries' },
-  { id: 'matchEnergy', label: 'Speak less and show less excitement to people who don\'t reciprocate your energy' },
-  { id: 'grateful',      label: 'Practiced gratitude' },
-  { id: 'apologized',  label: 'I admitted my mistakes fast & openly', hint: 'It disarms people and builds trust' },
-  { id: 'treatWithDignity', label: 'I treat every person with dignity and I give people a good reputation to live up to' },
-  { id: 'noFlatWrong',      label: 'Be Diplomatic', hint: 'Do not flatly share your point of view, instead call attention to it indirectly' },
+  // ── Mind & Self-Discipline (slot-rated — see separate table card) ──
+  { id: 'noAnger',    section: 'Mind & Self-Discipline', label: 'Anger Management', rateOnly: true, mindSlot: true },
+  { id: 'nsfwFree',   label: 'NSFW Free', rateOnly: true, mindSlot: true },
+  { id: 'noIllSpeak', label: 'Did not ill-speak about anyone', rateOnly: true, mindSlot: true },
+  { id: 'chillSmile', label: 'Chill & Smile', rateOnly: true, mindSlot: true },
+  { id: 'spokeLess',  label: 'Speak Less, Listen More', hint: 'Encourage others to talk about themselves', rateOnly: true, mindSlot: true },
+  { id: 'forgave',    label: 'Forgive & Forget', rateOnly: true, mindSlot: true },
+  { id: 'crackJoke',  label: 'Did you laugh & made others laugh? 😂', rateOnly: true, mindSlot: true },
+  { id: 'sayNoCommit', label: 'I learnt to say no, and commit', hint: 'Depth in a few commitments beats shallow involvement in many', rateOnly: true, mindSlot: true },
+  { id: 'dontTalkMoney', label: 'Don\'t talk money', hint: 'Kept conversations off finances — wealth, prices, debts, salaries', rateOnly: true, mindSlot: true },
+  { id: 'matchEnergy', label: 'Speak less and show less excitement to people who don\'t reciprocate your energy', rateOnly: true, mindSlot: true },
+  { id: 'grateful',      label: 'Practiced gratitude', rateOnly: true, mindSlot: true },
+  { id: 'apologized',  label: 'I admitted my mistakes fast & openly', hint: 'It disarms people and builds trust', rateOnly: true, mindSlot: true },
+  { id: 'treatWithDignity', label: 'I treat every person with dignity and I give people a good reputation to live up to', rateOnly: true, mindSlot: true },
+  { id: 'noFlatWrong',      label: 'Be Diplomatic', hint: 'Call attention to your point indirectly, do not flatly contradict', rateOnly: true, mindSlot: true },
 
   // ── Relationships ──
   { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this', yesNote: true },
 ];
+
+// Time slots for the Mind & Self-Discipline star table (5 slots → max 5 stars)
+const MIND_SLOTS = [
+  { id: 0, label: '7–10 AM' },
+  { id: 1, label: '10 AM–1 PM' },
+  { id: 2, label: '1–4 PM' },
+  { id: 3, label: '4–7 PM' },
+  { id: 4, label: '7–10 PM' }
+];
+// Convenience accessor for the slot-rated Mind & Self-Discipline practices
+function getMindItems() { return DAILY_ITEMS.filter(i => i.mindSlot); }
 
 const WEEKLY_ITEMS = [
   { id: 'visitedRelative', label: 'Visited a relative or friend this week', checkNote: true, checkNotePlaceholder: 'Whom did you visit?' },
@@ -3103,19 +3228,19 @@ const DEFAULT_DAILY_SCORING = {
   nsfwFree:           { rateOnly: true, ratingWeight: 8 },
   noIllSpeak:         { rateOnly: true, ratingWeight: 5 },
   chillSmile:         { rateOnly: true, ratingWeight: 5 },
-  spokeLess:          { weight: 3 },
-  forgave:            { weight: 4 },
-  crackJoke:          { weight: 2 },
-  sayNoCommit:        { weight: 3 },
-  dontTalkMoney:      { weight: 3 },
-  matchEnergy:        { weight: 3 },
-  grateful:           { weight: 4 },
+  spokeLess:          { rateOnly: true, ratingWeight: 3 },
+  forgave:            { rateOnly: true, ratingWeight: 4 },
+  crackJoke:          { rateOnly: true, ratingWeight: 2 },
+  sayNoCommit:        { rateOnly: true, ratingWeight: 3 },
+  dontTalkMoney:      { rateOnly: true, ratingWeight: 3 },
+  matchEnergy:        { rateOnly: true, ratingWeight: 3 },
+  grateful:           { rateOnly: true, ratingWeight: 4 },
   madeHappy:          { weight: 5 },
   familyTime:         { weight: 5 },
   calledFriend:       { weight: 3 },
-  apologized:         { weight: 3 },
-  treatWithDignity:   { weight: 3 },
-  noFlatWrong:        { weight: 3 }
+  apologized:         { rateOnly: true, ratingWeight: 3 },
+  treatWithDignity:   { rateOnly: true, ratingWeight: 3 },
+  noFlatWrong:        { rateOnly: true, ratingWeight: 3 }
 };
 // Default weekly tasks — sum to 20
 const DEFAULT_WEEKLY_SCORING = { visitedRelative: 10, foodFast: 10 };
@@ -3192,6 +3317,7 @@ function init() {
   buildChecklist('dailyChecklist', DAILY_ITEMS, 'daily');
   buildChecklist('weeklyChecklist', WEEKLY_ITEMS, 'weekly');
   buildChecklist('monthlyChecklist', MONTHLY_ITEMS, 'monthly');
+  buildMindSlotTable();
   buildMinutesGrid();
   buildTimeSelects();
   loadEntry();
@@ -3538,6 +3664,8 @@ function buildChecklist(containerId, items, kind) {
   el.innerHTML = '';
   const isPeriodKind = (kind === 'weekly' || kind === 'monthly');
   items.forEach(item => {
+    // Mind & Self-Discipline items are rendered in their own slot-table card
+    if (!isPeriodKind && item.mindSlot) return;
     // Section header (daily checklist only)
     if (!isPeriodKind && item.section) {
       const hdr = document.createElement('div');
@@ -3788,6 +3916,77 @@ function buildChecklist(containerId, items, kind) {
     }
     el.appendChild(div);
   });
+}
+
+/* ── Mind & Self-Discipline slot table ── */
+function buildMindSlotTable() {
+  const el = document.getElementById('mindSlotTable');
+  if (!el) return;
+  const items = getMindItems();
+
+  let html = '<div class="mind-table-wrap"><table class="mind-table"><thead><tr>';
+  html += '<th class="mind-col-practice">Practice</th>';
+  MIND_SLOTS.forEach(s => { html += '<th>' + s.label + '</th>'; });
+  html += '<th class="mind-col-total">★</th>';
+  html += '</tr></thead><tbody>';
+
+  items.forEach(item => {
+    html += '<tr id="mindrow_' + item.id + '">';
+    html += '<td class="mind-col-practice"><div class="mind-practice-label">' + esc(item.label);
+    if (item.hint) html += '<span class="mind-hint">' + esc(item.hint) + '</span>';
+    html += '</div></td>';
+    MIND_SLOTS.forEach(s => {
+      html += '<td><span class="mind-star" id="mindstar_' + item.id + '_' + s.id + '" '
+            + 'onclick="toggleMindStar(\'' + item.id + '\',' + s.id + ')" '
+            + 'title="' + esc(item.label) + ' — ' + s.label + '">☆</span></td>';
+    });
+    html += '<td><span class="mind-total-badge" id="mindtotal_' + item.id + '">0/5</span></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function toggleMindStar(itemId, slotId) {
+  const star = document.getElementById('mindstar_' + itemId + '_' + slotId);
+  if (!star) return;
+  const on = !star.classList.contains('on');
+  star.classList.toggle('on', on);
+  star.textContent = on ? '★' : '☆';
+  updateMindTotal(itemId);
+  debounce(autosave, 600)();
+}
+
+function updateMindTotal(itemId) {
+  let count = 0;
+  MIND_SLOTS.forEach(s => {
+    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
+    if (star && star.classList.contains('on')) count++;
+  });
+  const badge = document.getElementById('mindtotal_' + itemId);
+  if (badge) badge.textContent = count + '/5';
+  return count;
+}
+
+// Read the 5 slot booleans for a Mind item straight from the table DOM
+function readMindSlots(itemId) {
+  return MIND_SLOTS.map(s => {
+    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
+    return !!(star && star.classList.contains('on'));
+  });
+}
+
+// Restore a Mind item's slot stars (slots = array of 5 booleans)
+function setMindSlots(itemId, slots) {
+  MIND_SLOTS.forEach(s => {
+    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
+    if (!star) return;
+    const on = !!(slots && slots[s.id]);
+    star.classList.toggle('on', on);
+    star.textContent = on ? '★' : '☆';
+  });
+  updateMindTotal(itemId);
 }
 
 function setPracticeState(id, state) {
@@ -4046,7 +4245,15 @@ function readForm() {
     minutes: {}
   };
   entry.dailyNo = {};
+  entry.mindSlots = {};
   DAILY_ITEMS.forEach(i => {
+    if (i.mindSlot) {
+      // Slot-rated Mind item: rating = number of slots starred
+      const slots = readMindSlots(i.id);
+      entry.mindSlots[i.id] = slots;
+      entry.daily[i.id + 'Rating'] = slots.filter(Boolean).length;
+      return;
+    }
     if (i.rateOnly) {
       entry.daily[i.id + 'Rating'] = getStarRating(i.id);
       return;
@@ -4128,6 +4335,17 @@ function writeForm(entry) {
   document.getElementById('lessonText').value = entry.lesson || '';
   document.getElementById('shareText').value  = entry.share  || '';
   DAILY_ITEMS.forEach(i => {
+    if (i.mindSlot) {
+      // Restore slot stars. Prefer saved mindSlots; else derive from legacy rating/boolean.
+      let slots = entry.mindSlots && entry.mindSlots[i.id];
+      if (!slots) {
+        let r = entry.daily && entry.daily[i.id + 'Rating'];
+        if (r === undefined || r === null) r = (entry.daily && entry.daily[i.id] === true) ? 5 : 0;
+        slots = MIND_SLOTS.map(s => s.id < r);
+      }
+      setMindSlots(i.id, slots);
+      return;
+    }
     if (i.rateOnly) {
       let rating = (entry.daily && entry.daily[i.id + 'Rating']);
       // Backward-compat: legacy boolean → 5 stars if true, 0 if false/missing
@@ -5806,7 +6024,7 @@ function renderWeekTasksHtml(dayResults, allEntries) {
     const dayDoneH   = dayDone.reduce((s, g) => s + (g.duration || 1), 0);
 
     dayDone.forEach(g    => done.push({    text: g.text, dur: g.duration || 1, day: dayTag }));
-    dayNotDone.forEach(g => notDone.push({ text: g.text, dur: g.duration || 1, day: dayTag }));
+    dayNotDone.forEach(g => notDone.push({ text: g.text, dur: g.duration || 1, day: dayTag, date: d.date, goalId: g.id }));
 
     daySummaries.push({
       dayTag,
@@ -5834,6 +6052,23 @@ function renderWeekTasksHtml(dayResults, allEntries) {
       + '<span style="flex:1; font-size:0.92em; ' + textStyle + '">' + esc(item.text) + '</span>'
       + '<span style="font-size:0.75em; color:var(--soft); white-space:nowrap; margin-left:6px;">' + esc(item.day) + '</span>'
       + '<span style="font-size:0.75em; background:var(--line); color:var(--soft); border-radius:10px; padding:1px 7px; white-space:nowrap; flex-shrink:0;">' + durLabel(item.dur) + '</span>'
+      + '</div>';
+  };
+
+  // Not-Done row with Carry-Forward + Remove actions
+  const notDoneRow = (item) => {
+    const safeId = String(item.goalId).replace(/'/g, "\\'");
+    return '<div class="wtask-row">'
+      + '<span class="wtask-icon">○</span>'
+      + '<span class="wtask-text">' + esc(item.text) + '</span>'
+      + '<span class="wtask-meta">'
+      +   '<span class="wtask-day">' + esc(item.day) + '</span>'
+      +   '<span class="wtask-dur">' + durLabel(item.dur) + '</span>'
+      +   '<button class="wtask-btn wtask-carry" title="Carry forward to the next day" '
+      +     'onclick="carryForwardWeekTask(\'' + item.date + '\',\'' + safeId + '\')">→</button>'
+      +   '<button class="wtask-btn wtask-remove" title="Remove this task" '
+      +     'onclick="removeWeekTask(\'' + item.date + '\',\'' + safeId + '\')">✕</button>'
+      + '</span>'
       + '</div>';
   };
 
@@ -5906,14 +6141,59 @@ function renderWeekTasksHtml(dayResults, allEntries) {
   if (notDone.length === 0) {
     html += '<p style="color:var(--soft); font-style:italic; font-size:0.88em; margin:0;">All tasks completed! 🎉</p>';
   } else {
-    notDone.forEach(item => { html += taskRow(item, false); });
-    html += '<p style="color:var(--soft); font-size:0.82em; font-style:italic; margin-top:10px; margin-bottom:0;">Consider carrying these forward to next week\'s plan.</p>';
+    notDone.forEach(item => { html += notDoneRow(item); });
+    html += '<p style="color:var(--soft); font-size:0.8em; margin-top:10px; margin-bottom:0;">'
+          + '<span style="color:var(--accent); font-weight:bold;">→</span> carry a task to the next day &nbsp;·&nbsp; '
+          + '<span style="color:var(--warn); font-weight:bold;">✕</span> remove it</p>';
   }
   html += '</div>';
 
   html += '</div>'; // end grid
   html += '</div>'; // end card
   return html;
+}
+
+/* ── Weekly Tasks Review: per-task actions ── */
+function removeWeekTask(dateStr, goalId) {
+  if (!confirm('Remove this task permanently?')) return;
+  const all = getAllEntries();
+  const entry = all[dateStr];
+  if (!entry || !entry.goals) return;
+  entry.goals = entry.goals.filter(g => String(g.id) !== String(goalId));
+  setAllEntries(all);
+  afterWeekTaskChange([dateStr]);
+}
+
+function carryForwardWeekTask(dateStr, goalId) {
+  const all = getAllEntries();
+  const entry = all[dateStr];
+  if (!entry || !entry.goals) return;
+  const goal = entry.goals.find(g => String(g.id) === String(goalId));
+  if (!goal) return;
+  // Remove from the original day
+  entry.goals = entry.goals.filter(g => String(g.id) !== String(goalId));
+  // Move it to tomorrow — the day after TODAY (when the user is carrying it forward),
+  // not the day after the task's original date.
+  const nextDate = isoDate(addDays(new Date(todayISO() + 'T00:00:00'), 1));
+  if (!all[nextDate])        all[nextDate] = { date: nextDate, goals: [] };
+  if (!all[nextDate].goals)  all[nextDate].goals = [];
+  all[nextDate].goals.push({
+    id: 'cf_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
+    text: goal.text,
+    duration: goal.duration || 1,
+    done: false,
+    isOfficeWork: !!goal.isOfficeWork
+  });
+  setAllEntries(all);
+  afterWeekTaskChange([dateStr, nextDate]);
+}
+
+// Keep the Today form and the open report in sync after a task move/remove
+function afterWeekTaskChange(affectedDates) {
+  const cur = document.getElementById('entryDate').value;
+  if (affectedDates.indexOf(cur) !== -1) loadEntry(); // refresh form if that day is open
+  refreshHistoryList();
+  renderReport();   // re-render the weekly report so the change shows immediately
 }
 
 function renderMonthReport(c) {
