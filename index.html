@@ -822,6 +822,60 @@
   }
   .meal-note-input:focus { outline: none; border-color: var(--accent-soft); box-shadow: 0 0 0 2px rgba(139,111,71,0.08); }
   .meal-note-input::placeholder { color: var(--accent-soft); font-style: italic; font-size: 0.95em; }
+  /* Meal like / dislike buttons — shown only after a meal note is entered */
+  .meal-rate-wrap {
+    display: none;            /* revealed via .has-note */
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+  }
+  .meal-rate-wrap.has-note { display: inline-flex; }
+  .meal-rate-btn {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.92em;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.18s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  .meal-rate-btn .thumb-emoji {
+    display: inline-block;
+    filter: grayscale(0.85);
+    opacity: 0.55;
+    transition: filter 0.18s, opacity 0.18s, transform 0.18s;
+  }
+  .meal-rate-btn:hover { transform: translateY(-1px); }
+  .meal-rate-btn:hover .thumb-emoji { filter: grayscale(0); opacity: 1; }
+  .meal-rate-btn:active { transform: scale(0.9); }
+  /* Active LIKE */
+  .meal-rate-like.active {
+    background: #eaf6ea;
+    border-color: var(--good);
+    box-shadow: 0 2px 7px rgba(90, 138, 90, 0.3);
+  }
+  .meal-rate-like.active .thumb-emoji { filter: grayscale(0); opacity: 1; }
+  /* Active DISLIKE */
+  .meal-rate-dislike.active {
+    background: #fdecec;
+    border-color: #c0552a;
+    box-shadow: 0 2px 7px rgba(192, 85, 42, 0.3);
+  }
+  .meal-rate-dislike.active .thumb-emoji { filter: grayscale(0); opacity: 1; }
+  .meal-rate-btn.thumb-pop .thumb-emoji { animation: thumbEmojiPop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes thumbEmojiPop {
+    0%   { transform: scale(1) rotate(0); }
+    40%  { transform: scale(1.45) rotate(-12deg); }
+    70%  { transform: scale(1.1) rotate(6deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
   /* Weekly-shared field in read-only mode (e.g. Recite Shabad's text on Tue–Sun).
      Looks like a chip rather than an editable field so it's clear it's display-only. */
   .meal-note-input.week-shared-readonly {
@@ -837,8 +891,9 @@
     box-shadow: none;
   }
   /* Inside the inline meal row, label should shrink-wrap its text */
-  .meal-inline-row { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .meal-inline-row { flex: 1; display: flex; align-items: center; gap: 8px 10px; min-width: 0; flex-wrap: wrap; }
   .meal-inline-row label { flex: 0 1 auto; white-space: nowrap; }
+  .meal-inline-row .meal-note-input { flex: 1 1 140px; }
   .goals-empty {
     color: var(--soft);
     font-style: italic;
@@ -2616,6 +2671,9 @@
     <label for="gratefulText" style="margin-top:12px;">Three things I'm grateful for today</label>
     <textarea id="gratefulText" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea>
 
+    <label for="helpedText" style="margin-top:12px;">Helped someone today</label>
+    <textarea id="helpedText" placeholder="Money to the needy, a donation, or a hand with their work — how did you help?"></textarea>
+
     <div style="margin-top:18px; padding-top:12px; border-top:1px solid var(--line);">
       <button class="collapsible-toggle reflection-optional-toggle" id="reflectionOptToggle"
               onclick="toggleSection('reflectionOptBody','reflectionOptToggle')" aria-expanded="false">
@@ -2933,16 +2991,22 @@ const DAILY_ITEMS = [
     { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
     { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
   ]},
+  { id: 'trimNailsCut',  label: 'Trimming & nails cut', hint: 'Sunday grooming — keep it a weekly habit', sundayOnly: true },
   { id: 'waterSumiran1', label: 'Water intake & Sumiran 1' },
+  { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         mealKey: 'breakfast'    },
   { id: 'waterSumiran2', label: 'Water intake & Sumiran 2' },
-  { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes' },
+  { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes', yesNote: true, yesNotePlaceholder: 'What did you learn today?' },
   { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    mealKey: 'morningSnack' },
   { id: 'waterSumiran3', label: 'Water intake & Sumiran 3' },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             mealKey: 'lunch'        },
   { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    mealKey: 'eveningSnack' },
+  { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', yesNote: true, yesNotePlaceholder: 'Who did you call? (start typing to search)', yesNoteDatalist: 'socialCirclePeople' },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
+  { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true },
+  { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
+  { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            mealKey: 'dinner'       },
   { id: 'reciteShabad', label: 'Recite Shabad for the Week', hint: 'A short evening recitation — anchors the week\'s ShabadVani', weekSharedField: { storeAs: 'weekShabad', placeholder: 'Which Shabad are you learning this week?' } },
   { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
@@ -2955,36 +3019,24 @@ const DAILY_ITEMS = [
   { id: 'nsfwFree',   label: 'NSFW Free', hint: '1★ = Fail · 3★ = Pure Watching · 5★ = Pure Thoughts', rateOnly: true, starLabels: ['Major slip', 'Fail', 'Slipped', 'Pure Watching', 'Pure-minded', 'Pure Thoughts'] },
   { id: 'noIllSpeak', label: 'Did not ill-speak about anyone', hint: '5★ = 0 times · 4★ = 1 time · 3★ = 2 times · 2★ = 3 times · 1★ = 4+ times', rateOnly: true, starLabels: ['4+ times', '4 times', '3 times', '2 times', '1 time', '0 times'] },
   { id: 'chillSmile', label: 'Chill & Smile', hint: 'How much did you chill & smile in the day?', rateOnly: true, starLabels: ['Stressed all day', 'Barely smiled', 'A few moments', 'Decent vibe', 'Light & playful', 'Pure ease & joy'] },
-  { id: 'spokeLess',  label: 'Spoke less than usual — conserved energy' },
-  { id: 'forgave',    label: 'Forgave others for their mistakes' },
-  { id: 'crackJoke',  label: 'Did you crack a joke today?', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
+  { id: 'spokeLess',  label: 'Speak Less, Listen More', hint: 'Encourage others to talk about themselves' },
+  { id: 'forgave',    label: 'Forgive & Forget' },
+  { id: 'crackJoke',  label: 'Did you laugh & made others laugh? 😂', hint: 'Lightness is a discipline — humour kept the day from getting heavy', yesNote: true, yesNotePlaceholder: 'Which joke did you crack?' },
   { id: 'sayNoCommit', label: 'I learnt to say no, and commit', hint: 'Caring about fewer things means rejecting more, and depth in a few commitments beats shallow involvement in many' },
   { id: 'dontTalkMoney', label: 'Don\'t talk money', hint: 'Kept conversations off finances — wealth, prices, debts, salaries' },
   { id: 'matchEnergy', label: 'Speak less and show less excitement to people who don\'t reciprocate your energy' },
-
-  // ── Spirit ──
-  { id: 'morningPrayer', section: 'Spirit', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
-  { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'grateful',      label: 'Practiced gratitude' },
+  { id: 'apologized',  label: 'I admitted my mistakes fast & openly', hint: 'It disarms people and builds trust' },
+  { id: 'treatWithDignity', label: 'I treat every person with dignity and I give people a good reputation to live up to' },
+  { id: 'noFlatWrong',      label: 'Be Diplomatic', hint: 'Do not flatly share your point of view, instead call attention to it indirectly' },
 
   // ── Relationships ──
   { id: 'madeHappy',   section: 'Relationships', label: 'Made someone happy', hint: 'Extra marks for this', yesNote: true },
-  { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
-  { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', yesNote: true, yesNotePlaceholder: 'Who did you call? (start typing to search)', yesNoteDatalist: 'socialCirclePeople' },
-  { id: 'doGood',      label: 'Did good / heard good / spoke good / watched good' },
-  { id: 'helpedSomeone', label: 'Helped someone today', hint: 'Money to the needy, a donation, or help with their work' },
-  { id: 'apologized',  label: 'I admitted my mistakes fast & openly', hint: 'It disarms people and builds trust' },
-  { id: 'treatWithDignity', label: 'I treat every person with dignity and I give people a good reputation to live up to' },
-  { id: 'goodListener',     label: 'I am a good listener and I encourage others to talk about themselves', hint: 'I let the other person do most of the talking' },
-  { id: 'noFlatWrong',      label: 'I do not flatly tell someone they are wrong', hint: 'Instead I called attention to mistakes indirectly' },
 ];
 
 const WEEKLY_ITEMS = [
   { id: 'visitedRelative', label: 'Visited a relative or friend this week', checkNote: true, checkNotePlaceholder: 'Whom did you visit?' },
-  { id: 'highIntensity1',  label: 'High-intensity workout #1 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
-  { id: 'highIntensity2',  label: 'High-intensity workout #2 (this week)',  checkNote: true, checkNotePlaceholder: 'What activity did you do?' },
-  { id: 'foodFast',        label: 'Completed a food fast this week' },
-  { id: 'shabadVani',      label: 'Memorised a new ShabadVani this week',   checkNote: true, checkNotePlaceholder: 'Which ShabadVani did you learn?' }
+  { id: 'foodFast',        label: 'Completed a food fast this week' }
 ];
 
 const MONTHLY_ITEMS = [
@@ -3040,6 +3092,7 @@ const DEFAULT_DAILY_SCORING = {
   waterSumiran3: { weight: 1 },
   waterSumiran4: { weight: 1 },
   waterSumiran5: { weight: 1 },
+  eveningGym:    { weight: 2 },
   waterSumiran6: { weight: 1 },
   cyberMindMap:      { weight: 2 },
   noMilkBeforeSleep: { weight: 2 },
@@ -3060,15 +3113,12 @@ const DEFAULT_DAILY_SCORING = {
   madeHappy:          { weight: 5 },
   familyTime:         { weight: 5 },
   calledFriend:       { weight: 3 },
-  doGood:             { weight: 4 },
-  helpedSomeone:      { weight: 5 },
   apologized:         { weight: 3 },
   treatWithDignity:   { weight: 3 },
-  goodListener:       { weight: 3 },
   noFlatWrong:        { weight: 3 }
 };
 // Default weekly tasks — sum to 20
-const DEFAULT_WEEKLY_SCORING = { visitedRelative: 5, highIntensity1: 5, highIntensity2: 5, foodFast: 5, shabadVani: 5 };
+const DEFAULT_WEEKLY_SCORING = { visitedRelative: 10, foodFast: 10 };
 // Default monthly tasks — sum to 20
 const DEFAULT_MONTHLY_SCORING = { ashram1: 10, ashram2: 10 };
 
@@ -3093,12 +3143,20 @@ function loadCustomWeights() {
             saved.daily[id] = deepCloneWeights(def);
           }
         });
+        // Prune daily practices that have since been removed (e.g. doGood, goodListener)
+        Object.keys(saved.daily).forEach(id => {
+          if (DEFAULT_DAILY_SCORING[id] === undefined) delete saved.daily[id];
+        });
         DAILY_SCORING = saved.daily;
       }
       if (saved.weekly) {
-        // Backfill any weekly tasks added since the saved version (e.g. shabadVani)
+        // Backfill any weekly tasks added since the saved version
         Object.keys(DEFAULT_WEEKLY_SCORING).forEach(id => {
           if (saved.weekly[id] === undefined) saved.weekly[id] = DEFAULT_WEEKLY_SCORING[id];
+        });
+        // Prune weekly tasks that have since been removed (e.g. highIntensity1/2, shabadVani)
+        Object.keys(saved.weekly).forEach(id => {
+          if (DEFAULT_WEEKLY_SCORING[id] === undefined) delete saved.weekly[id];
         });
         WEEKLY_SCORING = saved.weekly;
       }
@@ -3549,19 +3607,76 @@ function buildChecklist(containerId, items, kind) {
         });
         lab.appendChild(subWrap);
       }
+      // Home-only items: hide when day type is not "home"
+      if (item.homeOnly) {
+        div.classList.add('home-only-item');
+        const dayTypeSel = document.getElementById('dayType');
+        if (dayTypeSel && dayTypeSel.value !== 'home') div.style.display = 'none';
+      }
+      // Sunday-only items: hide on any day that isn't a Sunday
+      if (item.sundayOnly) {
+        div.classList.add('sunday-only-item');
+        const dateEl = document.getElementById('entryDate');
+        const dStr = (dateEl && dateEl.value) || todayISO();
+        if (!isSunday(dStr)) div.style.display = 'none';
+      }
       div.appendChild(togWrap);
       if (item.mealKey) {
-        // Inline layout: [label text] ......... [note input]
+        // Inline layout: [label] [what did you eat?] [👍 👎 — shown once a note is typed]
+        const mealKey = item.mealKey;
         const rowWrap = document.createElement('div');
         rowWrap.className = 'meal-inline-row';
         rowWrap.appendChild(lab);
+        // Note input
         const noteInp = document.createElement('input');
         noteInp.type = 'text';
         noteInp.className = 'meal-note-input';
-        noteInp.id = 'mealNote_' + item.mealKey;
+        noteInp.id = 'mealNote_' + mealKey;
         noteInp.placeholder = 'What did you eat?';
-        noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
+        // Like / dislike buttons (hidden until a note is entered)
+        const rateWrap = document.createElement('div');
+        rateWrap.className = 'meal-rate-wrap';
+        rateWrap.id = 'mealRateWrap_' + mealKey;
+        const likeBtn = document.createElement('button');
+        likeBtn.type = 'button';
+        likeBtn.className = 'meal-rate-btn meal-rate-like';
+        likeBtn.id = 'mealLike_' + mealKey;
+        likeBtn.title = 'Liked it — healthy & tasty';
+        likeBtn.innerHTML = '<span class="thumb-emoji">👍</span>';
+        const dislikeBtn = document.createElement('button');
+        dislikeBtn.type = 'button';
+        dislikeBtn.className = 'meal-rate-btn meal-rate-dislike';
+        dislikeBtn.id = 'mealDislike_' + mealKey;
+        dislikeBtn.title = 'Didn\'t like it';
+        dislikeBtn.innerHTML = '<span class="thumb-emoji">👎</span>';
+        const popEmoji = btn => {
+          btn.classList.remove('thumb-pop');
+          void btn.offsetWidth;
+          btn.classList.add('thumb-pop');
+        };
+        likeBtn.addEventListener('click', () => {
+          const on = !likeBtn.classList.contains('active');
+          likeBtn.classList.toggle('active', on);
+          dislikeBtn.classList.remove('active');   // mutually exclusive
+          if (on) popEmoji(likeBtn);
+          debounce(autosave, 500)();
+        });
+        dislikeBtn.addEventListener('click', () => {
+          const on = !dislikeBtn.classList.contains('active');
+          dislikeBtn.classList.toggle('active', on);
+          likeBtn.classList.remove('active');      // mutually exclusive
+          if (on) popEmoji(dislikeBtn);
+          debounce(autosave, 500)();
+        });
+        rateWrap.appendChild(likeBtn);
+        rateWrap.appendChild(dislikeBtn);
+        rowWrap.appendChild(rateWrap);
+        // Reveal/hide the rate buttons based on whether a note exists
+        const syncRateVisibility = () => {
+          rateWrap.classList.toggle('has-note', noteInp.value.trim().length > 0);
+        };
+        noteInp.addEventListener('input', () => { syncRateVisibility(); debounce(autosave, 1500)(); });
         div.appendChild(rowWrap);
       } else if (item.noReason) {
         // Inline layout: [label text] ......... [reason input, shown only when No]
@@ -3890,6 +4005,17 @@ function readForm() {
       });
       return notes;
     })(),
+    mealRating: (() => {
+      const rating = {};
+      ['breakfast','morningSnack','lunch','eveningSnack','dinner'].forEach(k => {
+        const likeBtn    = document.getElementById('mealLike_'    + k);
+        const dislikeBtn = document.getElementById('mealDislike_' + k);
+        if (likeBtn && likeBtn.classList.contains('active'))         rating[k] = 'like';
+        else if (dislikeBtn && dislikeBtn.classList.contains('active')) rating[k] = 'dislike';
+        else rating[k] = '';
+      });
+      return rating;
+    })(),
     noReasons: (() => {
       const reasons = {};
       DAILY_ITEMS.filter(i => i.noReason).forEach(i => {
@@ -3900,6 +4026,7 @@ function readForm() {
     })(),
     actual: document.getElementById('actualText').value,
     grateful: document.getElementById('gratefulText').value,
+    helped:  document.getElementById('helpedText').value,
     apology: document.getElementById('apologyText').value,
     lesson: document.getElementById('lessonText').value,
     share:  document.getElementById('shareText').value,
@@ -3983,6 +4110,7 @@ function writeForm(entry) {
   renderAdHocMeds();
   document.getElementById('actualText').value = entry.actual || '';
   document.getElementById('gratefulText').value = entry.grateful || '';
+  document.getElementById('helpedText').value = entry.helped || '';
   document.getElementById('apologyText').value = entry.apology || '';
   // Yes-note fields (restore value and visibility)
   // Backward-compat: old entries stored "Made someone happy" detail in entry.kindness
@@ -4102,10 +4230,31 @@ function writeForm(entry) {
   if (wrc) wrc.style.display = isSunday(_dateVal)  ? 'block' : 'none';
   document.getElementById('weekPlanText').value       = entry.weekPlan       || '';
   document.getElementById('weekReflectionText').value = entry.weekReflection || '';
-  // Meal notes
+  // Meal notes + like/dislike rating
   ['breakfast','morningSnack','lunch','eveningSnack','dinner'].forEach(k => {
-    const el = document.getElementById('mealNote_' + k);
-    if (el) el.value = (entry.mealNotes && entry.mealNotes[k]) || '';
+    const el         = document.getElementById('mealNote_'     + k);
+    const likeBtn    = document.getElementById('mealLike_'     + k);
+    const dislikeBtn = document.getElementById('mealDislike_'  + k);
+    const rateWrap   = document.getElementById('mealRateWrap_' + k);
+    const note = (entry.mealNotes && entry.mealNotes[k]) || '';
+    if (el) el.value = note;
+    // Determine rating: new mealRating field, with backward-compat for old mealRecommend boolean
+    let rating = (entry.mealRating && entry.mealRating[k]) || '';
+    if (!rating && entry.mealRecommend && entry.mealRecommend[k] === true) rating = 'like';
+    if (likeBtn)    likeBtn.classList.toggle('active',    rating === 'like');
+    if (dislikeBtn) dislikeBtn.classList.toggle('active', rating === 'dislike');
+    // Show the rate buttons only when a note exists
+    if (rateWrap) rateWrap.classList.toggle('has-note', note.trim().length > 0);
+  });
+  // Home-only items: show only when dayType is "home"
+  const _isHome = (entry.dayType || '') === 'home';
+  document.querySelectorAll('.home-only-item').forEach(el => {
+    el.style.display = _isHome ? '' : 'none';
+  });
+  // Sunday-only items: show only on Sundays
+  const _isSunday = isSunday(_dateVal);
+  document.querySelectorAll('.sunday-only-item').forEach(el => {
+    el.style.display = _isSunday ? '' : 'none';
   });
   // "No" reason fields (restore value; visibility is handled by setPracticeState above)
   DAILY_ITEMS.filter(i => i.noReason).forEach(i => {
@@ -5139,11 +5288,12 @@ function renderDayReport(c) {
 
   // Reflection
   const madeHappyNote = (entry.yesNotes && entry.yesNotes.madeHappy) || entry.kindness || '';
-  if (entry.actual || entry.grateful || entry.lesson || madeHappyNote || entry.apology) {
+  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology) {
     html += '<div class="card"><h2>Reflection</h2>';
     if (entry.actual)      html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
     if (entry.grateful)    html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
     if (madeHappyNote)     html += '<p><strong>Made someone happy:</strong> ' + esc(madeHappyNote) + '</p>';
+    if (entry.helped)      html += '<p><strong>Helped someone:</strong> ' + esc(entry.helped).replace(/\n/g, '<br>') + '</p>';
     if (entry.lesson)      html += '<p><strong>Learned:</strong> ' + esc(entry.lesson) + '</p>';
     if (entry.apology)     html += '<p><strong>Apology:</strong> ' + esc(entry.apology) + '</p>';
     html += '</div>';
@@ -5408,20 +5558,22 @@ function renderWeekFoodTableHtml(dayResults, allEntries) {
         html += '<td class="food-cell no-entry">—</td>';
         return;
       }
-      const isYes = entry.daily   && entry.daily[meal.itemId]   === true;
-      const isNo  = entry.dailyNo && entry.dailyNo[meal.itemId] === true;
-      const note  = (entry.mealNotes && entry.mealNotes[meal.key] || '').trim();
+      const isYes      = entry.daily   && entry.daily[meal.itemId]   === true;
+      const isNo       = entry.dailyNo && entry.dailyNo[meal.itemId] === true;
+      const note       = (entry.mealNotes && entry.mealNotes[meal.key] || '').trim();
+      // Rating: new mealRating ('like'/'dislike'), with backward-compat for old mealRecommend boolean
+      let rating = (entry.mealRating && entry.mealRating[meal.key]) || '';
+      if (!rating && entry.mealRecommend && entry.mealRecommend[meal.key] === true) rating = 'like';
 
       const statusClass = isYes ? 'fs-yes' : isNo ? 'fs-no' : 'fs-open';
       const statusIcon  = isYes ? '✓'      : isNo ? '✗'     : '·';
 
       html += '<td class="food-cell">';
       html += '<span class="food-status ' + statusClass + '">' + statusIcon + '</span>';
-      if (note) {
-        html += esc(note);
-      } else if (!isYes && !isNo) {
-        html += '<span style="color:var(--line);">—</span>';
-      }
+      if (note) html += esc(note);
+      else if (!isYes && !isNo) html += '<span style="color:var(--line);">—</span>';
+      if (rating === 'like')         html += ' <span title="Liked — healthy &amp; tasty!" style="font-size:0.85em;">👍</span>';
+      else if (rating === 'dislike') html += ' <span title="Didn\'t like it" style="font-size:0.85em;">👎</span>';
       html += '</td>';
     });
     html += '</tr>';
@@ -5583,6 +5735,7 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
     { key: 'share',    emoji: '💬', title: 'Shared Thoughts' },
     { key: 'apology',  emoji: '😔', title: 'Mistakes &amp; Apologies' },
     { key: 'madeHappy', emoji: '💚', title: 'Made Someone Happy', fromYesNotes: true },
+    { key: 'helped',   emoji: '🤝', title: 'Helped Someone' },
   ];
 
   const getSecText = (e, sec) => {
@@ -6447,7 +6600,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','apologyText','lessonText','shareText'];
+  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
@@ -6486,7 +6639,12 @@ function getMedEndDate(med) {
   if (!med.startDate || !med.durationDays) return null;
   const d = new Date(med.startDate + 'T00:00:00');
   d.setDate(d.getDate() + Number(med.durationDays) - 1);
-  return d.toISOString().slice(0, 10);
+  // Format using LOCAL date parts — avoids the UTC shift toISOString() introduces
+  // for timezones ahead of UTC (e.g. IST), which would push the date back a day.
+  const y  = d.getFullYear();
+  const m  = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + dd;
 }
 
 function isMedActiveOnDate(med, dateStr) {
@@ -6791,9 +6949,44 @@ function renderMedBlock(courseId, med, today, isArchived) {
   html += '<div><strong>' + esc(med.name) + '</strong> ' + badge + ' ' + freqBadge;
   html += '<span class="med-date-range">' + (med.startDate || '') + (endLabel ? ' → ' + end : '') + '</span></div>';
   if (!isArchived) {
-    html += '<div><button class="danger" style="font-size:0.78em;padding:3px 8px;" onclick="deleteMedicine(\'' + courseId + '\',\'' + med.id + '\')">Remove</button></div>';
+    html += '<div style="display:flex; gap:6px;">';
+    html += '<button class="secondary" style="font-size:0.78em;padding:3px 8px;" onclick="showEditMedForm(\'' + med.id + '\')">Edit dates</button>';
+    html += '<button class="danger" style="font-size:0.78em;padding:3px 8px;" onclick="deleteMedicine(\'' + courseId + '\',\'' + med.id + '\')">Remove</button>';
+    html += '</div>';
   }
   html += '</div>';
+
+  // Inline edit-dates form (hidden by default)
+  if (!isArchived) {
+    const isWeekly = med.frequency === 'weekly';
+    html += '<div id="editMedForm_' + med.id + '" style="display:none; margin-top:10px; padding:12px 14px; background:var(--bg); border-radius:6px; border:1px solid var(--line);">';
+    html += '<h4 style="margin:0 0 10px; font-size:0.92em; color:var(--accent);">Edit schedule — ' + esc(med.name) + '</h4>';
+    // Frequency + day of week
+    html += '<div class="row" style="margin-bottom:10px;">';
+    html += '<div><label style="font-size:0.85em; margin-bottom:4px; display:block;">Frequency</label>';
+    html += '<select id="editMedFreq_' + med.id + '" onchange="medEditFreqChange(\'' + med.id + '\')">';
+    html += '<option value="daily"' + (isWeekly ? '' : ' selected') + '>Daily</option>';
+    html += '<option value="weekly"' + (isWeekly ? ' selected' : '') + '>Weekly (once a week)</option>';
+    html += '</select></div>';
+    html += '<div id="editMedWeekDayWrap_' + med.id + '" style="display:' + (isWeekly ? 'block' : 'none') + ';"><label style="font-size:0.85em; margin-bottom:4px; display:block;">Day of week</label>';
+    html += '<select id="editMedWeekDay_' + med.id + '">';
+    DAY_NAMES.forEach((d, i) => {
+      html += '<option value="' + i + '"' + (med.weekDay === i ? ' selected' : '') + '>' + d + '</option>';
+    });
+    html += '</select></div>';
+    html += '</div>';
+    // Start / End dates
+    html += '<div class="row">';
+    html += '<div><label style="font-size:0.85em; margin-bottom:4px; display:block;">Start date</label>'
+          + '<input type="date" id="editMedStart_' + med.id + '" value="' + (med.startDate || '') + '"></div>';
+    html += '<div><label style="font-size:0.85em; margin-bottom:4px; display:block;">End date</label>'
+          + '<input type="date" id="editMedEnd_' + med.id + '" value="' + (end || '') + '"></div>';
+    html += '</div>';
+    html += '<div class="button-row" style="margin-top:10px;">';
+    html += '<button class="primary" onclick="saveMedicineEdit(\'' + courseId + '\',\'' + med.id + '\')">Save Changes</button>';
+    html += '<button class="secondary" onclick="hideEditMedForm(\'' + med.id + '\')">Cancel</button>';
+    html += '</div></div>';
+  }
 
   html += '<div class="med-slots">';
   if (!med.slots || med.slots.length === 0) {
@@ -6852,6 +7045,56 @@ function medFreqChange(courseId) {
   const freqEl = document.getElementById('newMedFreq_'        + courseId);
   const wrap   = document.getElementById('newMedWeekDayWrap_' + courseId);
   if (wrap) wrap.style.display = (freqEl && freqEl.value === 'weekly') ? 'block' : 'none';
+}
+
+function showEditMedForm(medId) {
+  const f = document.getElementById('editMedForm_' + medId);
+  if (f) f.style.display = 'block';
+}
+function hideEditMedForm(medId) {
+  const f = document.getElementById('editMedForm_' + medId);
+  if (f) f.style.display = 'none';
+}
+function medEditFreqChange(medId) {
+  const freqEl = document.getElementById('editMedFreq_'        + medId);
+  const wrap   = document.getElementById('editMedWeekDayWrap_' + medId);
+  if (wrap) wrap.style.display = (freqEl && freqEl.value === 'weekly') ? 'block' : 'none';
+}
+function saveMedicineEdit(courseId, medId) {
+  const startEl   = document.getElementById('editMedStart_'   + medId);
+  const endEl     = document.getElementById('editMedEnd_'     + medId);
+  const freqEl    = document.getElementById('editMedFreq_'    + medId);
+  const weekDayEl = document.getElementById('editMedWeekDay_' + medId);
+
+  const start     = startEl ? startEl.value : '';
+  const end       = endEl   ? endEl.value   : '';
+  const frequency = freqEl  ? freqEl.value  : 'daily';
+  const weekDay   = (frequency === 'weekly' && weekDayEl) ? parseInt(weekDayEl.value) : undefined;
+
+  if (!start) { alert('Please enter a start date.'); return; }
+  if (!end)   { alert('Please enter an end date.'); return; }
+  if (end < start) { alert('End date must be on or after the start date.'); return; }
+
+  // Recompute durationDays from start → end (inclusive)
+  const startMs = new Date(start + 'T00:00:00').getTime();
+  const endMs   = new Date(end   + 'T00:00:00').getTime();
+  const days    = Math.round((endMs - startMs) / 86400000) + 1;
+
+  const courses = getCourses();
+  const course  = courses.find(c => c.id === courseId);
+  if (!course) return;
+  const med = (course.medicines || []).find(m => m.id === medId);
+  if (!med) return;
+
+  med.startDate    = start;
+  med.durationDays = days;
+  med.frequency    = frequency;
+  if (frequency === 'weekly' && weekDay !== undefined) med.weekDay = weekDay;
+  else delete med.weekDay;
+
+  setCourses(courses);
+  renderMedicinesTab();
+  renderTodayMedicines(document.getElementById('entryDate').value || todayISO());
 }
 
 function medUpdateMealSelect(medId) {
@@ -8128,6 +8371,16 @@ document.addEventListener('DOMContentLoaded', () => {
   init();
   document.getElementById('entryDate').addEventListener('change', loadEntry);
   setupAutosave();
+  // Live-toggle home-only practices when day type changes
+  const dayTypeSel = document.getElementById('dayType');
+  if (dayTypeSel) {
+    dayTypeSel.addEventListener('change', () => {
+      const isHome = dayTypeSel.value === 'home';
+      document.querySelectorAll('.home-only-item').forEach(el => {
+        el.style.display = isHome ? '' : 'none';
+      });
+    });
+  }
 });
 </script>
 
