@@ -668,6 +668,63 @@
     background: var(--line);
   }
 
+  /* ── Diet Plan editable table ── */
+  .diet-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 8px; }
+  .diet-table { border-collapse: collapse; width: 100%; min-width: 760px; }
+  .diet-table th, .diet-table td {
+    border: 1px solid var(--line);
+    padding: 8px 10px;
+    vertical-align: top;
+    text-align: left;
+  }
+  .diet-table thead th {
+    background: var(--bg);
+    font-size: 0.78em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--accent);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+  .diet-table .diet-meal-cell {
+    background: var(--bg);
+    font-weight: bold;
+    color: var(--ink);
+    font-size: 0.85em;
+    white-space: nowrap;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 120px;
+  }
+  .diet-meal-sub {
+    display: block;
+    font-size: 0.82em;
+    font-weight: normal;
+    color: var(--soft);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .diet-cell {
+    font-size: 0.85em;
+    color: var(--ink);
+    line-height: 1.4;
+    min-width: 150px;
+    cursor: text;
+    outline: none;
+    transition: background 0.12s, box-shadow 0.12s;
+  }
+  .diet-cell:hover { background: #faf7f1; }
+  .diet-cell:focus {
+    background: #fffdf6;
+    box-shadow: inset 0 0 0 2px var(--accent-soft);
+    border-radius: 2px;
+  }
+
   /* ── Weekly Tasks Review — Not Done rows with actions ── */
   .wtask-row {
     display: flex;
@@ -2986,6 +3043,22 @@
   </div>
   <div class="quote">"Small disciplines done daily, with love, become a beautiful life."</div>
 
+  <!-- Diet Plan (collapsible, editable) -->
+  <div class="card">
+    <button class="collapsible-toggle" id="dietPlanToggle" onclick="toggleSection('dietPlanBody','dietPlanToggle')" aria-expanded="false">
+      <span>🥗 Diet Plan — 7-Day Vegetarian</span>
+      <span class="collapsible-icon">▸</span>
+    </button>
+    <div id="dietPlanBody" class="collapsible-body" style="display:none;">
+      <p style="color:var(--soft); font-size:0.85em; margin-top:0;">Male, 30 yrs, lacto-vegetarian · ~2,400–2,600 kcal/day · tea/coffee only at Morning &amp; Evening snacks. <strong>Tap any cell to edit it</strong> — changes save automatically.</p>
+      <div id="dietPlanContainer"></div>
+      <div class="button-row" style="margin-top:12px;">
+        <button class="secondary" onclick="resetDietPlan()">Reset to original plan</button>
+      </div>
+      <div id="dietPlanMsg" class="status-msg"></div>
+    </div>
+  </div>
+
   <!-- Atomic Habits Summary (collapsible) -->
   <div class="card">
     <button class="collapsible-toggle" id="atomicHabitsToggle" onclick="toggleSection('atomicHabitsBody','atomicHabitsToggle')" aria-expanded="false">
@@ -3427,6 +3500,115 @@ function renderMission30() {
   el.style.display = 'inline-flex';
 }
 
+/* ---------- DIET PLAN ---------- */
+const DIET_PLAN_KEY = 'dearDiary_dietPlan_v1';
+const DIET_DAYS = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+const DIET_PLAN_DEFAULT = [
+  { slot: 'Breakfast', sub: '', days: [
+    'Vegetable poha with peanuts + 1 glass milk + 1 orange',
+    'Vegetable oats upma + 1 glass milk + 1 banana',
+    '2 besan chilla with mint chutney + bowl of curd + papaya',
+    '3 idli with sambar & coconut chutney + 1 glass milk',
+    'Paneer-stuffed whole-wheat paratha (1) + curd + 1 apple',
+    '2 moong dal cheela + mint chutney + 1 glass milk + fruit',
+    'Whole-wheat veg-paneer sandwich (grilled) + 1 glass milk + fruit'
+  ]},
+  { slot: 'Morning Snack', sub: 'tea / coffee', days: [
+    'Tea/coffee + roasted chana + 6-8 almonds',
+    'Tea/coffee + 4 walnut halves + 1 apple',
+    'Tea/coffee + mixed seeds (1 tbsp) + 1 guava',
+    'Tea/coffee + 6-8 almonds + 1 orange',
+    'Tea/coffee + 4 walnut halves + 1 pear',
+    'Tea/coffee + mixed nuts (small handful) + fruit',
+    'Tea/coffee + 6-8 almonds + 1 orange'
+  ]},
+  { slot: 'Lunch', sub: '', days: [
+    '2 multigrain roti + palak paneer + 1/2 bowl brown rice + cucumber-tomato-lemon salad + curd',
+    'Rajma + 1 bowl brown rice + 1 roti + carrot-beetroot-lemon salad + curd',
+    'Chana masala + jeera brown rice + 1 roti + onion-tomato-lemon salad + buttermilk',
+    'Mixed dal + paneer bhurji + 2 multigrain roti + spinach + salad + curd',
+    'Kadhi + brown rice + 1 roti + bhindi sabzi + green salad',
+    'Lobia (black-eyed peas) curry + brown rice + 1 roti + salad + buttermilk',
+    'Chole + brown rice + 1 roti + mixed salad with lemon + curd'
+  ]},
+  { slot: 'Evening Snack', sub: 'tea / coffee', days: [
+    'Tea/coffee + moong sprouts chaat (lemon, tomato, onion)',
+    'Tea/coffee + grilled paneer tikka / roasted makhana',
+    'Tea/coffee + roasted peanuts + seasonal fruit',
+    'Tea/coffee + sprouts & corn chaat',
+    'Tea/coffee + roasted chana + seasonal fruit',
+    'Tea/coffee + paneer cubes / roasted makhana',
+    'Tea/coffee + sprouts chaat / seasonal fruit'
+  ]},
+  { slot: 'Dinner', sub: '', days: [
+    'Mixed dal + 2 roti + bhindi sabzi + green salad',
+    'Tofu/paneer & vegetable stir-fry + 2 roti + salad',
+    'Vegetable khichdi (dal+rice) with ghee + curd + salad',
+    'Mixed veg curry + dal + 1/2 bowl brown rice + salad',
+    'Soya chunk curry + 2 roti + salad + curd',
+    'Palak dal + 2 roti + lauki sabzi + salad',
+    'Mixed dal + 2 roti + seasonal mixed veg + salad'
+  ]}
+];
+
+function getDietPlan() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DIET_PLAN_KEY));
+    if (saved && Array.isArray(saved) && saved.length) return saved;
+  } catch (e) { /* ignore */ }
+  return JSON.parse(JSON.stringify(DIET_PLAN_DEFAULT));
+}
+function setDietPlan(plan) { localStorage.setItem(DIET_PLAN_KEY, JSON.stringify(plan)); }
+
+function renderDietPlan() {
+  const el = document.getElementById('dietPlanContainer');
+  if (!el) return;
+  const plan = getDietPlan();
+
+  // Days as rows, meals as columns
+  let html = '<div class="diet-table-wrap"><table class="diet-table"><thead><tr>';
+  html += '<th class="diet-meal-cell">Day</th>';
+  plan.forEach(row => {
+    html += '<th>' + esc(row.slot)
+          + (row.sub ? '<span class="diet-meal-sub">(' + esc(row.sub) + ')</span>' : '') + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  DIET_DAYS.forEach((dayName, di) => {
+    html += '<tr>';
+    html += '<td class="diet-meal-cell">' + esc(dayName) + '</td>';
+    plan.forEach((row, ri) => {
+      html += '<td class="diet-cell" contenteditable="true" '
+            + 'data-r="' + ri + '" data-d="' + di + '" '
+            + 'oninput="onDietCellEdit(this)">' + esc(row.days[di]) + '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+const _saveDietDebounced = debounce(() => {
+  const cells = document.querySelectorAll('#dietPlanContainer .diet-cell');
+  const plan = getDietPlan();
+  cells.forEach(c => {
+    const r = +c.dataset.r, d = +c.dataset.d;
+    if (plan[r] && plan[r].days) plan[r].days[d] = c.textContent.trim();
+  });
+  setDietPlan(plan);
+  showMsg('dietPlanMsg', '✓ Diet plan saved.', 'success');
+}, 800);
+
+function onDietCellEdit(cell) { _saveDietDebounced(); }
+
+function resetDietPlan() {
+  if (!confirm('Reset the diet plan back to the original 7-day plan? Your edits will be lost.')) return;
+  localStorage.removeItem(DIET_PLAN_KEY);
+  renderDietPlan();
+  showMsg('dietPlanMsg', 'Diet plan reset to the original plan.', 'success');
+}
+
 /* ---------- INIT ---------- */
 function init() {
   loadCustomWeights();
@@ -3443,6 +3625,7 @@ function init() {
   renderTodayMedicines(todayISO());
   renderBirthdayReminders(todayISO());
   renderMission30();
+  renderDietPlan();
   refreshSocialCircleDatalist();
   // UI refresh: floating chip + section rail + "don't miss twice" banner
   buildSectionRail();
@@ -6934,7 +7117,8 @@ function exportJSON() {
       medlogs:  getMedLogs(),
       social:   getSocial(),
       finance:  getFinanceData(),
-      calendar: getCalendarData()
+      calendar: getCalendarData(),
+      dietPlan: getDietPlan()
     }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -6962,6 +7146,7 @@ function importJSON(ev) {
         if (data.__meta.social)   setSocial(data.__meta.social);
         if (data.__meta.finance)  setFinanceData(data.__meta.finance);
         if (data.__meta.calendar) setCalendarData(data.__meta.calendar);
+        if (data.__meta.dietPlan) setDietPlan(data.__meta.dietPlan);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
