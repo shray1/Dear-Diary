@@ -750,6 +750,38 @@
     .report-ctrl-label { width: auto; padding-top: 0; }
   }
 
+  /* ── Reflection rows (weekly compilation + monthly highlights) ── */
+  .refl-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 8px 10px 0;
+    border-top: 1px solid var(--line);
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .refl-day { flex-shrink: 0; min-width: 80px; padding-top: 1px; }
+  .refl-text { color: var(--ink); white-space: pre-line; line-height: 1.6; flex: 1; min-width: 0; }
+  .refl-star {
+    flex-shrink: 0;
+    align-self: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25em;
+    line-height: 1;
+    color: var(--line);
+    padding: 2px 4px;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .refl-star:hover { color: #e6b800; transform: scale(1.2); }
+  .refl-star.active { color: #e6b800; }
+  .refl-row.refl-highlighted {
+    background: #fffaf0;
+    border-left: 3px solid #e6b800;
+    padding-left: 10px;
+  }
+
   /* ── Weekly Food Log (Data & History) navigation header ── */
   .food-log-header {
     display: flex;
@@ -3358,6 +3390,7 @@
 const DAILY_ITEMS = [
   // ── Body & Rhythm ──
   { id: 'wakeSunrise',        section: 'Body & Rhythm', label: 'Woke up before sunrise', noReason: true },
+  { id: 'sumiranPapaji', label: 'Sumiran (2 mins) for Papaji\'s Health' },
   { id: 'greetSeniors', label: 'Greet & Kiss Senior Members in the Family' },
   { id: 'morningWalk',        label: 'Morning walk or jogging', subratings: [
     { id: 'suryanamaskar', title: 'Suryanamaskar', starLabels: ['', '1', '2', '3', '4', '5'] },
@@ -3376,7 +3409,7 @@ const DAILY_ITEMS = [
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
   { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', yesNote: true, yesNotePlaceholder: 'Who did you call? (start typing to search)', yesNoteDatalist: 'socialCirclePeople' },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
-  { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true },
+  { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true, noReason: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            hint: '🕗 8:00–8:30 PM',   mealKey: 'dinner'       },
@@ -3463,6 +3496,7 @@ const TIME_SLOTS = (() => {
 // Default daily practice weights — sum to 100
 const DEFAULT_DAILY_SCORING = {
   wakeSunrise:        { weight: 6 },
+  sumiranPapaji:      { weight: 3 },
   greetSeniors:       { weight: 3 },
   morningWalk:        { weight: 6, subratings: { suryanamaskar: 3, pranayam: 3 } },
   homemadeBreakfast:    { weight: 3 },
@@ -6515,26 +6549,51 @@ function renderWeekReport(c) {
   c.innerHTML = html;
 }
 
-function renderWeeklyReflectionsHtml(dayResults, allEntries) {
-  // Collect each reflection field across the 7 days
-  const sections = [
-    { key: 'actual',   emoji: '📅', title: 'How Each Day Went' },
-    { key: 'grateful', emoji: '🙏', title: 'Gratitude This Week' },
-    { key: 'lesson',   emoji: '📚', title: 'Learnings' },
-    { key: 'share',    emoji: '💬', title: 'Shared Thoughts' },
-    { key: 'apology',  emoji: '😔', title: 'Mistakes &amp; Apologies' },
-    { key: 'madeHappy', emoji: '💚', title: 'Made Someone Happy', fromYesNotes: true },
-    { key: 'helped',   emoji: '🤝', title: 'Helped Someone' },
-  ];
+// Shared reflection section config (used by weekly compilation + monthly highlights)
+const REFLECTION_SECTIONS = [
+  { key: 'actual',    emoji: '📅', title: 'How Each Day Went' },
+  { key: 'grateful',  emoji: '🙏', title: 'Gratitude' },
+  { key: 'lesson',    emoji: '📚', title: 'Learnings' },
+  { key: 'share',     emoji: '💬', title: 'Shared Thoughts' },
+  { key: 'apology',   emoji: '😔', title: 'Mistakes &amp; Apologies' },
+  { key: 'madeHappy', emoji: '💚', title: 'Made Someone Happy', fromYesNotes: true },
+  { key: 'helped',    emoji: '🤝', title: 'Helped Someone' },
+];
 
-  const getSecText = (e, sec) => {
-    if (!e) return '';
-    if (sec.fromYesNotes) {
-      // New field: yesNotes.madeHappy — fall back to legacy entry.kindness
-      return (e.yesNotes && e.yesNotes[sec.key]) || (sec.key === 'madeHappy' ? e.kindness : '') || '';
-    }
-    return e[sec.key] || '';
-  };
+function getReflectionText(e, sec) {
+  if (!e) return '';
+  if (sec.fromYesNotes) {
+    return (e.yesNotes && e.yesNotes[sec.key]) || (sec.key === 'madeHappy' ? e.kindness : '') || '';
+  }
+  return e[sec.key] || '';
+}
+
+/* ── Reflection highlights (stored separately so they survive entry edits) ── */
+const REFLECTION_HL_KEY = 'dearDiary_reflectionHL_v1';
+function getReflectionHighlights() {
+  try { return JSON.parse(localStorage.getItem(REFLECTION_HL_KEY)) || {}; } catch (e) { return {}; }
+}
+function setReflectionHighlights(obj) { localStorage.setItem(REFLECTION_HL_KEY, JSON.stringify(obj)); }
+function isReflectionHighlighted(date, key) {
+  const hl = getReflectionHighlights();
+  return !!(hl[date] && hl[date][key]);
+}
+function toggleReflectionHighlight(date, key) {
+  const hl = getReflectionHighlights();
+  if (!hl[date]) hl[date] = {};
+  if (hl[date][key]) {
+    delete hl[date][key];
+    if (Object.keys(hl[date]).length === 0) delete hl[date];
+  } else {
+    hl[date][key] = true;
+  }
+  setReflectionHighlights(hl);
+  renderReport(); // refresh the weekly report to update the star
+}
+
+function renderWeeklyReflectionsHtml(dayResults, allEntries) {
+  const sections = REFLECTION_SECTIONS;
+  const getSecText = getReflectionText;
 
   // Check if any day has any reflection content
   const hasAny = dayResults.some(d => {
@@ -6545,7 +6604,7 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
 
   let html = '<div class="card">';
   html += '<h2>📖 Week in Review</h2>';
-  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">All daily reflections compiled, day by day.</p>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">All daily reflections compiled, day by day. Tap the ☆ on any reflection to <strong>highlight</strong> it for the Monthly report.</p>';
 
   sections.forEach(sec => {
     // Collect non-empty entries
@@ -6560,19 +6619,65 @@ function renderWeeklyReflectionsHtml(dayResults, allEntries) {
     html += '<div style="margin-bottom:20px;">';
     html += '<h3 style="margin-bottom:10px;">' + sec.emoji + ' ' + sec.title + '</h3>';
     rows.forEach(r => {
-      html += '<div style="display:flex; gap:12px; padding:10px 0; border-top:1px solid var(--line);">';
+      const hl = isReflectionHighlighted(r.date, sec.key);
+      html += '<div class="refl-row' + (hl ? ' refl-highlighted' : '') + '">';
       // Day label
-      html += '<div style="flex-shrink:0; min-width:80px;">';
+      html += '<div class="refl-day">';
       html += '<span style="font-weight:bold; color:var(--accent); font-size:0.92em;">' + esc(r.dayName) + '</span> ';
       html += '<span style="color:var(--soft); font-size:0.82em;">' + r.date.slice(5) + '</span>';
       html += '</div>';
       // Content
-      html += '<div style="color:var(--ink); white-space:pre-line; line-height:1.6; flex:1;">' + esc(r.text) + '</div>';
+      html += '<div class="refl-text">' + esc(r.text) + '</div>';
+      // Highlight star
+      html += '<button type="button" class="refl-star' + (hl ? ' active' : '') + '" '
+            + 'onclick="toggleReflectionHighlight(\'' + r.date + '\',\'' + sec.key + '\')" '
+            + 'title="' + (hl ? 'Highlighted for the Monthly report — tap to remove' : 'Highlight this for the Monthly report') + '">'
+            + (hl ? '★' : '☆') + '</button>';
       html += '</div>';
     });
     html += '</div>';
   });
 
+  html += '</div>';
+  return html;
+}
+
+function renderMonthlyHighlightsHtml(year, month, allEntries) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const pad = n => String(n).padStart(2, '0');
+
+  let body = '';
+  REFLECTION_SECTIONS.forEach(sec => {
+    const rows = [];
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = year + '-' + pad(month + 1) + '-' + pad(d);
+      if (!isReflectionHighlighted(date, sec.key)) continue;
+      const text = getReflectionText(allEntries[date], sec).trim();
+      if (!text) continue;
+      const dObj = new Date(date + 'T00:00:00');
+      const dayName = DAY_NAMES_SHORT[dObj.getDay() === 0 ? 6 : dObj.getDay() - 1];
+      rows.push({ date, dayName, text });
+    }
+    if (rows.length === 0) return;
+    body += '<div style="margin-bottom:20px;">';
+    body += '<h3 style="margin-bottom:10px;">' + sec.emoji + ' ' + sec.title + '</h3>';
+    rows.forEach(r => {
+      body += '<div class="refl-row refl-highlighted">';
+      body += '<div class="refl-day">';
+      body += '<span style="font-weight:bold; color:var(--accent); font-size:0.92em;">' + esc(r.dayName) + '</span> ';
+      body += '<span style="color:var(--soft); font-size:0.82em;">' + r.date.slice(5) + '</span>';
+      body += '</div>';
+      body += '<div class="refl-text">' + esc(r.text) + '</div>';
+      body += '</div>';
+    });
+    body += '</div>';
+  });
+
+  if (!body) return '';
+  let html = '<div class="card">';
+  html += '<h2>⭐ Highlights of the Month</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Reflections you starred in the weekly reports.</p>';
+  html += body;
   html += '</div>';
   return html;
 }
@@ -6871,6 +6976,9 @@ function renderMonthReport(c) {
 
   // Day type distribution for the month range
   html += renderDayTypeStatsCard(r.monthStart, r.monthEnd);
+
+  // Highlighted reflections of the month (starred in the weekly reports)
+  html += renderMonthlyHighlightsHtml(year, month, _allM);
 
   c.innerHTML = html;
 }
@@ -7342,7 +7450,8 @@ function exportJSON() {
       social:   getSocial(),
       finance:  getFinanceData(),
       calendar: getCalendarData(),
-      dietPlan: getDietPlan()
+      dietPlan: getDietPlan(),
+      reflectionHL: getReflectionHighlights()
     }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -7371,6 +7480,7 @@ function importJSON(ev) {
         if (data.__meta.finance)  setFinanceData(data.__meta.finance);
         if (data.__meta.calendar) setCalendarData(data.__meta.calendar);
         if (data.__meta.dietPlan) setDietPlan(data.__meta.dietPlan);
+        if (data.__meta.reflectionHL) setReflectionHighlights(data.__meta.reflectionHL);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
