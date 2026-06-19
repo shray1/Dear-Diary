@@ -904,6 +904,22 @@
   .wtask-carry:hover { border-color: var(--accent); color: var(--accent); background: #fdf8f2; transform: translateX(1px); }
   .wtask-remove:hover { border-color: var(--warn); color: var(--warn); background: #fdf3ec; }
 
+  /* ── Body & Rhythm streak badge ── */
+  .streak-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #c9540a;
+    background: #fff1e6;
+    border: 1px solid #f3c89e;
+    border-radius: 11px;
+    padding: 1px 8px;
+    vertical-align: middle;
+    white-space: nowrap;
+    line-height: 1.5;
+  }
+
   /* ── Mind & Self-Discipline practice manager ── */
   .mind-add-row {
     display: flex;
@@ -1030,6 +1046,7 @@
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+    flex-wrap: wrap;
   }
   .goals-input-row input[type="text"] {
     flex: 1;
@@ -1130,6 +1147,18 @@
     font-style: normal;
   }
   .goal-item.done .goal-duration-badge { opacity: 0.5; }
+  .goal-time-badge {
+    font-size: 0.75em;
+    font-weight: bold;
+    color: var(--accent);
+    background: #f3ecdf;
+    border-radius: 10px;
+    padding: 2px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-style: normal;
+  }
+  .goal-item.done .goal-time-badge { opacity: 0.5; }
   /* Office-Work marker */
   .goal-office-badge {
     display: inline-flex;
@@ -2983,10 +3012,11 @@
     <!-- Small Goals -->
     <div class="goals-section">
       <h3>⏱ Small Goals for Today</h3>
-      <p class="goals-hint">Add goals with estimated time (1 h – 6 h each). Tick them off this evening.</p>
+      <p class="goals-hint">Add goals with an optional start time &amp; estimated duration. Reorder with the arrows; the Day report lays them out by start time so you can map out your day. Tick them off this evening.</p>
       <div class="goals-input-row">
         <input type="text" id="goalInput" placeholder="e.g. Finish chapter 3 of the book…"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addGoal();}">
+        <input type="time" id="goalStartTime" step="900" title="Start time (optional) — 15-minute steps" style="flex-shrink:0; width:120px;">
         <select id="goalDuration" style="flex-shrink:0; width:90px;">
           <option value="1">1 hr</option>
           <option value="1.5">1.5 hr</option>
@@ -4270,6 +4300,12 @@ function buildChecklist(containerId, items, kind) {
       togWrap.appendChild(noBtn);
       const lab = document.createElement('label');
       lab.textContent = item.label;
+      // Streak counter badge (filled by updateStreakBadges)
+      const streakBadge = document.createElement('span');
+      streakBadge.className = 'streak-badge';
+      streakBadge.id = 'streak_' + item.id;
+      streakBadge.style.display = 'none';
+      lab.appendChild(streakBadge);
       if (item.hint) {
         const h = document.createElement('span');
         h.className = 'hint';
@@ -4856,7 +4892,7 @@ function readForm() {
     bedTime: document.getElementById('bedTime').value,
     screenTime: document.getElementById('screenTime').value,
     plan: document.getElementById('planText').value,
-    goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, done: !!g.done, isOfficeWork: !!g.isOfficeWork })),
+    goals: currentGoals.map(g => ({ id: g.id, text: g.text, duration: g.duration || 1, startTime: g.startTime || '', done: !!g.done, isOfficeWork: !!g.isOfficeWork })),
     adHocMeds: currentAdHocMeds.map(m => ({
       id: m.id,
       name: m.name || '',
@@ -4982,7 +5018,7 @@ function writeForm(entry) {
   document.getElementById('bedTime').value = entry.bedTime || '';
   document.getElementById('screenTime').value = entry.screenTime || '';
   document.getElementById('planText').value = entry.plan || '';
-  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, done: !!g.done, isOfficeWork: !!g.isOfficeWork, _editing: false }));
+  currentGoals = (entry.goals || []).map(g => ({ id: g.id || Date.now() + Math.random(), text: g.text || '', duration: g.duration || 1, startTime: g.startTime || '', done: !!g.done, isOfficeWork: !!g.isOfficeWork, _editing: false }));
   renderGoalsList();
   currentAdHocMeds = (entry.adHocMeds || []).map(m => ({
     id: m.id || ('adhoc_' + Date.now() + '_' + Math.floor(Math.random() * 9999)),
@@ -5194,6 +5230,7 @@ function writeForm(entry) {
     }
   });
   updateScorePreview();
+  updateStreakBadges(_dateVal);
 }
 
 // Live preview of the day's 3 component scores + average (shown in the Conscience card)
@@ -5327,6 +5364,7 @@ function renderGoalsList() {
           value="${esc(goal.text)}"
           onkeydown="if(event.key==='Enter'){event.preventDefault();saveGoalEdit(${idx});}
                      if(event.key==='Escape') cancelGoalEdit(${idx});">
+        <input type="time" id="goalEditTime_${idx}" value="${goal.startTime || ''}" step="900" title="Start time (15-minute steps)" style="flex-shrink:0;width:110px;padding:4px;font-family:inherit;font-size:0.85em;border:1px solid var(--line);border-radius:5px;">
         <select id="goalEditDur_${idx}" style="flex-shrink:0;width:80px;padding:4px;font-family:inherit;font-size:0.85em;border:1px solid var(--line);border-radius:5px;">${durOptions}</select>
         <div class="goal-actions">
           <button class="goal-btn goal-save" onclick="saveGoalEdit(${idx})">Save</button>
@@ -5335,9 +5373,13 @@ function renderGoalsList() {
       </div>`;
     }
     const officeBadge = goal.isOfficeWork ? '<span class="goal-office-badge">🏢 Office</span>' : '';
+    const timeBadge = goal.startTime
+      ? `<span class="goal-time-badge">🕘 ${esc(formatTime12hFromHHMM(goal.startTime))}</span>`
+      : '';
     return `<div class="goal-item ${goal.done ? 'done' : ''}">
       <input type="checkbox" ${goal.done ? 'checked' : ''} onchange="toggleGoal(${idx})"
         title="${goal.done ? 'Mark as not done' : 'Mark as done'}">
+      ${timeBadge}
       <span class="goal-text">${esc(goal.text)}</span>
       ${officeBadge}
       <span class="goal-duration-badge">${durationLabel(dur)}</span>
@@ -5371,18 +5413,31 @@ function renderGoalsList() {
   progPct.textContent  = pct + '%';
 }
 
+// Round a HH:MM string to the nearest 15-minute mark (returns '' if blank/invalid)
+function snapTo15(t) {
+  if (!t || !t.includes(':')) return '';
+  let [h, m] = t.split(':').map(Number);
+  if (isNaN(h) || isNaN(m)) return '';
+  m = Math.round(m / 15) * 15;
+  if (m === 60) { m = 0; h = (h + 1) % 24; }
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
 function addGoal() {
   const input    = document.getElementById('goalInput');
   const durSel   = document.getElementById('goalDuration');
+  const timeEl   = document.getElementById('goalStartTime');
   const officeEl = document.getElementById('goalOfficeFlag');
   const officeLbl = document.getElementById('goalOfficeCheckLabel');
   const text     = (input.value || '').trim();
   if (!text) { input.focus(); return; }
   const duration = parseFloat(durSel ? durSel.value : 1) || 1;
+  const startTime = timeEl ? snapTo15(timeEl.value || '') : '';
   const isOfficeWork = !!(officeEl && officeEl.checked);
-  currentGoals.push({ id: Date.now(), text, duration, done: false, isOfficeWork, _editing: false });
+  currentGoals.push({ id: Date.now(), text, duration, startTime, done: false, isOfficeWork, _editing: false });
   input.value = '';
   if (durSel) durSel.value = '1'; // reset to default
+  if (timeEl) timeEl.value = '';
   if (officeEl) officeEl.checked = false;
   if (officeLbl) officeLbl.classList.remove('active');
   input.focus();
@@ -5429,6 +5484,7 @@ function carryForwardGoal(idx) {
     id: 'cf_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
     text: goal.text,
     duration: goal.duration || 1,
+    startTime: goal.startTime || '',
     done: false,
     isOfficeWork: !!goal.isOfficeWork
   });
@@ -5459,11 +5515,13 @@ function editGoal(idx) {
 function saveGoalEdit(idx) {
   const input  = document.getElementById('goalEdit_'    + idx);
   const durSel = document.getElementById('goalEditDur_' + idx);
+  const timeEl = document.getElementById('goalEditTime_' + idx);
   if (!input) return;
   const text = input.value.trim();
   if (!text) { input.focus(); return; }
   currentGoals[idx].text     = text;
   currentGoals[idx].duration = durSel ? (parseFloat(durSel.value) || 1) : (currentGoals[idx].duration || 1);
+  currentGoals[idx].startTime = timeEl ? snapTo15(timeEl.value || '') : (currentGoals[idx].startTime || '');
   currentGoals[idx]._editing = false;
   renderGoalsList();
   autosave();
@@ -5899,6 +5957,49 @@ function isPracticeApplicable(item, entry, dateStr) {
   return true;
 }
 
+// Current "done" streak for a Body & Rhythm practice, counting back from refDateStr.
+// Days where the practice doesn't apply (Home-only on office days, Sunday-only on
+// weekdays) are skipped (they neither extend nor break the streak). The reference
+// day gets a grace pass when it isn't marked yet, so the streak doesn't read 0 mid-day.
+function practiceStreak(id, refDateStr, all) {
+  all = all || getAllEntries();
+  const item = DAILY_ITEM_MAP[id] || {};
+  let streak = 0;
+  let d = new Date(refDateStr + 'T00:00:00');
+  for (let i = 0; i < 1200; i++) {           // cap the look-back (~3.3 years)
+    const iso = isoDate(d);
+    const e = all[iso];
+    if (!isPracticeApplicable(item, e || {}, iso)) { d = addDays(d, -1); continue; }
+    const done = !!(e && e.daily && e.daily[id] === true);
+    if (done) { streak++; }
+    else if (iso === refDateStr && refDateStr === todayISO()) { /* grace: today not marked yet */ }
+    else { break; }
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+
+// Fill the streak badges next to each Body & Rhythm practice
+function updateStreakBadges(refDateStr) {
+  const dateEl = document.getElementById('entryDate');
+  refDateStr = refDateStr || (dateEl && dateEl.value) || todayISO();
+  const all = getAllEntries();
+  DAILY_ITEMS.forEach(i => {
+    if (i.mindSlot || i.rateOnly) return;    // Body & Rhythm yes/no practices only
+    const badge = document.getElementById('streak_' + i.id);
+    if (!badge) return;
+    const s = practiceStreak(i.id, refDateStr, all);
+    if (s >= 1) {
+      badge.textContent = '🔥 ' + s;
+      badge.title = s + '-day streak';
+      badge.style.display = '';
+    } else {
+      badge.textContent = '';
+      badge.style.display = 'none';
+    }
+  });
+}
+
 // Each day has 3 component scores (all 0–100), averaged into the day total:
 //   • Body & Rhythm   — non-rate practices, normalised from their weights
 //   • Mind & Self-Discipline — slot-rated practices, normalised from their weights
@@ -6223,13 +6324,23 @@ function renderDayReport(c) {
     html += '<strong style="color:var(--accent);">⏱ Daily Goals</strong>';
     html += '<span style="color:var(--soft); font-size:0.88em;">' + doneCount + ' / ' + totalCount + ' completed (' + pct + '%)</span>';
     html += '</div>';
-    entry.goals.forEach(g => {
+    // Show goals in start-time order (untimed last) so the day reads like a timeline
+    const _goalsSorted = entry.goals.slice().sort((a, b) => {
+      const ta = (a.startTime && a.startTime.includes(':')) ? a.startTime : '~';
+      const tb = (b.startTime && b.startTime.includes(':')) ? b.startTime : '~';
+      return ta < tb ? -1 : ta > tb ? 1 : 0;
+    });
+    _goalsSorted.forEach(g => {
       const style = g.done ? 'text-decoration:line-through; color:var(--soft);' : 'color:var(--ink);';
       const officeBadge = g.isOfficeWork
         ? '<span class="goal-office-badge" style="margin-left:6px;">🏢 Office</span>'
         : '';
+      const timeBadge = g.startTime
+        ? '<span class="goal-time-badge">🕘 ' + esc(formatTime12hFromHHMM(g.startTime)) + '</span>'
+        : '';
       html += '<div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line); font-size:0.95em;">';
       html += '<span style="color:' + (g.done ? 'var(--good)' : 'var(--line)') + '; font-size:1.1em;">' + (g.done ? '✓' : '○') + '</span>';
+      html += timeBadge;
       html += '<span style="' + style + '">' + esc(g.text) + '</span>' + officeBadge;
       html += '</div>';
     });
@@ -7145,6 +7256,7 @@ function carryForwardWeekTask(dateStr, goalId) {
     id: 'cf_' + Date.now() + '_' + Math.floor(Math.random() * 9999),
     text: goal.text,
     duration: goal.duration || 1,
+    startTime: goal.startTime || '',
     done: false,
     isOfficeWork: !!goal.isOfficeWork
   });
@@ -7849,6 +7961,7 @@ function autosave() {
   updateDaySummaryChip();
   renderNeverMissTwice();
   updateScorePreview();
+  updateStreakBadges();
 }
 
 function setupAutosave() {
