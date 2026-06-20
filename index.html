@@ -720,6 +720,7 @@
     box-shadow: 0 2px 7px rgba(139, 111, 71, 0.28);
   }
   .report-month-grid .report-seg-btn { min-width: 52px; text-align: center; padding: 7px 10px; }
+
   .report-year-nav {
     display: inline-flex;
     align-items: center;
@@ -1336,6 +1337,43 @@
   .meal-inline-row { flex: 1; display: flex; align-items: center; gap: 8px 10px; min-width: 0; flex-wrap: wrap; }
   .meal-inline-row label { flex: 0 1 auto; white-space: nowrap; }
   .meal-inline-row .meal-note-input { flex: 1 1 140px; }
+
+  /* Multi-people-pick (Called a friend) */
+  .mpp-wrap { flex: 1 1 200px; min-width: 0; }
+  .mpp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .mpp-chips:empty { margin-bottom: 0; }
+  .mpp-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--accent-soft); color: var(--ink);
+    padding: 3px 8px 3px 10px; border-radius: 14px;
+    font-size: 0.85em; white-space: nowrap;
+  }
+  .mpp-chip button {
+    background: none; border: none; cursor: pointer; color: var(--soft);
+    font-size: 1em; line-height: 1; padding: 0 2px;
+  }
+  .mpp-chip button:hover { color: var(--ink); }
+  .mpp-search {
+    width: 100%; padding: 6px 10px; border-radius: 6px;
+    border: 1px solid var(--line); background: var(--bg);
+    font-family: inherit; font-size: 0.92em; box-sizing: border-box;
+  }
+  .mpp-search:focus { outline: none; border-color: var(--accent-soft); }
+  .mpp-dropdown {
+    display: none; position: absolute; left: 0; right: 0; top: 100%;
+    max-height: 180px; overflow-y: auto; z-index: 50;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 0 0 6px 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+  }
+  .mpp-dropdown.open { display: block; }
+  .mpp-option {
+    padding: 7px 12px; cursor: pointer; font-size: 0.9em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .mpp-option:hover { background: var(--accent-soft); }
+  .mpp-option .mpp-cat { font-size: 0.78em; color: var(--soft); margin-left: auto; }
+  .mpp-option.selected { background: var(--accent-soft); font-weight: 600; }
+
   .goals-empty {
     color: var(--soft);
     font-style: italic;
@@ -1668,6 +1706,7 @@
   .sc-connect-btn.active { opacity: 1; border-color: transparent; }
   .sc-connect-btn.wa.active  { background: #25d366; }
   .sc-connect-btn.ig.active  { background: linear-gradient(135deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); }
+  .sc-connect-btn.met.active { background: #4a90d9; }
   .cat-pill {
     display: inline-block;
     font-size: 0.72em;
@@ -2613,6 +2652,24 @@
     .section-rail { display: none !important; }
   }
 
+  /* ── Blogs tab ── */
+  .blog-list { display: flex; flex-direction: column; gap: 0; }
+  .blog-item {
+    padding: 14px 0; border-bottom: 1px solid var(--line);
+  }
+  .blog-item:last-child { border-bottom: none; }
+  .blog-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  }
+  .blog-title { font-weight: bold; font-size: 1.05em; color: var(--ink); line-height: 1.4; }
+  .blog-date { font-size: 0.82em; color: var(--soft); margin-top: 2px; }
+  .blog-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .blog-body {
+    margin-top: 8px; color: var(--ink); font-size: 0.93em; line-height: 1.65;
+    white-space: pre-line;
+  }
+  .blog-edit-form { padding: 4px 0; }
+
   /* ── Financial tab ── */
   .fin-month-bar {
     display: flex;
@@ -2917,6 +2974,7 @@
   <button class="tab" onclick="showTab('medicines')">Medicines</button>
   <button class="tab" onclick="showTab('social')">Social Circle</button>
   <button class="tab" onclick="showTab('financial')">Financial</button>
+  <button class="tab" onclick="showTab('blogs')">Blogs</button>
 </div>
 
 <!-- TODAY TAB -->
@@ -3183,6 +3241,7 @@
     <div class="report-seg" id="periodBtns" style="margin-bottom:4px;">
       <button type="button" class="report-seg-btn" data-period="day"   onclick="selectReportPeriod('day')">Day</button>
       <button type="button" class="report-seg-btn" data-period="week"  onclick="selectReportPeriod('week')">Week</button>
+      <button type="button" class="report-seg-btn" data-period="last30" onclick="selectReportPeriod('last30')">Last 30 Days</button>
       <button type="button" class="report-seg-btn" data-period="month" onclick="selectReportPeriod('month')">Month</button>
       <button type="button" class="report-seg-btn" data-period="year"  onclick="selectReportPeriod('year')">Year</button>
     </div>
@@ -3213,6 +3272,11 @@
     <div id="reportWeekRow" class="report-ctrl-row" style="display:none;">
       <span class="report-ctrl-label">Week</span>
       <div class="report-seg" id="reportWeekBtns"></div>
+    </div>
+
+    <!-- Last 30 days info -->
+    <div id="reportLast30Row" class="report-ctrl-row" style="display:none;">
+      <span class="report-ctrl-label" id="reportLast30Label" style="font-size:0.9em; color:var(--soft);"></span>
     </div>
   </div>
   <div id="reportContent"></div>
@@ -3470,6 +3534,11 @@
   <div id="financialContent"></div>
 </div>
 
+<!-- BLOGS TAB -->
+<div id="blogs" class="panel">
+  <div id="blogsContent"></div>
+</div>
+
 <p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
 
 </div>
@@ -3496,7 +3565,7 @@ const DAILY_ITEMS = [
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             hint: '🕜 1:30–2:00 PM',   mealKey: 'lunch'        },
   { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
-  { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', yesNote: true, yesNotePlaceholder: 'Who did you call? (start typing to search)', yesNoteDatalist: 'socialCirclePeople' },
+  { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', multiPeoplePick: true },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true, noReason: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
@@ -4410,6 +4479,23 @@ function buildChecklist(containerId, items, kind) {
         reasonInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(reasonInp);
         div.appendChild(rowWrap);
+      } else if (item.multiPeoplePick) {
+        const rowWrap = document.createElement('div');
+        rowWrap.className = 'meal-inline-row';
+        rowWrap.style.flexWrap = 'wrap';
+        rowWrap.appendChild(lab);
+        const pickWrap = document.createElement('div');
+        pickWrap.id = 'mpp_' + item.id;
+        pickWrap.className = 'mpp-wrap';
+        pickWrap.style.display = 'none';
+        pickWrap.innerHTML = '<div class="mpp-chips" id="mppChips_' + item.id + '"></div>'
+          + '<div style="position:relative;">'
+          + '<input type="text" class="mpp-search" id="mppSearch_' + item.id + '" placeholder="Type to search…" autocomplete="off">'
+          + '<div class="mpp-dropdown" id="mppDrop_' + item.id + '"></div>'
+          + '</div>';
+        rowWrap.appendChild(pickWrap);
+        div.appendChild(rowWrap);
+        setTimeout(() => initMultiPeoplePick(item.id), 0);
       } else if (item.yesNote) {
         // Inline layout: [label text] ......... [note input, shown only when Yes]
         const rowWrap = document.createElement('div');
@@ -4722,6 +4808,12 @@ function setPracticeState(id, state) {
     yesNoteInp.style.display = state === 'yes' ? '' : 'none';
     if (state === 'yes') setTimeout(() => yesNoteInp.focus(), 50);
   }
+  // Multi-people-pick widget only visible when yes
+  const mppEl = document.getElementById('mpp_' + id);
+  if (mppEl) {
+    mppEl.style.display = state === 'yes' ? '' : 'none';
+    if (state === 'yes') setTimeout(() => { const s = document.getElementById('mppSearch_' + id); if (s) s.focus(); }, 50);
+  }
   // fire change event so autosave picks it up
   div.dispatchEvent(new Event('change', { bubbles: true }));
 }
@@ -4949,6 +5041,7 @@ function readForm() {
       });
       return notes;
     })(),
+    calledFriends: getMppSelected('calledFriend'),
     daily: {},
     weekly: {},
     weeklyOn: {},
@@ -5042,6 +5135,19 @@ function writeForm(entry) {
               || '';
       const isYes = !!(entry.daily && entry.daily[i.id] === true);
       el.style.display = isYes ? '' : 'none';
+    }
+  });
+  // Multi-people-pick (Called a friend) — restore selections
+  DAILY_ITEMS.filter(i => i.multiPeoplePick).forEach(i => {
+    let names = entry.calledFriends || [];
+    if (names.length === 0 && entry.yesNotes && entry.yesNotes[i.id]) {
+      names = [entry.yesNotes[i.id]];
+    }
+    setMppSelected(i.id, names);
+    const mppEl = document.getElementById('mpp_' + i.id);
+    if (mppEl) {
+      const isYes = !!(entry.daily && entry.daily[i.id] === true);
+      mppEl.style.display = isYes ? '' : 'none';
     }
   });
   document.getElementById('lessonText').value = entry.lesson || '';
@@ -6234,6 +6340,7 @@ function renderReportControls() {
   show('reportYearRow',  p === 'week' || p === 'month' || p === 'year');
   show('reportMonthRow', p === 'week' || p === 'month');
   show('reportWeekRow',  p === 'week');
+  show('reportLast30Row', p === 'last30');
 
   // Year label
   const yl = document.getElementById('reportYearLabel');
@@ -6259,6 +6366,13 @@ function renderReportControls() {
         + 'Week ' + (i + 1) + '</button>';
     }).join('');
   }
+
+  // Last 30 days label
+  if (p === 'last30') {
+    const endD = new Date(); const startD = addDays(endD, -29);
+    const lbl = document.getElementById('reportLast30Label');
+    if (lbl) lbl.textContent = isoDate(startD) + '  →  ' + isoDate(endD);
+  }
 }
 
 function formatShortDateRange(start, end) {
@@ -6274,10 +6388,11 @@ function renderReport() {
   if (!reportState) return;
   const c = document.getElementById('reportContent');
   const period = reportState.period;
-  if (period === 'day')   return renderDayReport(c);
-  if (period === 'week')  return renderWeekReport(c);
-  if (period === 'month') return renderMonthReport(c);
-  if (period === 'year')  return renderYearReport(c);
+  if (period === 'day')    return renderDayReport(c);
+  if (period === 'week')   return renderWeekReport(c);
+  if (period === 'last30') return renderLast30DaysReport(c);
+  if (period === 'month')  return renderMonthReport(c);
+  if (period === 'year')   return renderYearReport(c);
 }
 
 function renderDayReport(c) {
@@ -7313,17 +7428,23 @@ function renderMonthReport(c) {
   });
 
   // Shabad per week — pulled from each week's Monday entry
+  const _allM = getAllEntries();
   const _monthShabads = r.weekResults.map(w => ({ idx: w, shabad: getWeekShabad(w.weekStart) }));
   if (_monthShabads.some(s => s.shabad)) {
     html += '<h3 style="margin-top:18px;">📿 Shabads of the month</h3>';
     html += '<ul style="list-style:none; padding:0;">';
     r.weekResults.forEach((w, i) => {
       const shabad = getWeekShabad(w.weekStart);
+      const practiced = w.dayResults.filter(d => {
+        const e = _allM[d.date];
+        return e && e.daily && e.daily.reciteShabad === true;
+      }).length;
       if (shabad) {
         html += '<li style="padding:6px 0; border-bottom:1px solid var(--line); font-size:0.95em;">';
         html += '<span style="color:var(--accent); font-weight:bold;">Week ' + (i+1) + '</span> ';
         html += '<span style="color:var(--soft); font-size:0.85em;">(' + w.weekStart + ')</span> ';
         html += '<span style="color:var(--ink); margin-left:6px;">' + esc(shabad) + '</span>';
+        html += ' <span style="color:var(--good); font-size:0.85em;">· Recited ' + practiced + '/7 days</span>';
         html += '</li>';
       } else {
         html += '<li style="padding:6px 0; border-bottom:1px solid var(--line); font-size:0.95em; color:var(--soft); font-style:italic;">';
@@ -7335,7 +7456,6 @@ function renderMonthReport(c) {
   }
 
   html += '<h3 style="margin-top:18px;">Monthly tasks</h3><ul>';
-  const _allM = getAllEntries();
   const _mDates = unionMonthlyDateFromSiblings(r.monthStart, _allM);
   MONTHLY_ITEMS.forEach(i => {
     const done = r.monthlyHits[i.id];
@@ -7463,6 +7583,240 @@ function renderOfficeWorkCardForRange(allEntries, startStr, endStr, showList) {
     });
     html += '</div></details>';
   }
+
+  html += '</div>';
+  return html;
+}
+
+function renderLast30DaysReport(c) {
+  const today = new Date();
+  const startDate = addDays(today, -29);
+  const endStr   = isoDate(today);
+  const startStr = isoDate(startDate);
+  const all = getAllEntries();
+
+  // Build day results for all 30 days
+  const dayResults = [];
+  const bodyScores = [], mindScores = [], consScores = [], dayScores = [];
+  for (let i = 0; i < 30; i++) {
+    const d = addDays(startDate, i);
+    const iso = isoDate(d);
+    const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    const entry = all[iso];
+    const r = entry ? scoreDay(entry) : { total: 0, body: 0, mind: 0, conscience: null, hasEntry: false, breakdown: [] };
+    dayResults.push({ date: iso, dayName: DAY_NAMES_SHORT[dayIdx], ...r });
+    if (r.hasEntry) {
+      dayScores.push(r.total); bodyScores.push(r.body); mindScores.push(r.mind);
+      if (r.conscience !== null) consScores.push(r.conscience);
+    }
+  }
+  const loggedDays = dayScores.length;
+  const totalScore = _avg(dayScores);
+
+  let html = '<div class="card">';
+  html += '<h2>Last 30 Days — Performance Overview</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">' + startStr + ' → ' + endStr + ' · Average of ' + loggedDays + ' logged day' + (loggedDays === 1 ? '' : 's') + '</p>';
+  html += scoreDisplayHtml(totalScore, 100);
+  html += '<div class="stat-grid" style="margin-top:18px;">';
+  html += statBoxHtml(Math.round(_avg(bodyScores)), 'Avg Body & Rhythm');
+  html += statBoxHtml(Math.round(_avg(mindScores)), 'Avg Mind & Discipline');
+  html += statBoxHtml(consScores.length ? Math.round(_avg(consScores)) : '—', 'Avg Conscience');
+  html += statBoxHtml(loggedDays + '/30', 'Days Logged');
+  html += '</div>';
+
+  // Weekly breakdown — group the 30 days into weeks of 7
+  const weekChunks = [];
+  for (let i = 0; i < 30; i += 7) {
+    const chunk = dayResults.slice(i, Math.min(i + 7, 30));
+    const logged = chunk.filter(d => d.hasEntry);
+    const avg = _avg(logged.map(d => d.total));
+    const start = chunk[0].date;
+    const end = chunk[chunk.length - 1].date;
+    weekChunks.push({ start, end, avg, loggedDays: logged.length });
+  }
+  html += '<h3 style="margin-top:18px;">Weekly breakdown</h3>';
+  weekChunks.forEach((w, i) => {
+    const pct = Math.round(w.avg);
+    html += '<div class="progress-row"><span>Week ' + (i + 1) + ' <span style="color:var(--soft); font-size:0.85em;">(' + w.start.slice(5) + ' → ' + w.end.slice(5) + ')</span></span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + (w.loggedDays > 0 ? w.avg.toFixed(0) + '/100' : '—') + '</span></div>';
+  });
+
+  // Daily scores
+  html += '<h3 style="margin-top:18px;">Daily scores</h3>';
+  dayResults.forEach(d => {
+    const pct = Math.round(d.total);
+    html += '<div class="progress-row"><span>' + d.dayName + ' ' + d.date.slice(5) + '</span>';
+    html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+    html += '<span class="pct">' + (d.hasEntry ? d.total.toFixed(0) + '/100' : '—') + '</span></div>';
+  });
+  html += '</div>';
+
+  // Trend — best and worst days
+  const logged = dayResults.filter(d => d.hasEntry);
+  if (logged.length >= 3) {
+    const sorted = logged.slice().sort((a, b) => b.total - a.total);
+    const best  = sorted.slice(0, 3);
+    const worst = sorted.slice(-3).reverse();
+    html += '<div class="card"><h2>🏆 Best & Worst Days</h2>';
+    html += '<div style="display:flex; gap:20px; flex-wrap:wrap;">';
+    html += '<div style="flex:1; min-width:200px;">';
+    html += '<h3 style="color:var(--good);">Top 3</h3>';
+    best.forEach(d => {
+      html += '<div class="progress-row"><span>' + d.dayName + ' ' + d.date + '</span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + Math.round(d.total) + '%"></div></div>';
+      html += '<span class="pct">' + d.total.toFixed(0) + '</span></div>';
+    });
+    html += '</div>';
+    html += '<div style="flex:1; min-width:200px;">';
+    html += '<h3 style="color:#c0552a;">Bottom 3</h3>';
+    worst.forEach(d => {
+      html += '<div class="progress-row"><span>' + d.dayName + ' ' + d.date + '</span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + Math.round(d.total) + '%"></div></div>';
+      html += '<span class="pct">' + d.total.toFixed(0) + '</span></div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+  }
+
+  // Consistency streak — longest consecutive logged days in the range
+  let maxStreak = 0, curStreak = 0;
+  dayResults.forEach(d => {
+    if (d.hasEntry) { curStreak++; if (curStreak > maxStreak) maxStreak = curStreak; }
+    else curStreak = 0;
+  });
+  // Days missed
+  const missed = 30 - loggedDays;
+  // Score trend — first half vs second half
+  const firstHalf  = dayResults.slice(0, 15).filter(d => d.hasEntry);
+  const secondHalf = dayResults.slice(15).filter(d => d.hasEntry);
+  const firstAvg   = _avg(firstHalf.map(d => d.total));
+  const secondAvg  = _avg(secondHalf.map(d => d.total));
+  const trendDiff  = secondAvg - firstAvg;
+  const trendLabel = trendDiff > 2 ? '📈 Improving' : trendDiff < -2 ? '📉 Declining' : '➡️ Steady';
+
+  html += '<div class="card"><h2>📊 Consistency & Trend</h2>';
+  html += '<div class="stat-grid">';
+  html += statBoxHtml(maxStreak + ' days', 'Best Streak');
+  html += statBoxHtml(missed, 'Days Missed');
+  html += statBoxHtml(trendLabel, 'Trend');
+  html += statBoxHtml((trendDiff >= 0 ? '+' : '') + trendDiff.toFixed(1), 'Score Shift');
+  html += '</div>';
+  html += '<p style="color:var(--soft); font-size:0.88em; margin-top:10px;">Trend compares average of the first 15 days vs the last 15 days.</p>';
+  html += '</div>';
+
+  // Practice tracker — show last 7 days only (otherwise table is too wide)
+  const last7 = dayResults.slice(-7);
+  html += '<div class="card">';
+  html += '<h2>Practice Tracker (Last 7 Days)</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-yes" style="width:18px;height:18px;font-size:0.75em;">✓</span> Done</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-no" style="width:18px;height:18px;font-size:0.8em;">✗</span> Not done</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-unfilled" style="width:18px;height:18px;line-height:16px;">·</span> Not filled</span>'
+        + '<span style="display:inline-flex;align-items:center;gap:5px;"><span class="pt-no-entry">—</span> No entry</span>'
+        + '</p>';
+  html += renderPracticeTrackerHtml(last7, all);
+  html += '</div>';
+
+  // Practice completion rate over 30 days
+  const practiceStats = {};
+  DAILY_ITEMS.filter(i => !i.mindSlot && !i.rateOnly).forEach(item => {
+    let done = 0, applicable = 0;
+    dayResults.forEach(d => {
+      if (!d.hasEntry) return;
+      const e = all[d.date];
+      if (!e) return;
+      if (item.sundayOnly && parseISODate(d.date).getDay() !== 0) return;
+      if (item.homeOnly) {
+        const dt = e.dayType || 'home';
+        if (dt !== 'home') return;
+      }
+      applicable++;
+      if (e.daily && e.daily[item.id] === true) done++;
+    });
+    if (applicable > 0) practiceStats[item.id] = { label: item.label, done, applicable, pct: Math.round(done / applicable * 100) };
+  });
+  const practiceList = Object.values(practiceStats).sort((a, b) => b.pct - a.pct);
+  if (practiceList.length > 0) {
+    html += '<div class="card"><h2>📋 Practice Completion Rate (30 Days)</h2>';
+    html += '<p style="color:var(--soft); margin-top:0; font-size:0.88em;">How often each practice was done on applicable days.</p>';
+    practiceList.forEach(p => {
+      html += '<div class="progress-row"><span>' + esc(p.label) + ' <span style="color:var(--soft); font-size:0.85em;">(' + p.done + '/' + p.applicable + ')</span></span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + p.pct + '%"></div></div>';
+      html += '<span class="pct">' + p.pct + '%</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Sleep schedule
+  const wakeTimes = [], bedTimes = [];
+  const sleepChartRows = [];
+  dayResults.forEach(d => {
+    const e = all[d.date];
+    if (!e) return;
+    if (e.wakeTime) wakeTimes.push(e.wakeTime);
+    if (e.bedTime)  bedTimes.push(e.bedTime);
+    if (e.wakeTime || e.bedTime) {
+      sleepChartRows.push({ label: d.dayName + ' ' + d.date.slice(5), bedTime: e.bedTime || '', wakeTime: e.wakeTime || '' });
+    }
+  });
+  const avgWake = avgWakeTime(wakeTimes);
+  const avgBed  = avgBedTime(bedTimes);
+  if (avgWake || avgBed || sleepChartRows.length > 0) {
+    html += '<div class="card"><h2>Sleep Schedule</h2>';
+    html += '<div class="stat-grid">';
+    html += statBoxHtml(avgWake ? formatTime12hFromHHMM(avgWake) : '—', 'Avg Wake-up');
+    html += statBoxHtml(avgBed  ? formatTime12hFromHHMM(avgBed)  : '—', 'Avg Bedtime');
+    html += statBoxHtml(wakeTimes.length, 'Days Logged');
+    html += '</div>';
+    html += renderSleepChartHtml(sleepChartRows);
+    html += '</div>';
+  }
+
+  // Office work
+  html += renderOfficeWorkCardForRange(all, startStr, endStr, true);
+
+  // Day type distribution
+  html += renderDayTypeStatsCard(startStr, endStr);
+
+  // Reflections
+  html += renderLast30ReflectionsHtml(dayResults, all);
+
+  c.innerHTML = html;
+}
+
+function renderLast30ReflectionsHtml(dayResults, allEntries) {
+  const sections = REFLECTION_SECTIONS;
+  const hasAny = dayResults.some(d => {
+    const e = allEntries[d.date];
+    return e && sections.some(s => getReflectionText(e, s).trim());
+  });
+  if (!hasAny) return '';
+
+  let html = '<div class="card">';
+  html += '<h2>📖 Reflections — Last 30 Days</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">All daily reflections compiled. Expand each section to read.</p>';
+
+  sections.forEach(sec => {
+    const rows = dayResults.map(d => {
+      const e = allEntries[d.date];
+      const text = getReflectionText(e, sec).trim();
+      return { dayName: d.dayName, date: d.date, text };
+    }).filter(r => r.text);
+    if (rows.length === 0) return;
+
+    html += '<details style="margin-bottom:14px;">';
+    html += '<summary style="cursor:pointer; font-weight:bold; color:var(--accent); font-size:0.95em;">'
+          + sec.emoji + ' ' + sec.title + ' <span style="color:var(--soft); font-weight:normal;">(' + rows.length + ' entries)</span></summary>';
+    html += '<div style="margin-top:8px;">';
+    rows.forEach(r => {
+      html += '<div style="padding:6px 0; border-bottom:1px solid var(--line); font-size:0.9em;">';
+      html += '<span style="color:var(--accent); font-weight:bold; margin-right:6px;">' + r.dayName + ' ' + r.date.slice(5) + '</span>';
+      html += '<span style="color:var(--ink);">' + esc(r.text).replace(/\n/g, '<br>') + '</span>';
+      html += '</div>';
+    });
+    html += '</div></details>';
+  });
 
   html += '</div>';
   return html;
@@ -7930,6 +8284,7 @@ function showTab(name) {
   if (name === 'medicines') renderMedicinesTab();
   if (name === 'social')    renderSocialTab();
   if (name === 'financial') renderFinancialTab();
+  if (name === 'blogs') renderBlogsTab();
   // Day-summary chip and section rail are only useful on Today
   const onToday = (name === 'today');
   setSectionRailVisible(onToday);
@@ -7962,6 +8317,9 @@ function autosave() {
   renderNeverMissTwice();
   updateScorePreview();
   updateStreakBadges();
+  if (entry.daily && entry.daily.calledFriend === true && entry.calledFriends && entry.calledFriends.length > 0) {
+    updateLastCalledOn(entry.calledFriends, entry.date);
+  }
 }
 
 function setupAutosave() {
@@ -8633,6 +8991,112 @@ function medAdherenceHtml(dateStr) {
   return html;
 }
 
+/* ========== MULTI-PEOPLE PICK (Called a friend) ========== */
+
+const _mppSelections = {};
+
+function initMultiPeoplePick(itemId) {
+  _mppSelections[itemId] = _mppSelections[itemId] || [];
+  const searchEl = document.getElementById('mppSearch_' + itemId);
+  const dropEl   = document.getElementById('mppDrop_' + itemId);
+  if (!searchEl || !dropEl) return;
+
+  searchEl.addEventListener('focus', () => { renderMppDropdown(itemId, searchEl.value); dropEl.classList.add('open'); });
+  searchEl.addEventListener('input', () => renderMppDropdown(itemId, searchEl.value));
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#mpp_' + itemId)) dropEl.classList.remove('open');
+  });
+}
+
+function renderMppDropdown(itemId, query) {
+  const dropEl = document.getElementById('mppDrop_' + itemId);
+  if (!dropEl) return;
+  const q = (query || '').trim().toLowerCase();
+  const people = getSocial();
+  const order = { close: 0, good: 1, casual: 2, wsn: 3 };
+  const sorted = people.slice().sort((a, b) => {
+    const oa = order[a.category] != null ? order[a.category] : 99;
+    const ob = order[b.category] != null ? order[b.category] : 99;
+    return oa !== ob ? oa - ob : (a.name || '').localeCompare(b.name || '');
+  });
+  const sel = _mppSelections[itemId] || [];
+  const filtered = sorted.filter(p => p.name && (!q || p.name.toLowerCase().includes(q)));
+  if (filtered.length === 0) {
+    dropEl.innerHTML = '<div style="padding:8px 12px; color:var(--soft); font-size:0.88em; font-style:italic;">No matches</div>';
+    dropEl.classList.add('open');
+    return;
+  }
+  let html = '';
+  filtered.forEach(p => {
+    const isSel = sel.includes(p.name);
+    const cat = SOCIAL_CATS.find(c => c.id === p.category);
+    html += '<div class="mpp-option' + (isSel ? ' selected' : '') + '" data-name="' + esc(p.name) + '">'
+          + '<span>' + (isSel ? '☑' : '☐') + '</span>'
+          + '<span>' + esc(p.name) + '</span>'
+          + '<span class="mpp-cat">' + (cat ? cat.label : '') + '</span>'
+          + '</div>';
+  });
+  dropEl.innerHTML = html;
+  dropEl.classList.add('open');
+  dropEl.querySelectorAll('.mpp-option').forEach(opt => {
+    opt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMppPerson(itemId, opt.dataset.name);
+      const s = document.getElementById('mppSearch_' + itemId);
+      if (s) { renderMppDropdown(itemId, s.value); s.focus(); }
+    });
+  });
+}
+
+function toggleMppPerson(itemId, name) {
+  const sel = _mppSelections[itemId] = _mppSelections[itemId] || [];
+  const idx = sel.indexOf(name);
+  if (idx >= 0) sel.splice(idx, 1); else sel.push(name);
+  renderMppChips(itemId);
+  autosave();
+}
+
+function removeMppPerson(itemId, name) {
+  const sel = _mppSelections[itemId];
+  if (!sel) return;
+  const idx = sel.indexOf(name);
+  if (idx >= 0) sel.splice(idx, 1);
+  renderMppChips(itemId);
+  renderMppDropdown(itemId, '');
+  autosave();
+}
+
+function renderMppChips(itemId) {
+  const el = document.getElementById('mppChips_' + itemId);
+  if (!el) return;
+  const sel = _mppSelections[itemId] || [];
+  el.innerHTML = sel.map(name =>
+    '<span class="mpp-chip">' + esc(name)
+    + '<button onclick="removeMppPerson(\'' + itemId + '\',\'' + esc(name).replace(/'/g, "\\'") + '\')" title="Remove">✕</button>'
+    + '</span>'
+  ).join('');
+}
+
+function getMppSelected(itemId) {
+  return (_mppSelections[itemId] || []).slice();
+}
+
+function setMppSelected(itemId, names) {
+  _mppSelections[itemId] = (names || []).slice();
+  renderMppChips(itemId);
+}
+
+function updateLastCalledOn(names, dateStr) {
+  if (!names || names.length === 0) return;
+  const list = getSocial();
+  let changed = false;
+  names.forEach(name => {
+    const p = list.find(x => x.name === name);
+    if (p) { p.lastCalledOn = dateStr; changed = true; }
+  });
+  if (changed) setSocial(list);
+}
+
 /* ========== SOCIAL CIRCLE ========== */
 
 const SOCIAL_KEY = 'dear-diary-social';
@@ -8894,6 +9358,12 @@ function renderPersonRow(p) {
                 :                      '🎂 ' + formatBirthday(p.birthday);
     html += '<div class="person-birthday' + cls + '">' + label + '</div>';
   }
+  if (p.lastCalledOn || p.lastMetOn) {
+    html += '<div style="font-size:0.82em; color:var(--soft); margin-top:2px; display:flex; gap:14px; flex-wrap:wrap;">';
+    if (p.lastCalledOn) html += '<span>📞 Last called: ' + p.lastCalledOn + '</span>';
+    if (p.lastMetOn)    html += '<span>🤝 Last met: ' + p.lastMetOn + '</span>';
+    html += '</div>';
+  }
   html += '</div>';
   html += '<div class="person-actions">';
   // WhatsApp toggle
@@ -8927,6 +9397,16 @@ function renderPersonRow(p) {
         + '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>'
         + '<circle cx="12" cy="12" r="4.5"/>'
         + '<circle cx="17.5" cy="6.5" r="1" fill="' + (p.instagram ? '#fff' : 'var(--ink)') + '" stroke="none"/>'
+        + '</svg></button>';
+  // Last Met toggle
+  const metActive = p.lastMetOn ? ' active' : '';
+  html += '<button class="sc-connect-btn met' + metActive + '" '
+        + 'onclick="markLastMet(\'' + p.id + '\')" '
+        + 'title="' + (p.lastMetOn ? 'Last met: ' + p.lastMetOn + ' — click to update to today' : 'Mark as met today') + '">'
+        + '<svg viewBox="0 0 24 24" width="14" height="14" fill="' + (p.lastMetOn ? '#fff' : 'var(--ink)') + '">'
+        + '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 '
+        + '2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0'
+        + '-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>'
         + '</svg></button>';
   // Category pill — click to open category picker
   html += '<button class="cat-pill cat-' + p.category + '" onclick="openCatPicker(\'' + p.id + '\')" title="Change category">'
@@ -9088,6 +9568,20 @@ function clearSocialSearch() {
   const inp = document.getElementById('socialSearch');
   if (inp) { inp.value = ''; inp.focus(); }
   filterSocialList('');
+}
+
+function markLastMet(id) {
+  const list = getSocial();
+  const p = list.find(x => x.id === id);
+  if (!p) return;
+  p.lastMetOn = todayISO();
+  setSocial(list);
+  const row = document.getElementById('prow_' + id);
+  if (row) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = renderPersonRow(p);
+    row.replaceWith(tmp.firstElementChild);
+  }
 }
 
 function toggleConnect(id, platform) {
@@ -9731,6 +10225,127 @@ function renderDayTypeStatsCard(startDateStr, endDateStr) {
   html += '</div>';
   html += '</div>';
   return html;
+}
+
+/* ========== BLOGS TAB ========== */
+
+const BLOGS_KEY = 'dearDiary_blogs_v1';
+
+function getBlogs() {
+  try { return JSON.parse(localStorage.getItem(BLOGS_KEY) || '[]'); } catch { return []; }
+}
+function setBlogs(list) { localStorage.setItem(BLOGS_KEY, JSON.stringify(list)); }
+function blogGenId() { return 'blog_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
+
+let _blogEditId = null;
+
+function renderBlogsTab() {
+  const el = document.getElementById('blogsContent');
+  if (!el) return;
+  const blogs = getBlogs().sort((a, b) => b.date.localeCompare(a.date));
+  let html = '';
+
+  // Blog list
+  html += '<div class="card">';
+  html += '<h2>📝 My Blogs</h2>';
+  if (blogs.length === 0) {
+    html += '<p style="color:var(--soft); font-style:italic;">No blogs yet. Write your first one below!</p>';
+  } else {
+    html += '<div class="blog-list">';
+    blogs.forEach(b => {
+      const isEditing = _blogEditId === b.id;
+      html += '<div class="blog-item" id="blog_' + b.id + '">';
+
+      if (isEditing) {
+        html += '<div class="blog-edit-form">';
+        html += '<input type="text" id="blogEditTitle_' + b.id + '" value="' + esc(b.title) + '" placeholder="Blog title" style="width:100%; font-size:1.05em; font-weight:bold; margin-bottom:8px;">';
+        html += '<input type="date" id="blogEditDate_' + b.id + '" value="' + b.date + '" style="margin-bottom:8px; max-width:200px;">';
+        html += '<textarea id="blogEditBody_' + b.id + '" placeholder="Write your blog..." style="width:100%; min-height:160px; margin-bottom:10px;">' + esc(b.body || '') + '</textarea>';
+        html += '<div class="button-row">';
+        html += '<button class="primary" onclick="saveBlogEdit(\'' + b.id + '\')">Save</button>';
+        html += '<button class="secondary" onclick="cancelBlogEdit()">Cancel</button>';
+        html += '</div>';
+        html += '</div>';
+      } else {
+        html += '<div class="blog-header">';
+        html += '<div>';
+        html += '<div class="blog-title">' + esc(b.title) + '</div>';
+        html += '<div class="blog-date">' + b.date + '</div>';
+        html += '</div>';
+        html += '<div class="blog-actions">';
+        html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="startBlogEdit(\'' + b.id + '\')">Edit</button>';
+        html += '<button class="danger" style="font-size:0.78em; padding:3px 9px;" onclick="deleteBlog(\'' + b.id + '\')">✕</button>';
+        html += '</div>';
+        html += '</div>';
+        if (b.body) {
+          html += '<div class="blog-body">' + esc(b.body).replace(/\n/g, '<br>') + '</div>';
+        }
+      }
+
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // Add new blog
+  html += '<div class="card">';
+  html += '<h3 style="margin-top:0;">Write a New Blog</h3>';
+  html += '<input type="text" id="blogNewTitle" placeholder="Blog title" style="width:100%; font-size:1.05em; font-weight:bold; margin-bottom:8px;">';
+  html += '<input type="date" id="blogNewDate" value="' + todayISO() + '" style="margin-bottom:8px; max-width:200px;">';
+  html += '<textarea id="blogNewBody" placeholder="Write your thoughts..." style="width:100%; min-height:180px; margin-bottom:12px;"></textarea>';
+  html += '<div class="button-row"><button class="primary" onclick="addBlog()">Publish Blog</button></div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+function addBlog() {
+  const title = (document.getElementById('blogNewTitle').value || '').trim();
+  const date  = document.getElementById('blogNewDate').value || todayISO();
+  const body  = (document.getElementById('blogNewBody').value || '').trim();
+  if (!title) { alert('Please enter a title for your blog.'); return; }
+  if (!body)  { alert('Please write some content for your blog.'); return; }
+  const blogs = getBlogs();
+  blogs.push({ id: blogGenId(), title, date, body, createdAt: new Date().toISOString() });
+  setBlogs(blogs);
+  _blogEditId = null;
+  renderBlogsTab();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function deleteBlog(id) {
+  if (!confirm('Delete this blog? This cannot be undone.')) return;
+  setBlogs(getBlogs().filter(b => b.id !== id));
+  if (_blogEditId === id) _blogEditId = null;
+  renderBlogsTab();
+}
+
+function startBlogEdit(id) {
+  _blogEditId = id;
+  renderBlogsTab();
+  setTimeout(() => {
+    const el = document.getElementById('blogEditTitle_' + id);
+    if (el) { el.focus(); el.select(); }
+  }, 50);
+}
+
+function cancelBlogEdit() {
+  _blogEditId = null;
+  renderBlogsTab();
+}
+
+function saveBlogEdit(id) {
+  const title = (document.getElementById('blogEditTitle_' + id).value || '').trim();
+  const date  = document.getElementById('blogEditDate_' + id).value || todayISO();
+  const body  = (document.getElementById('blogEditBody_' + id).value || '').trim();
+  if (!title) { alert('Title cannot be empty.'); return; }
+  const blogs = getBlogs();
+  const b = blogs.find(x => x.id === id);
+  if (b) { b.title = title; b.date = date; b.body = body; b.updatedAt = new Date().toISOString(); }
+  setBlogs(blogs);
+  _blogEditId = null;
+  renderBlogsTab();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
