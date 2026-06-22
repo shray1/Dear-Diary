@@ -1824,6 +1824,17 @@
     color: var(--line); font-size: 0.8em;
   }
   .pt-no-entry { color: var(--line); font-size: 0.95em; }
+  .pt-reason {
+    font-size: 0.7em; color: #c0552a; line-height: 1.2;
+    max-width: 80px; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; margin-top: 2px;
+  }
+  .pt-detail-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    cursor: pointer; font-size: 0.88em; color: var(--soft);
+    user-select: none; margin-left: 12px;
+  }
+  .pt-detail-toggle input { accent-color: var(--accent); }
   .pt-stars { color: #e6b84a; font-size: 0.82em; letter-spacing: 0.5px; }
   /* Bar charts (Anger / NSFW) */
   .wbc-wrap {
@@ -3071,6 +3082,7 @@
     <div class="goals-section">
       <h3>⏱ Small Goals for Today</h3>
       <p class="goals-hint">Add goals with an optional start time &amp; estimated duration. Reorder with the arrows; the Day report lays them out by start time so you can map out your day. Tick them off this evening.</p>
+      <p style="margin:0 0 10px;"><a href="javascript:void(0)" onclick="showUncheckedGoals30()" style="color:var(--accent); font-size:0.88em;">View unchecked goals in last 30 days</a></p>
       <div class="goals-input-row">
         <input type="text" id="goalInput" placeholder="e.g. Finish chapter 3 of the book…"
           onkeydown="if(event.key==='Enter'){event.preventDefault();addGoal();}">
@@ -3537,6 +3549,15 @@
 <!-- BLOGS TAB -->
 <div id="blogs" class="panel">
   <div id="blogsContent"></div>
+</div>
+
+<!-- Unchecked Goals Modal -->
+<div id="uncheckedGoalsModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center;">
+  <div style="background:var(--card); border-radius:12px; max-width:600px; width:92%; max-height:80vh; overflow-y:auto; padding:24px; box-shadow:0 8px 32px rgba(0,0,0,0.2); position:relative;">
+    <button onclick="closeUncheckedGoalsModal()" style="position:absolute; top:12px; right:14px; background:none; border:none; font-size:1.3em; cursor:pointer; color:var(--soft);">✕</button>
+    <h2 style="margin-top:0;">Unchecked Goals — Last 30 Days</h2>
+    <div id="uncheckedGoalsBody"></div>
+  </div>
 </div>
 
 <p class="footer-note">Saved locally in your browser. Remember to back up your JSON regularly.</p>
@@ -5612,6 +5633,55 @@ function toggleGoal(idx) {
   autosave();
 }
 
+function showUncheckedGoals30() {
+  const all = getAllEntries();
+  const today = new Date();
+  const unchecked = [];
+  for (let i = 1; i <= 30; i++) {
+    const d = addDays(today, -i);
+    const iso = isoDate(d);
+    const e = all[iso];
+    if (!e || !Array.isArray(e.goals)) continue;
+    e.goals.forEach(g => {
+      if (!g.done) unchecked.push({ text: g.text, date: iso, duration: g.duration || 1, startTime: g.startTime || '', isOfficeWork: !!g.isOfficeWork });
+    });
+  }
+
+  const body = document.getElementById('uncheckedGoalsBody');
+  if (unchecked.length === 0) {
+    body.innerHTML = '<p style="color:var(--soft); font-style:italic;">No unchecked goals in the last 30 days. Great job!</p>';
+  } else {
+    let html = '<p style="color:var(--soft); font-size:0.88em; margin-top:0;">' + unchecked.length + ' unchecked goal' + (unchecked.length === 1 ? '' : 's') + ' found.</p>';
+    let curDate = '';
+    unchecked.forEach(g => {
+      if (g.date !== curDate) {
+        if (curDate) html += '</div>';
+        curDate = g.date;
+        const d = new Date(g.date + 'T00:00:00');
+        const label = d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        html += '<div style="margin-bottom:4px;"><div style="font-weight:bold; color:var(--accent); font-size:0.9em; padding:8px 0 4px; border-bottom:1px solid var(--line);">' + label + '</div>';
+      }
+      const time = g.startTime ? '<span style="color:var(--soft); font-size:0.85em; margin-right:6px;">🕘 ' + formatTime12hFromHHMM(g.startTime) + '</span>' : '';
+      const office = g.isOfficeWork ? ' <span style="font-size:0.78em; background:var(--accent-soft); padding:1px 6px; border-radius:8px;">🏢</span>' : '';
+      html += '<div style="padding:5px 0 5px 10px; font-size:0.92em; display:flex; align-items:center; gap:6px;">'
+            + '<span style="color:#c0552a;">○</span>' + time
+            + '<span>' + esc(g.text) + '</span>'
+            + '<span style="color:var(--soft); font-size:0.82em;">(' + g.duration + 'h)</span>'
+            + office + '</div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  }
+
+  const modal = document.getElementById('uncheckedGoalsModal');
+  modal.style.display = 'flex';
+  modal.onclick = (e) => { if (e.target === modal) closeUncheckedGoalsModal(); };
+}
+
+function closeUncheckedGoalsModal() {
+  document.getElementById('uncheckedGoalsModal').style.display = 'none';
+}
+
 function editGoal(idx) {
   currentGoals.forEach(g => { g._editing = false; });
   currentGoals[idx]._editing = true;
@@ -6539,6 +6609,12 @@ function renderDayReport(c) {
 }
 
 /* ── Practice tracker table (weekly) ── */
+let _ptDetailed = false;
+function togglePracticeTrackerDetail() {
+  _ptDetailed = !_ptDetailed;
+  renderReport();
+}
+
 function renderPracticeTrackerHtml(dayResults, allEntries) {
   const DAY_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
@@ -6605,7 +6681,13 @@ function renderPracticeTrackerHtml(dayResults, allEntries) {
         if (isYes) {
           html += '<td><span class="pt-yes" title="Done">✓</span></td>';
         } else if (isNo) {
-          html += '<td><span class="pt-no" title="Not done">✗</span></td>';
+          const reason = _ptDetailed && entry.noReasons && entry.noReasons[item.id] ? entry.noReasons[item.id] : '';
+          if (reason) {
+            html += '<td><span class="pt-no" title="Not done">✗</span>'
+                  + '<div class="pt-reason" title="' + esc(reason) + '">' + esc(reason) + '</div></td>';
+          } else {
+            html += '<td><span class="pt-no" title="Not done">✗</span></td>';
+          }
         } else {
           html += '<td><span class="pt-unfilled" title="Not filled">·</span></td>';
         }
@@ -7013,7 +7095,8 @@ function renderWeekReport(c) {
 
   // ── Practice Tracker table ──
   html += '<div class="card">';
-  html += '<h2>Practice Tracker</h2>';
+  html += '<h2 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;">Practice Tracker'
+        + '<label class="pt-detail-toggle"><input type="checkbox" onchange="togglePracticeTrackerDetail()"' + (_ptDetailed ? ' checked' : '') + '> Detailed</label></h2>';
   html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">'
         + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-yes" style="width:18px;height:18px;font-size:0.75em;">✓</span> Done</span>'
         + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-no" style="width:18px;height:18px;font-size:0.8em;">✗</span> Not done</span>'
@@ -7708,7 +7791,8 @@ function renderLast30DaysReport(c) {
   // Practice tracker — show last 7 days only (otherwise table is too wide)
   const last7 = dayResults.slice(-7);
   html += '<div class="card">';
-  html += '<h2>Practice Tracker (Last 7 Days)</h2>';
+  html += '<h2 style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;">Practice Tracker (Last 7 Days)'
+        + '<label class="pt-detail-toggle"><input type="checkbox" onchange="togglePracticeTrackerDetail()"' + (_ptDetailed ? ' checked' : '') + '> Detailed</label></h2>';
   html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">'
         + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-yes" style="width:18px;height:18px;font-size:0.75em;">✓</span> Done</span>'
         + '<span style="display:inline-flex;align-items:center;gap:5px;margin-right:12px;"><span class="pt-no" style="width:18px;height:18px;font-size:0.8em;">✗</span> Not done</span>'
