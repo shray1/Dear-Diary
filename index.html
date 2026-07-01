@@ -3581,10 +3581,14 @@ const DAILY_ITEMS = [
   { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         hint: '🕗 7:45–8:15 AM',   mealKey: 'breakfast'    },
   { id: 'waterSumiran2', label: 'Water intake & Sumiran 2' },
   { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes', yesNote: true, yesNotePlaceholder: 'What did you learn today?' },
+  { id: 'officeWork1', label: 'Productive Work Hour (1)', hint: '🕘 8:45–9:45 AM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    hint: '🕙 10:40–11:10 AM', mealKey: 'morningSnack' },
   { id: 'waterSumiran3', label: 'Water intake & Sumiran 3' },
+  { id: 'officeWork2', label: 'Productive Work Hour (2)', hint: '🕛 11:45–12:45 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
+  { id: 'callWifey', label: 'Call Wifey', hint: 'A quick call before lunch — stay connected', officeOnly: true },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             hint: '🕜 1:30–2:00 PM',   mealKey: 'lunch'        },
   { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
+  { id: 'officeWork3', label: 'Productive Work Hour (3)', hint: '🕒 3:00–4:00 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
   { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', multiPeoplePick: true },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
@@ -3679,8 +3683,12 @@ const DEFAULT_DAILY_SCORING = {
   greetSeniors:       { weight: 3 },
   morningWalk:        { weight: 6, subratings: { suryanamaskar: 3, pranayam: 3 } },
   homemadeBreakfast:    { weight: 3 },
+  officeWork1:          { weight: 4 },
   homemadeMorningSnack: { weight: 3 },
+  officeWork2:          { weight: 4 },
+  callWifey:            { weight: 3 },
   homemadeLunch:        { weight: 3 },
+  officeWork3:          { weight: 4 },
   homemadeEveningSnack: { weight: 3 },
   homemadeDinner:          { weight: 3 },
   reciteShabad:  { weight: 2 },
@@ -4421,6 +4429,12 @@ function buildChecklist(containerId, items, kind) {
         const dayTypeSel = document.getElementById('dayType');
         if (dayTypeSel && dayTypeSel.value !== 'home') div.style.display = 'none';
       }
+      // Office-only items: hide when day type is not "office"
+      if (item.officeOnly) {
+        div.classList.add('office-only-item');
+        const dayTypeSel = document.getElementById('dayType');
+        if (dayTypeSel && dayTypeSel.value !== 'office') div.style.display = 'none';
+      }
       // Sunday-only items: hide on any day that isn't a Sunday
       if (item.sundayOnly) {
         div.classList.add('sunday-only-item');
@@ -4486,7 +4500,7 @@ function buildChecklist(containerId, items, kind) {
         };
         noteInp.addEventListener('input', () => { syncRateVisibility(); debounce(autosave, 1500)(); });
         div.appendChild(rowWrap);
-      } else if (item.noReason) {
+      } else if (item.noReason && !item.yesNote) {
         // Inline layout: [label text] ......... [reason input, shown only when No]
         const rowWrap = document.createElement('div');
         rowWrap.className = 'meal-inline-row';
@@ -4518,7 +4532,7 @@ function buildChecklist(containerId, items, kind) {
         div.appendChild(rowWrap);
         setTimeout(() => initMultiPeoplePick(item.id), 0);
       } else if (item.yesNote) {
-        // Inline layout: [label text] ......... [note input, shown only when Yes]
+        // Inline layout: [label text] ......... [note input, shown only when Yes] [reason input, shown only when No]
         const rowWrap = document.createElement('div');
         rowWrap.className = 'meal-inline-row';
         rowWrap.appendChild(lab);
@@ -4535,6 +4549,17 @@ function buildChecklist(containerId, items, kind) {
         }
         noteInp.addEventListener('input', debounce(autosave, 1500));
         rowWrap.appendChild(noteInp);
+        // Also add a "why not?" field if noReason is set
+        if (item.noReason) {
+          const reasonInp = document.createElement('input');
+          reasonInp.type = 'text';
+          reasonInp.className = 'meal-note-input';
+          reasonInp.id = 'noReason_' + item.id;
+          reasonInp.placeholder = 'Why not?';
+          reasonInp.style.display = 'none';
+          reasonInp.addEventListener('input', debounce(autosave, 1500));
+          rowWrap.appendChild(reasonInp);
+        }
         div.appendChild(rowWrap);
       } else if (item.weekSharedField) {
         // Inline layout: [label] ......... [text input, editable only on Monday]
@@ -5309,6 +5334,11 @@ function writeForm(entry) {
   const _isHome = (entry.dayType || '') === 'home';
   document.querySelectorAll('.home-only-item').forEach(el => {
     el.style.display = _isHome ? '' : 'none';
+  });
+  // Office-only items: show only when dayType is "office"
+  const _isOffice = (entry.dayType || '') === 'office';
+  document.querySelectorAll('.office-only-item').forEach(el => {
+    el.style.display = _isOffice ? '' : 'none';
   });
   // Sunday-only items: show only on Sundays
   const _isSunday = isSunday(_dateVal);
@@ -6130,6 +6160,7 @@ function isPracticeApplicable(item, entry, dateStr) {
   if (!item) return true;
   if (item.sundayOnly && !isSunday(dateStr)) return false;
   if (item.homeOnly && (entry.dayType || '') !== 'home') return false;
+  if (item.officeOnly && (entry.dayType || '') !== 'office') return false;
   return true;
 }
 
@@ -7814,6 +7845,10 @@ function renderLast30DaysReport(c) {
       if (item.homeOnly) {
         const dt = e.dayType || 'home';
         if (dt !== 'home') return;
+      }
+      if (item.officeOnly) {
+        const dt = e.dayType || 'home';
+        if (dt !== 'office') return;
       }
       applicable++;
       if (e.daily && e.daily[item.id] === true) done++;
@@ -10440,9 +10475,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const dayTypeSel = document.getElementById('dayType');
   if (dayTypeSel) {
     dayTypeSel.addEventListener('change', () => {
-      const isHome = dayTypeSel.value === 'home';
+      const val = dayTypeSel.value;
       document.querySelectorAll('.home-only-item').forEach(el => {
-        el.style.display = isHome ? '' : 'none';
+        el.style.display = val === 'home' ? '' : 'none';
+      });
+      document.querySelectorAll('.office-only-item').forEach(el => {
+        el.style.display = val === 'office' ? '' : 'none';
       });
     });
   }
