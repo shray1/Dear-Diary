@@ -2672,7 +2672,12 @@
   .blog-header {
     display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
   }
+  .blog-title-wrap {
+    display: flex; align-items: flex-start; gap: 8px; cursor: pointer; flex: 1; min-width: 0;
+  }
+  .blog-caret { color: var(--accent); font-size: 0.95em; line-height: 1.5; flex-shrink: 0; user-select: none; }
   .blog-title { font-weight: bold; font-size: 1.05em; color: var(--ink); line-height: 1.4; }
+  .blog-title-wrap:hover .blog-title { color: var(--accent); }
   .blog-date { font-size: 0.82em; color: var(--soft); margin-top: 2px; }
   .blog-actions { display: flex; gap: 6px; flex-shrink: 0; }
   .blog-body {
@@ -8324,7 +8329,8 @@ function exportJSON() {
       calendar: getCalendarData(),
       dietPlan: getDietPlan(),
       reflectionHL: getReflectionHighlights(),
-      mindPractices: getMindPractices()
+      mindPractices: getMindPractices(),
+      blogs: getBlogs()
     }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -8355,6 +8361,7 @@ function importJSON(ev) {
         if (data.__meta.dietPlan) setDietPlan(data.__meta.dietPlan);
         if (data.__meta.reflectionHL) setReflectionHighlights(data.__meta.reflectionHL);
         if (data.__meta.mindPractices) { setMindPractices(data.__meta.mindPractices); applyMindPractices(); buildMindSlotTable(); }
+        if (data.__meta.blogs) setBlogs(data.__meta.blogs);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
@@ -8363,7 +8370,7 @@ function importJSON(ev) {
       setAllEntries(entries);
       refreshHistoryList();
       loadEntry();
-      showMsg('dataMsg', 'Imported ' + count + ' entries.' + (data.__meta ? ' Medicines data restored.' : ''), 'success');
+      showMsg('dataMsg', 'Imported ' + count + ' entries.' + (data.__meta ? ' Additional data restored.' : ''), 'success');
     } catch (e) {
       showMsg('dataMsg', 'Import failed: ' + e.message, 'warn');
     }
@@ -10357,6 +10364,13 @@ function setBlogs(list) { localStorage.setItem(BLOGS_KEY, JSON.stringify(list));
 function blogGenId() { return 'blog_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
 
 let _blogEditId = null;
+const _blogExpanded = new Set();
+
+function toggleBlogExpand(id) {
+  if (_blogExpanded.has(id)) _blogExpanded.delete(id);
+  else _blogExpanded.add(id);
+  renderBlogsTab();
+}
 
 function renderBlogsTab() {
   const el = document.getElementById('blogsContent');
@@ -10386,17 +10400,21 @@ function renderBlogsTab() {
         html += '</div>';
         html += '</div>';
       } else {
+        const expanded = _blogExpanded.has(b.id);
         html += '<div class="blog-header">';
+        html += '<div class="blog-title-wrap" onclick="toggleBlogExpand(\'' + b.id + '\')">';
+        html += '<span class="blog-caret">' + (expanded ? '▾' : '▸') + '</span>';
         html += '<div>';
         html += '<div class="blog-title">' + esc(b.title) + '</div>';
         html += '<div class="blog-date">' + b.date + '</div>';
+        html += '</div>';
         html += '</div>';
         html += '<div class="blog-actions">';
         html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="startBlogEdit(\'' + b.id + '\')">Edit</button>';
         html += '<button class="danger" style="font-size:0.78em; padding:3px 9px;" onclick="deleteBlog(\'' + b.id + '\')">✕</button>';
         html += '</div>';
         html += '</div>';
-        if (b.body) {
+        if (b.body && expanded) {
           html += '<div class="blog-body">' + esc(b.body).replace(/\n/g, '<br>') + '</div>';
         }
       }
