@@ -2288,6 +2288,14 @@
   .cal-mini-cell.t-night  { background: #ebe7f5; color: #5a4a8a; }
   .cal-mini-cell.t-tour   { background: #e8f0fb; color: #3a5fa0; }
   .cal-mini-cell.is-gazetted { box-shadow: inset 0 -4px 0 #d63535; }
+  .cal-mini-cell .cal-mini-star {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    font-size: 0.6em;
+    line-height: 1;
+    pointer-events: none;
+  }
   .cal-mini-cell:hover:not(.empty) {
     transform: scale(1.05);
     z-index: 1;
@@ -3200,6 +3208,15 @@
 
     <label for="helpedText" style="margin-top:12px;">Helped someone today</label>
     <textarea id="helpedText" placeholder="Money to the needy, a donation, or a hand with their work — how did you help?"></textarea>
+
+    <div class="special-event-block" style="margin-top:16px;">
+      <label style="display:flex; align-items:center; gap:8px; text-transform:none; color:var(--ink); font-size:0.98em; cursor:pointer;">
+        <input type="checkbox" id="specialEventChk" style="width:16px; height:16px; cursor:pointer;" onchange="onSpecialEventToggle()">
+        <span>⭐ Was today a special day or event?</span>
+      </label>
+      <input type="text" id="specialEventText" placeholder="What was the special event? (e.g. Anniversary, Promotion, Festival…)"
+             style="display:none; margin-top:8px;">
+    </div>
 
     <div style="margin-top:18px; padding-top:12px; border-top:1px solid var(--line);">
       <button class="collapsible-toggle reflection-optional-toggle" id="reflectionOptToggle"
@@ -5078,6 +5095,8 @@ function readForm() {
     apology: document.getElementById('apologyText').value,
     lesson: document.getElementById('lessonText').value,
     share:  document.getElementById('shareText').value,
+    specialEvent: (() => { const el = document.getElementById('specialEventChk'); return !!(el && el.checked); })(),
+    specialEventText: (() => { const el = document.getElementById('specialEventText'); return el ? el.value.trim() : ''; })(),
     conscienceScore: (() => {
       const el = document.getElementById('conscienceScore');
       if (!el || el.value === '') return '';
@@ -5203,6 +5222,19 @@ function writeForm(entry) {
   });
   document.getElementById('lessonText').value = entry.lesson || '';
   document.getElementById('shareText').value  = entry.share  || '';
+  // Special event — the entry's own value wins; otherwise pre-fill from a
+  // calendar special event already marked for this date (e.g. a future event).
+  {
+    const seChk = document.getElementById('specialEventChk');
+    const seTxt = document.getElementById('specialEventText');
+    if (seChk && seTxt) {
+      const calEvent = getSpecialEventForDate(entry.date);
+      const isMarked = (entry.specialEvent === true) || (!!calEvent && entry.specialEvent === undefined);
+      seChk.checked = isMarked;
+      seTxt.value = entry.specialEventText || (calEvent ? calEvent.name : '') || '';
+      seTxt.style.display = isMarked ? '' : 'none';
+    }
+  }
   const _csEl = document.getElementById('conscienceScore');
   if (_csEl) _csEl.value = (entry.conscienceScore !== undefined && entry.conscienceScore !== null) ? entry.conscienceScore : '';
   DAILY_ITEMS.forEach(i => {
@@ -5418,6 +5450,7 @@ function saveEntry() {
   propagateWeekly(entry, all);
   propagateMonthly(entry, all);
   setAllEntries(all);
+  syncSpecialEventFromEntry(entry);
   showMsg('saveMsg', 'Saved entry for ' + entry.date + '. Well done. ', 'success');
   refreshHistoryList();
 }
@@ -6631,8 +6664,9 @@ function renderDayReport(c) {
 
   // Reflection
   const madeHappyNote = (entry.yesNotes && entry.yesNotes.madeHappy) || entry.kindness || '';
-  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology) {
+  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology || entry.specialEvent) {
     html += '<div class="card"><h2>Reflection</h2>';
+    if (entry.specialEvent) html += '<p><strong>⭐ Special event:</strong> ' + esc(entry.specialEventText || 'Yes') + '</p>';
     if (entry.actual)      html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
     if (entry.grateful)    html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
     if (madeHappyNote)     html += '<p><strong>Made someone happy:</strong> ' + esc(madeHappyNote) + '</p>';
@@ -8432,6 +8466,7 @@ function autosave() {
   propagateWeekly(entry, all);
   propagateMonthly(entry, all);
   setAllEntries(all);
+  syncSpecialEventFromEntry(entry);
   refreshHistoryList();
   const ind = document.getElementById('autosaveIndicator');
   const t = new Date();
@@ -8450,7 +8485,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','conscienceScore'];
+  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','specialEventText','conscienceScore'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
@@ -10022,10 +10057,11 @@ function getCalendarData() {
     return {
       holidays: raw.holidays || [],
       leaves:   raw.leaves   || [],
-      tours:    raw.tours    || []
+      tours:    raw.tours    || [],
+      specialEvents: raw.specialEvents || []
     };
   } catch {
-    return { holidays: [], leaves: [], tours: [] };
+    return { holidays: [], leaves: [], tours: [], specialEvents: [] };
   }
 }
 function setCalendarData(data) {
@@ -10033,6 +10069,51 @@ function setCalendarData(data) {
 }
 function calGenId(prefix) {
   return prefix + '_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+}
+
+/* ---- Special events: calendar ⇄ daily-entry sync helpers ---- */
+function getSpecialEventForDate(dateStr) {
+  if (!dateStr) return null;
+  const data = getCalendarData();
+  return data.specialEvents.find(e => e.date === dateStr) || null;
+}
+// Create or update the special event for a date (called when marked in Daily Entry).
+function upsertSpecialEvent(dateStr, name) {
+  if (!dateStr) return;
+  const data = getCalendarData();
+  const existing = data.specialEvents.find(e => e.date === dateStr);
+  if (existing) {
+    existing.name = name || '';
+  } else {
+    data.specialEvents.push({ id: calGenId('s'), date: dateStr, name: name || '' });
+  }
+  setCalendarData(data);
+}
+// Remove the special event for a date (called when unmarked in Daily Entry).
+function removeSpecialEventByDate(dateStr) {
+  if (!dateStr) return;
+  const data = getCalendarData();
+  const before = data.specialEvents.length;
+  data.specialEvents = data.specialEvents.filter(e => e.date !== dateStr);
+  if (data.specialEvents.length !== before) setCalendarData(data);
+}
+// Keep the calendar in step with what the Daily Entry reflection says for this date.
+function syncSpecialEventFromEntry(entry) {
+  if (!entry || !entry.date) return;
+  if (entry.specialEvent) {
+    upsertSpecialEvent(entry.date, (entry.specialEventText || '').trim());
+  } else {
+    removeSpecialEventByDate(entry.date);
+  }
+}
+// Daily Entry: show/hide the description field when the checkbox toggles.
+function onSpecialEventToggle() {
+  const chk = document.getElementById('specialEventChk');
+  const txt = document.getElementById('specialEventText');
+  if (!chk || !txt) return;
+  txt.style.display = chk.checked ? '' : 'none';
+  if (chk.checked) setTimeout(() => txt.focus(), 50);
+  autosave();
 }
 
 // Compute the default day type from calendar + weekday rules.
@@ -10102,7 +10183,18 @@ function renderCalendarSection() {
   html += '<div class="cal-event-list" style="margin-top:14px;" id="toursList"></div>';
   html += '</div>';
 
-  // 4. Calendar preview
+  // 4. Special Events
+  html += '<div class="card"><h2>⭐ Special Events</h2>';
+  html += '<p style="color:var(--soft); margin-top:0; font-size:0.9em;">Special days & events (anniversaries, festivals, milestones). Mark a future one here and it shows up automatically in that day\'s Reflection — and anything you mark in Reflection appears here too.</p>';
+  html += '<div class="cal-event-form">';
+  html += '<div><label for="specialEventDate">Date</label><input type="date" id="specialEventDate"></div>';
+  html += '<div><label for="specialEventName">Event</label><input type="text" id="specialEventName" placeholder="e.g. Anniversary, Birthday, Festival"></div>';
+  html += '<div><label>&nbsp;</label><button class="primary" onclick="addSpecialEvent()">+ Add</button></div>';
+  html += '</div>';
+  html += '<div class="cal-event-list" style="margin-top:14px;" id="specialEventsList"></div>';
+  html += '</div>';
+
+  // 5. Calendar preview
   html += '<div class="card"><h2>🗓 Calendar Preview</h2>';
   html += '<div class="cal-mini-header">';
   html += '<button onclick="calShiftMonth(-1)" title="Previous month">◀</button>';
@@ -10116,6 +10208,7 @@ function renderCalendarSection() {
   html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#ebe7f5;"></span>Night Duty</div>';
   html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="background:#e8f0fb;"></span>Tour</div>';
   html += '<div class="cal-mini-legend-item"><span class="cal-mini-swatch" style="border-bottom:3px solid #d63535;"></span>Gazetted Holiday</div>';
+  html += '<div class="cal-mini-legend-item"><span style="font-size:0.85em;">⭐</span> Special Event</div>';
   html += '</div>';
   html += '</div>';
 
@@ -10124,6 +10217,7 @@ function renderCalendarSection() {
   renderHolidaysList();
   renderLeavesList();
   renderToursList();
+  renderSpecialEventsList();
   renderCalMiniGrid();
 }
 
@@ -10188,7 +10282,76 @@ function renderToursList() {
   el.innerHTML = html;
 }
 
+function renderSpecialEventsList() {
+  const el = document.getElementById('specialEventsList');
+  if (!el) return;
+  const data = getCalendarData();
+  const sorted = data.specialEvents.slice().sort((a, b) => a.date.localeCompare(b.date));
+  if (sorted.length === 0) { el.innerHTML = '<div class="cal-empty">No special events added yet.</div>'; return; }
+  let html = '';
+  sorted.forEach(s => {
+    html += '<div class="cal-event-item">';
+    html += '<div class="cal-event-info">';
+    html += '<span class="cal-event-name">' + esc(s.name || '(unnamed event)') + '</span>';
+    html += '<span class="cal-event-date">' + s.date + '</span>';
+    html += '</div>';
+    html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteSpecialEvent(\'' + s.id + '\')">Remove</button>';
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
 /* ---- Add / Delete ---- */
+function addSpecialEvent() {
+  const date = document.getElementById('specialEventDate').value;
+  const name = (document.getElementById('specialEventName').value || '').trim();
+  if (!date) { alert('Please pick a date for the special event.'); return; }
+  if (!name) { alert('Please enter a name for the special event.'); return; }
+  upsertSpecialEvent(date, name);
+  // Reflect it into that day's saved entry too, so the sync is two-way.
+  const all = getAllEntries();
+  if (all[date]) {
+    all[date].specialEvent = true;
+    all[date].specialEventText = name;
+    setAllEntries(all);
+  }
+  document.getElementById('specialEventDate').value = '';
+  document.getElementById('specialEventName').value = '';
+  renderSpecialEventsList();
+  renderCalMiniGrid();
+  // If the currently-open Daily Entry is this date, refresh its fields live.
+  const openDate = document.getElementById('entryDate');
+  if (openDate && openDate.value === date) {
+    const chk = document.getElementById('specialEventChk');
+    const txt = document.getElementById('specialEventText');
+    if (chk && txt) { chk.checked = true; txt.value = name; txt.style.display = ''; }
+  }
+}
+function deleteSpecialEvent(id) {
+  if (!confirm('Remove this special event?')) return;
+  const data = getCalendarData();
+  const removed = data.specialEvents.find(e => e.id === id);
+  data.specialEvents = data.specialEvents.filter(e => e.id !== id);
+  setCalendarData(data);
+  // Clear it from that day's saved entry too.
+  if (removed) {
+    const all = getAllEntries();
+    if (all[removed.date]) {
+      all[removed.date].specialEvent = false;
+      all[removed.date].specialEventText = '';
+      setAllEntries(all);
+    }
+    const openDate = document.getElementById('entryDate');
+    if (openDate && openDate.value === removed.date) {
+      const chk = document.getElementById('specialEventChk');
+      const txt = document.getElementById('specialEventText');
+      if (chk && txt) { chk.checked = false; txt.value = ''; txt.style.display = 'none'; }
+    }
+  }
+  renderSpecialEventsList();
+  renderCalMiniGrid();
+}
+
 function addHoliday() {
   const date = document.getElementById('holidayDate').value;
   const name = (document.getElementById('holidayName').value || '').trim();
@@ -10304,18 +10467,22 @@ function renderCalMiniGrid() {
     const isToday   = dateStr === today;
     const holiday   = data.holidays.find(h => h.date === dateStr);
     const isGazette = holiday && holiday.gazetted;
+    const special   = data.specialEvents.find(e => e.date === dateStr);
 
     let cls = 'cal-mini-cell t-' + dayType;
     if (isToday)    cls += ' is-today';
     if (isGazette)  cls += ' is-gazetted';
+    if (special)    cls += ' has-special';
 
-    const tip = holiday ? holiday.name : (
+    let tip = holiday ? holiday.name : (
       data.tours.find(t => dateStr >= t.startDate && dateStr <= t.endDate) ? 'Tour: ' + (data.tours.find(t => dateStr >= t.startDate && dateStr <= t.endDate).remarks || '(no remarks)') :
       data.leaves.find(l => dateStr >= l.startDate && dateStr <= l.endDate) ? 'Leave: ' + (data.leaves.find(l => dateStr >= l.startDate && dateStr <= l.endDate).remarks || '(no remarks)') :
       ''
     );
+    if (special) tip = (tip ? tip + ' · ' : '') + '⭐ ' + (special.name || 'Special event');
 
-    html += '<div class="' + cls + '" title="' + esc(tip) + '">' + day + '</div>';
+    const star = special ? '<span class="cal-mini-star">⭐</span>' : '';
+    html += '<div class="' + cls + '" title="' + esc(tip) + '">' + day + star + '</div>';
   }
 
   html += '</div>';
