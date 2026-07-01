@@ -2693,6 +2693,11 @@
     white-space: pre-line;
   }
   .blog-edit-form { padding: 4px 0; }
+  .blog-pin-btn.active {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--ink);
+  }
+  .blog-pin-mark { font-size: 0.9em; }
+  .blog-item.pinned { background: rgba(139,111,71,0.04); }
 
   /* ── Financial tab ── */
   .fin-month-bar {
@@ -10539,10 +10544,21 @@ function toggleBlogExpand(id) {
   renderBlogsTab();
 }
 
+function toggleBlogPin(id) {
+  const blogs = getBlogs();
+  const b = blogs.find(x => x.id === id);
+  if (b) { b.pinned = !b.pinned; setBlogs(blogs); }
+  renderBlogsTab();
+}
+
 function renderBlogsTab() {
   const el = document.getElementById('blogsContent');
   if (!el) return;
-  const blogs = getBlogs().sort((a, b) => b.date.localeCompare(a.date));
+  const blogs = getBlogs().sort((a, b) => {
+    // Pinned blogs first, then by date (newest first)
+    if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+    return b.date.localeCompare(a.date);
+  });
   let html = '';
 
   // Blog list
@@ -10554,7 +10570,7 @@ function renderBlogsTab() {
     html += '<div class="blog-list">';
     blogs.forEach(b => {
       const isEditing = _blogEditId === b.id;
-      html += '<div class="blog-item" id="blog_' + b.id + '">';
+      html += '<div class="blog-item' + (b.pinned ? ' pinned' : '') + '" id="blog_' + b.id + '">';
 
       if (isEditing) {
         html += '<div class="blog-edit-form">';
@@ -10572,11 +10588,12 @@ function renderBlogsTab() {
         html += '<div class="blog-title-wrap" onclick="toggleBlogExpand(\'' + b.id + '\')">';
         html += '<span class="blog-caret">' + (expanded ? '▾' : '▸') + '</span>';
         html += '<div>';
-        html += '<div class="blog-title">' + esc(b.title) + '</div>';
+        html += '<div class="blog-title">' + (b.pinned ? '<span class="blog-pin-mark" title="Pinned">📌</span> ' : '') + esc(b.title) + '</div>';
         html += '<div class="blog-date">' + b.date + '</div>';
         html += '</div>';
         html += '</div>';
         html += '<div class="blog-actions">';
+        html += '<button class="secondary blog-pin-btn' + (b.pinned ? ' active' : '') + '" style="font-size:0.78em; padding:3px 9px;" onclick="toggleBlogPin(\'' + b.id + '\')" title="' + (b.pinned ? 'Unpin' : 'Pin to top') + '">📌 ' + (b.pinned ? 'Pinned' : 'Pin') + '</button>';
         html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="startBlogEdit(\'' + b.id + '\')">Edit</button>';
         html += '<button class="danger" style="font-size:0.78em; padding:3px 9px;" onclick="deleteBlog(\'' + b.id + '\')">✕</button>';
         html += '</div>';
