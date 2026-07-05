@@ -3223,6 +3223,15 @@
              style="display:none; margin-top:8px;">
     </div>
 
+    <div class="special-event-block" style="margin-top:16px;">
+      <label style="display:flex; align-items:center; gap:8px; text-transform:none; color:var(--ink); font-size:0.98em; cursor:pointer;">
+        <input type="checkbox" id="outsideFoodChk" style="width:16px; height:16px; cursor:pointer;" onchange="onOutsideFoodToggle()">
+        <span>🍔 Did you eat outside food today?</span>
+      </label>
+      <input type="text" id="outsideFoodText" placeholder="What / where did you eat? (e.g. Pizza at Domino's, Chaat at the market…)"
+             style="display:none; margin-top:8px;">
+    </div>
+
     <div style="margin-top:18px; padding-top:12px; border-top:1px solid var(--line);">
       <button class="collapsible-toggle reflection-optional-toggle" id="reflectionOptToggle"
               onclick="toggleSection('reflectionOptBody','reflectionOptToggle')" aria-expanded="false">
@@ -3614,6 +3623,7 @@ const DAILY_ITEMS = [
   { id: 'officeWork2', label: 'Productive Work Hour (2)', hint: '🕛 11:45–12:45 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'callWifey', label: 'Call Wifey', hint: 'A quick call before lunch — stay connected', officeOnly: true },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             hint: '🕜 1:30–2:00 PM',   mealKey: 'lunch'        },
+  { id: 'chairPose', label: 'Sit in Chair Position for 1 minute', hint: 'Utkatasana — a short post-lunch hold to build strength & focus' },
   { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
   { id: 'officeWork3', label: 'Productive Work Hour (3)', hint: '🕒 3:00–4:00 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
@@ -3715,6 +3725,7 @@ const DEFAULT_DAILY_SCORING = {
   officeWork2:          { weight: 4 },
   callWifey:            { weight: 3 },
   homemadeLunch:        { weight: 3 },
+  chairPose:            { weight: 2 },
   officeWork3:          { weight: 4 },
   homemadeEveningSnack: { weight: 3 },
   homemadeDinner:          { weight: 3 },
@@ -5102,6 +5113,8 @@ function readForm() {
     share:  document.getElementById('shareText').value,
     specialEvent: (() => { const el = document.getElementById('specialEventChk'); return !!(el && el.checked); })(),
     specialEventText: (() => { const el = document.getElementById('specialEventText'); return el ? el.value.trim() : ''; })(),
+    outsideFood: (() => { const el = document.getElementById('outsideFoodChk'); return !!(el && el.checked); })(),
+    outsideFoodText: (() => { const el = document.getElementById('outsideFoodText'); return el ? el.value.trim() : ''; })(),
     conscienceScore: (() => {
       const el = document.getElementById('conscienceScore');
       if (!el || el.value === '') return '';
@@ -5238,6 +5251,17 @@ function writeForm(entry) {
       seChk.checked = isMarked;
       seTxt.value = entry.specialEventText || (calEvent ? calEvent.name : '') || '';
       seTxt.style.display = isMarked ? '' : 'none';
+    }
+  }
+  // Outside food
+  {
+    const ofChk = document.getElementById('outsideFoodChk');
+    const ofTxt = document.getElementById('outsideFoodText');
+    if (ofChk && ofTxt) {
+      const isMarked = entry.outsideFood === true;
+      ofChk.checked = isMarked;
+      ofTxt.value = entry.outsideFoodText || '';
+      ofTxt.style.display = isMarked ? '' : 'none';
     }
   }
   const _csEl = document.getElementById('conscienceScore');
@@ -6669,9 +6693,10 @@ function renderDayReport(c) {
 
   // Reflection
   const madeHappyNote = (entry.yesNotes && entry.yesNotes.madeHappy) || entry.kindness || '';
-  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology || entry.specialEvent) {
+  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology || entry.specialEvent || entry.outsideFood) {
     html += '<div class="card"><h2>Reflection</h2>';
     if (entry.specialEvent) html += '<p><strong>⭐ Special event:</strong> ' + esc(entry.specialEventText || 'Yes') + '</p>';
+    if (entry.outsideFood) html += '<p><strong>🍔 Outside food:</strong> ' + esc(entry.outsideFoodText || 'Yes') + '</p>';
     if (entry.actual)      html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
     if (entry.grateful)    html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
     if (madeHappyNote)     html += '<p><strong>Made someone happy:</strong> ' + esc(madeHappyNote) + '</p>';
@@ -8490,7 +8515,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','specialEventText','conscienceScore'];
+  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','specialEventText','outsideFoodText','conscienceScore'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
@@ -10115,6 +10140,15 @@ function syncSpecialEventFromEntry(entry) {
 function onSpecialEventToggle() {
   const chk = document.getElementById('specialEventChk');
   const txt = document.getElementById('specialEventText');
+  if (!chk || !txt) return;
+  txt.style.display = chk.checked ? '' : 'none';
+  if (chk.checked) setTimeout(() => txt.focus(), 50);
+  autosave();
+}
+
+function onOutsideFoodToggle() {
+  const chk = document.getElementById('outsideFoodChk');
+  const txt = document.getElementById('outsideFoodText');
   if (!chk || !txt) return;
   txt.style.display = chk.checked ? '' : 'none';
   if (chk.checked) setTimeout(() => txt.focus(), 50);
