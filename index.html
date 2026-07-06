@@ -3367,6 +3367,12 @@
       <li>Visit Ashram / Satsang / Satguru — 2 times</li>
     </ul>
   </div>
+  <div class="card">
+    <h2>A Good Year</h2>
+    <ul>
+      <li>One Full Complete Month Bramhacharya</li>
+    </ul>
+  </div>
 
   <!-- Manage Mind & Self-Discipline practices -->
   <div id="mindManageSection"></div>
@@ -7551,8 +7557,8 @@ function renderMonthReport(c) {
   if (isNaN(month) || isNaN(year)) { c.innerHTML = '<div class="card"><p>Pick a month and year.</p></div>'; return; }
   const r = scoreMonth(year, month);
 
-  // Month plan — stored on the 1st of the month
-  const _firstOfMonth = year + '-' + String(month).padStart(2,'0') + '-01';
+  // Month plan — stored on the 1st of the month (month is 0-indexed, ISO needs 1-indexed)
+  const _firstOfMonth = year + '-' + String(month + 1).padStart(2,'0') + '-01';
   const _firstEntry   = getAllEntries()[_firstOfMonth] || {};
   const _monthPlan    = (_firstEntry.monthPlan || '').trim();
 
