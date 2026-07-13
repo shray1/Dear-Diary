@@ -3241,6 +3241,15 @@
              style="display:none; margin-top:8px;">
     </div>
 
+    <div class="special-event-block" style="margin-top:16px;">
+      <label style="display:flex; align-items:center; gap:8px; text-transform:none; color:var(--ink); font-size:0.98em; cursor:pointer;">
+        <input type="checkbox" id="nsfwSlipChk" style="width:16px; height:16px; cursor:pointer;" onchange="onNsfwSlipToggle()">
+        <span>🚫 Did you slip on NSFW today?</span>
+      </label>
+      <input type="text" id="nsfwSlipText" placeholder="How &amp; what did you slip on? (be honest — awareness is the first step back on track)"
+             style="display:none; margin-top:8px;">
+    </div>
+
     <div style="margin-top:18px; padding-top:12px; border-top:1px solid var(--line);">
       <button class="collapsible-toggle reflection-optional-toggle" id="reflectionOptToggle"
               onclick="toggleSection('reflectionOptBody','reflectionOptToggle')" aria-expanded="false">
@@ -5141,6 +5150,8 @@ function readForm() {
     outsideFoodText: (() => { const el = document.getElementById('outsideFoodText'); return el ? el.value.trim() : ''; })(),
     unwell: (() => { const el = document.getElementById('unwellChk'); return !!(el && el.checked); })(),
     unwellText: (() => { const el = document.getElementById('unwellText'); return el ? el.value.trim() : ''; })(),
+    nsfwSlip: (() => { const el = document.getElementById('nsfwSlipChk'); return !!(el && el.checked); })(),
+    nsfwSlipText: (() => { const el = document.getElementById('nsfwSlipText'); return el ? el.value.trim() : ''; })(),
     conscienceScore: (() => {
       const el = document.getElementById('conscienceScore');
       if (!el || el.value === '') return '';
@@ -5299,6 +5310,17 @@ function writeForm(entry) {
       uwChk.checked = isMarked;
       uwTxt.value = entry.unwellText || '';
       uwTxt.style.display = isMarked ? '' : 'none';
+    }
+  }
+  // NSFW slip
+  {
+    const nsChk = document.getElementById('nsfwSlipChk');
+    const nsTxt = document.getElementById('nsfwSlipText');
+    if (nsChk && nsTxt) {
+      const isMarked = entry.nsfwSlip === true;
+      nsChk.checked = isMarked;
+      nsTxt.value = entry.nsfwSlipText || '';
+      nsTxt.style.display = isMarked ? '' : 'none';
     }
   }
   const _csEl = document.getElementById('conscienceScore');
@@ -6730,11 +6752,12 @@ function renderDayReport(c) {
 
   // Reflection
   const madeHappyNote = (entry.yesNotes && entry.yesNotes.madeHappy) || entry.kindness || '';
-  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology || entry.specialEvent || entry.outsideFood || entry.unwell) {
+  if (entry.actual || entry.grateful || entry.helped || entry.lesson || madeHappyNote || entry.apology || entry.specialEvent || entry.outsideFood || entry.unwell || entry.nsfwSlip) {
     html += '<div class="card"><h2>Reflection</h2>';
     if (entry.specialEvent) html += '<p><strong>⭐ Special event:</strong> ' + esc(entry.specialEventText || 'Yes') + '</p>';
     if (entry.outsideFood) html += '<p><strong>🍔 Outside food:</strong> ' + esc(entry.outsideFoodText || 'Yes') + '</p>';
     if (entry.unwell) html += '<p><strong>🤒 Unwell / tired:</strong> ' + esc(entry.unwellText || 'Yes') + '</p>';
+    if (entry.nsfwSlip) html += '<p><strong>🚫 NSFW slip:</strong> ' + esc(entry.nsfwSlipText || 'Yes') + '</p>';
     if (entry.actual)      html += '<p><strong>Day:</strong> ' + esc(entry.actual) + '</p>';
     if (entry.grateful)    html += '<p><strong>Grateful:</strong> ' + esc(entry.grateful).replace(/\n/g, '<br>') + '</p>';
     if (madeHappyNote)     html += '<p><strong>Made someone happy:</strong> ' + esc(madeHappyNote) + '</p>';
@@ -8559,7 +8582,7 @@ function autosave() {
 
 function setupAutosave() {
   const debouncedSave = debounce(autosave, 1500);
-  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','specialEventText','outsideFoodText','unwellText','conscienceScore'];
+  const ids = ['dayType','dayMood','wakeTime','bedTime','screenTime','planText','monthPlanText','weekPlanText','weekReflectionText','actualText','gratefulText','helpedText','apologyText','lessonText','shareText','specialEventText','outsideFoodText','unwellText','nsfwSlipText','conscienceScore'];
   ids.forEach(id => document.getElementById(id).addEventListener('input', debouncedSave));
   ['dailyChecklist','weeklyChecklist','monthlyChecklist','minutesGrid'].forEach(cId => {
     document.getElementById(cId).addEventListener('change', debouncedSave);
@@ -10202,6 +10225,15 @@ function onOutsideFoodToggle() {
 function onUnwellToggle() {
   const chk = document.getElementById('unwellChk');
   const txt = document.getElementById('unwellText');
+  if (!chk || !txt) return;
+  txt.style.display = chk.checked ? '' : 'none';
+  if (chk.checked) setTimeout(() => txt.focus(), 50);
+  autosave();
+}
+
+function onNsfwSlipToggle() {
+  const chk = document.getElementById('nsfwSlipChk');
+  const txt = document.getElementById('nsfwSlipText');
   if (!chk || !txt) return;
   txt.style.display = chk.checked ? '' : 'none';
   if (chk.checked) setTimeout(() => txt.focus(), 50);
