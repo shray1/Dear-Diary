@@ -3616,17 +3616,21 @@ const DAILY_ITEMS = [
   { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         hint: '🕗 7:45–8:15 AM',   mealKey: 'breakfast'    },
   { id: 'waterSumiran2', label: 'Water intake & Sumiran 2' },
+  { id: 'walkBreak1', label: 'Walk 5 mins & Toilet Break 1', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
   { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes', yesNote: true, yesNotePlaceholder: 'What did you learn today?' },
   { id: 'officeWork1', label: 'Productive Work Hour (1)', hint: '🕘 8:45–9:45 AM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    hint: '🕙 10:40–11:10 AM', mealKey: 'morningSnack' },
+  { id: 'walkBreak2', label: 'Walk 5 mins & Toilet Break 2', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
   { id: 'waterSumiran3', label: 'Water intake & Sumiran 3' },
   { id: 'officeWork2', label: 'Productive Work Hour (2)', hint: '🕛 11:45–12:45 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'callWifey', label: 'Call Wifey', hint: 'A quick call before lunch — stay connected', officeOnly: true },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             hint: '🕜 1:30–2:00 PM',   mealKey: 'lunch'        },
   { id: 'chairPose', label: 'Sit in Chair Position for 1 minute', hint: 'Utkatasana — a short post-lunch hold to build strength & focus' },
+  { id: 'walkBreak3', label: 'Walk 5 mins & Toilet Break 3', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
   { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
   { id: 'officeWork3', label: 'Productive Work Hour (3)', hint: '🕒 3:00–4:00 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
+  { id: 'walkBreak4', label: 'Walk 5 mins & Toilet Break 4', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
   { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', multiPeoplePick: true },
   { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
   { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true, noReason: true },
@@ -3737,6 +3741,10 @@ const DEFAULT_DAILY_SCORING = {
   waterSumiran4: { weight: 1 },
   waterSumiran5: { weight: 1 },
   eveningGym:    { weight: 2 },
+  walkBreak1:    { weight: 2 },
+  walkBreak2:    { weight: 2 },
+  walkBreak3:    { weight: 2 },
+  walkBreak4:    { weight: 2 },
   waterSumiran6: { weight: 1 },
   cyberMindMap:      { weight: 2 },
   noMilkBeforeSleep: { weight: 2 },
@@ -3881,8 +3889,9 @@ const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'
 const DAY_NAMES_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 /* ---------- MISSION 30 ---------- */
-const MISSION_START = '2026-06-11';   // Day 1
+const MISSION_START = '2026-07-11';   // Day 1
 const MISSION_DAYS  = 30;
+const MISSION_TITLE = '🛡 Mission 30 (2)';
 
 function renderMission30() {
   const el = document.getElementById('mission30');
@@ -3894,20 +3903,20 @@ function renderMission30() {
   let html, cls = 'mission-badge';
   if (diff < 0) {
     const n = -diff;
-    html = '<div class="m-title">🛡 Mission 30</div>'
+    html = '<div class="m-title">' + MISSION_TITLE + '</div>'
          + '<div class="m-day">Soon</div>'
          + '<div class="m-sub">in ' + n + ' day' + (n === 1 ? '' : 's') + '</div>';
   } else {
     const day = diff + 1;
     if (day <= MISSION_DAYS) {
       const pct = Math.round(day / MISSION_DAYS * 100);
-      html = '<div class="m-title">🛡 Mission 30</div>'
+      html = '<div class="m-title">' + MISSION_TITLE + '</div>'
            + '<div class="m-day">Day ' + day + '</div>'
            + '<div class="m-sub">' + day + ' / ' + MISSION_DAYS + '</div>'
            + '<div class="m-progress"><div class="m-progress-fill" style="width:' + pct + '%;"></div></div>';
     } else {
       cls += ' m-complete';
-      html = '<div class="m-title">🛡 Mission 30</div>'
+      html = '<div class="m-title">' + MISSION_TITLE + '</div>'
            + '<div class="m-day">✓</div>'
            + '<div class="m-sub">Complete!</div>'
            + '<div class="m-progress"><div class="m-progress-fill" style="width:100%;"></div></div>';
@@ -7379,7 +7388,10 @@ function renderMonthlyHighlightsHtml(year, month, allEntries) {
   return html;
 }
 
-function renderWeekTasksHtml(dayResults, allEntries) {
+function renderWeekTasksHtml(dayResults, allEntries, opts) {
+  opts = opts || {};
+  const title    = opts.title || '✅ Weekly Tasks Review';
+  const useDate  = !!opts.useDate;
   const durLabel = d => (d === 1 ? '1 hr' : d + ' hr');
 
   // Per-day stats + flat done/notDone lists
@@ -7389,7 +7401,7 @@ function renderWeekTasksHtml(dayResults, allEntries) {
   dayResults.forEach(d => {
     const entry  = allEntries[d.date];
     const goals  = (entry && entry.goals) ? entry.goals.filter(g => g.text) : [];
-    const dayTag = d.dayName.slice(0, 3);
+    const dayTag = useDate ? d.date.slice(5) : d.dayName.slice(0, 3);
 
     const dayDone    = goals.filter(g =>  g.done);
     const dayNotDone = goals.filter(g => !g.done);
@@ -7446,7 +7458,7 @@ function renderWeekTasksHtml(dayResults, allEntries) {
   };
 
   let html = '<div class="card">';
-  html += '<h2>✅ Weekly Tasks Review</h2>';
+  html += '<h2>' + title + '</h2>';
 
   // ── Overall progress bar ──
   html += '<div style="display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap;">';
@@ -7966,6 +7978,9 @@ function renderLast30DaysReport(c) {
 
   // Day type distribution
   html += renderDayTypeStatsCard(startStr, endStr);
+
+  // Tasks review (last 30 days)
+  html += renderWeekTasksHtml(dayResults, all, { title: '✅ Tasks Review — Last 30 Days', useDate: true });
 
   // Reflections
   html += renderLast30ReflectionsHtml(dayResults, all);
