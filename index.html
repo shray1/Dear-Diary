@@ -965,7 +965,7 @@
   .mind-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 540px;
+    min-width: 320px;
   }
   .mind-table th, .mind-table td {
     padding: 8px 6px;
@@ -1002,6 +1002,11 @@
     font-style: italic;
     margin-top: 2px;
   }
+  .mind-stars {
+    display: inline-flex;
+    gap: 2px;
+    white-space: nowrap;
+  }
   .mind-star {
     font-size: 1.5em;
     line-height: 1;
@@ -1011,8 +1016,9 @@
     transition: color 0.12s, transform 0.12s;
     display: inline-block;
   }
-  .mind-star:hover { transform: scale(1.18); color: #e6c200; }
   .mind-star.on { color: #e6b800; }
+  .mind-star.hover { color: #e6c200; transform: scale(1.12); }
+  .mind-col-rating { min-width: 160px; }
   .mind-col-total { width: 48px; }
   .mind-total-badge {
     font-size: 0.82em;
@@ -3166,7 +3172,7 @@
 
   <div class="card card-core" id="sec-mind">
     <h2>Mind &amp; Self-Discipline</h2>
-    <p style="color:var(--soft); margin-top:0;">Tap a star for each time slot you upheld the practice. More slots = more stars (max 5).</p>
+    <p style="color:var(--soft); margin-top:0;">Rate how well you upheld each practice across the whole day — out of 5 stars.</p>
     <div id="mindSlotTable"></div>
   </div>
 
@@ -3636,34 +3642,35 @@ const DAILY_ITEMS = [
     { id: 'pranayam',      title: 'Pranayam',      starLabels: ['', '100+', '200+', '300+', '400+', '500+'] }
   ]},
   { id: 'trimNailsCut',  label: 'Trimming & nails cut', hint: 'Sunday grooming — keep it a weekly habit', sundayOnly: true },
-  { id: 'waterSumiran1', label: 'Water intake & Sumiran 1' },
+  { id: 'waterSumiran1', label: 'Water Intake & Sumiran for Guru\'s Grace' },
   { id: 'morningPrayer', label: 'Morning prayer', hint: 'On busy days, can be done during home → office commute', stars: true },
   { id: 'homemadeBreakfast',    label: 'Breakfast at proper time',         hint: '🕗 7:45–8:15 AM',   mealKey: 'breakfast'    },
-  { id: 'waterSumiran2', label: 'Water intake & Sumiran 2' },
+  { id: 'waterSumiran2', label: 'Water Intake & Sumiran for Health' },
   { id: 'walkBreak1', label: 'Walk 5 mins & Toilet Break 1', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
-  { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes', yesNote: true, yesNotePlaceholder: 'What did you learn today?' },
+  { id: 'readHN',        label: 'Read HackerNews', hint: 'Stay curious — skim the front page for 5–10 minutes', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you learn today?' },
+  { id: 'checkedEmails', label: 'Checked Emails', hint: 'Skim your inbox — clear anything urgent before deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'Anything that needs follow-up?' },
   { id: 'officeWork1', label: 'Productive Work Hour (1)', hint: '🕘 8:45–9:45 AM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeMorningSnack', label: 'Morning snacks at proper time',    hint: '🕙 10:40–11:10 AM', mealKey: 'morningSnack' },
   { id: 'walkBreak2', label: 'Walk 5 mins & Toilet Break 2', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
-  { id: 'waterSumiran3', label: 'Water intake & Sumiran 3' },
+  { id: 'waterSumiran3', label: 'Water Intake & Sumiran for Love' },
   { id: 'officeWork2', label: 'Productive Work Hour (2)', hint: '🕛 11:45–12:45 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'callWifey', label: 'Call Wifey', hint: 'A quick call before lunch — stay connected', officeOnly: true },
   { id: 'homemadeLunch',        label: 'Lunch at proper time',             hint: '🕜 1:30–2:00 PM',   mealKey: 'lunch'        },
   { id: 'chairPose', label: 'Sit in Chair Position for 1 minute', hint: 'Utkatasana — a short post-lunch hold to build strength & focus' },
   { id: 'walkBreak3', label: 'Walk 5 mins & Toilet Break 3', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
-  { id: 'waterSumiran4', label: 'Water intake & Sumiran 4' },
+  { id: 'waterSumiran4', label: 'Water Intake & Sumiran for Wisdom' },
   { id: 'officeWork3', label: 'Productive Work Hour (3)', hint: '🕒 3:00–4:00 PM — Focused deep work', officeOnly: true, yesNote: true, yesNotePlaceholder: 'What did you work on?', noReason: true },
   { id: 'homemadeEveningSnack', label: 'Evening snacks at proper time',    hint: '🕟 4:45–5:15 PM',   mealKey: 'eveningSnack' },
   { id: 'walkBreak4', label: 'Walk 5 mins & Toilet Break 4', hint: 'Get up, move & reset — a healthy backbone starts with not sitting all day', officeOnly: true },
   { id: 'calledFriend', label: 'Called a friend', hint: 'Touch base — strengthens close & good friend tiers', multiPeoplePick: true },
-  { id: 'waterSumiran5', label: 'Water intake & Sumiran 5' },
+  { id: 'waterSumiran5', label: 'Water Intake & Sumiran for Wealth' },
   { id: 'eveningGym',   label: 'Evening Gym for 5 mins', hint: 'Home day — a short movement session before dinner', homeOnly: true, noReason: true },
   { id: 'eveningPrayer', label: 'Evening prayer', hint: 'On busy days, can be done during office → home commute', stars: true },
   { id: 'familyTime',  label: 'Spent time with family', hint: 'Grandma, parents, brother, wife' },
   { id: 'homemadeDinner',       label: 'Dinner at proper time',            hint: '🕗 8:00–8:30 PM',   mealKey: 'dinner'       },
   { id: 'reciteShabad', label: 'Recite Shabad for the Week', hint: 'A short evening recitation — anchors the week\'s ShabadVani', weekSharedField: { storeAs: 'weekShabad', placeholder: 'Which Shabad are you learning this week?' } },
-  { id: 'waterSumiran6', label: 'Water intake & Sumiran 6' },
-  { id: 'cyberMindMap',  label: 'Went through Cybersecurity MindMaps', hint: 'Review mind maps to keep the knowledge fresh' },
+  { id: 'waterSumiran6', label: 'Water Intake & Sumiran for Family' },
+  { id: 'cyberMindMap',  label: 'Went through Cybersecurity MindMaps', hint: 'Review mind maps to keep the knowledge fresh', retired: true, retiredOn: '2026-07-26' },
   { id: 'noMilkBeforeSleep', label: 'Did not drink milk before sleeping', hint: 'Drinking milk at night causes acid reflux to you, so don\'t drink milk within 2 hours of sleep' },
   { id: 'brushNight',    label: 'Brushed teeth at night', hint: 'A small discipline that protects the day from carrying over' },
   { id: 'lightsOff11',   label: 'Lights off at 11 PM', hint: 'Only baby-related tasks allowed after 11 PM — protect your sleep' },
@@ -3762,6 +3769,7 @@ const DEFAULT_DAILY_SCORING = {
   waterSumiran1: { weight: 1 },
   waterSumiran2: { weight: 1 },
   readHN:        { weight: 1 },
+  checkedEmails: { weight: 1 },
   waterSumiran3: { weight: 1 },
   waterSumiran4: { weight: 1 },
   waterSumiran5: { weight: 1 },
@@ -3771,7 +3779,7 @@ const DEFAULT_DAILY_SCORING = {
   walkBreak3:    { weight: 2 },
   walkBreak4:    { weight: 2 },
   waterSumiran6: { weight: 1 },
-  cyberMindMap:      { weight: 2 },
+  // cyberMindMap retired 2026-07-26 — no longer scored; past records kept & shown in the Retired Practices card.
   noMilkBeforeSleep: { weight: 2 },
   brushNight:        { weight: 2 },
   lightsOff11:       { weight: 2 },
@@ -4271,6 +4279,7 @@ function renderNeverMissTwice(currentDate) {
   // Find yesterday's missed practices (skip section markers and items with no scoring)
   const misses = [];
   DAILY_ITEMS.forEach(item => {
+    if (item.retired) return;
     if (_practiceMissedOn(item, yEntry)) {
       misses.push({
         item,
@@ -4419,6 +4428,9 @@ function buildChecklist(containerId, items, kind) {
   el.innerHTML = '';
   const isPeriodKind = (kind === 'weekly' || kind === 'monthly');
   items.forEach(item => {
+    // Retired practices are no longer tracked — hidden from the entry form,
+    // but their past records are preserved and shown in the Retired card in Stats.
+    if (item.retired) return;
     // Mind & Self-Discipline items are rendered in their own slot-table card
     if (!isPeriodKind && item.mindSlot) return;
     // Section header (daily checklist only)
@@ -4837,7 +4849,7 @@ function buildMindSlotTable() {
 
   let html = '<div class="mind-table-wrap"><table class="mind-table"><thead><tr>';
   html += '<th class="mind-col-practice">Practice</th>';
-  MIND_SLOTS.forEach(s => { html += '<th>' + s.label + '</th>'; });
+  html += '<th class="mind-col-rating">Rating (out of 5)</th>';
   html += '<th class="mind-col-total">★</th>';
   html += '</tr></thead><tbody>';
 
@@ -4846,11 +4858,16 @@ function buildMindSlotTable() {
     html += '<td class="mind-col-practice"><div class="mind-practice-label">' + esc(item.label);
     if (item.hint) html += '<span class="mind-hint">' + esc(item.hint) + '</span>';
     html += '</div></td>';
-    MIND_SLOTS.forEach(s => {
-      html += '<td><span class="mind-star" id="mindstar_' + item.id + '_' + s.id + '" '
-            + 'onclick="toggleMindStar(\'' + item.id + '\',' + s.id + ')" '
-            + 'title="' + esc(item.label) + ' — ' + s.label + '">☆</span></td>';
-    });
+    html += '<td class="mind-col-rating">';
+    html += '<span class="mind-stars" id="mindstars_' + item.id + '" data-rating="0" '
+          + 'onmouseleave="hoverMindStars(\'' + item.id + '\',0)">';
+    for (let v = 1; v <= 5; v++) {
+      html += '<span class="mind-star" data-val="' + v + '" '
+            + 'onclick="clickMindStar(\'' + item.id + '\',' + v + ')" '
+            + 'onmouseover="hoverMindStars(\'' + item.id + '\',' + v + ')" '
+            + 'title="' + esc(item.label) + ' — ' + v + ' / 5">★</span>';
+    }
+    html += '</span></td>';
     html += '<td><span class="mind-total-badge" id="mindtotal_' + item.id + '">0/5</span></td>';
     html += '</tr>';
   });
@@ -4859,45 +4876,47 @@ function buildMindSlotTable() {
   el.innerHTML = html;
 }
 
-function toggleMindStar(itemId, slotId) {
-  const star = document.getElementById('mindstar_' + itemId + '_' + slotId);
-  if (!star) return;
-  const on = !star.classList.contains('on');
-  star.classList.toggle('on', on);
-  star.textContent = on ? '★' : '☆';
-  updateMindTotal(itemId);
+// Click star N: set rating to N, or clear down to N-1 if it was already N
+function clickMindStar(itemId, val) {
+  const cur = getMindRating(itemId);
+  setMindRating(itemId, val === cur ? val - 1 : val);
   debounce(autosave, 600)();
 }
 
-function updateMindTotal(itemId) {
-  let count = 0;
-  MIND_SLOTS.forEach(s => {
-    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
-    if (star && star.classList.contains('on')) count++;
+// Preview the rating on hover (upTo = 0 restores the committed rating)
+function hoverMindStars(itemId, upTo) {
+  const wrap = document.getElementById('mindstars_' + itemId);
+  if (!wrap) return;
+  const eff = upTo || (parseInt(wrap.dataset.rating) || 0);
+  wrap.querySelectorAll('.mind-star').forEach(s => {
+    s.classList.toggle('hover', parseInt(s.dataset.val) <= eff);
   });
+}
+
+function paintMindStars(itemId, rating) {
+  const wrap = document.getElementById('mindstars_' + itemId);
+  if (!wrap) return;
+  wrap.querySelectorAll('.mind-star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.val) <= rating);
+  });
+}
+
+// Read a Mind item's whole-day rating (0–5) from the table DOM
+function getMindRating(itemId) {
+  const wrap = document.getElementById('mindstars_' + itemId);
+  return wrap ? (parseInt(wrap.dataset.rating) || 0) : 0;
+}
+
+// Set a Mind item's rating and repaint stars + badge (no autosave)
+function setMindRating(itemId, rating) {
+  const wrap = document.getElementById('mindstars_' + itemId);
+  if (!wrap) return;
+  rating = Math.max(0, Math.min(5, parseInt(rating) || 0));
+  wrap.dataset.rating = rating;
+  paintMindStars(itemId, rating);
+  hoverMindStars(itemId, 0);
   const badge = document.getElementById('mindtotal_' + itemId);
-  if (badge) badge.textContent = count + '/5';
-  return count;
-}
-
-// Read the 5 slot booleans for a Mind item straight from the table DOM
-function readMindSlots(itemId) {
-  return MIND_SLOTS.map(s => {
-    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
-    return !!(star && star.classList.contains('on'));
-  });
-}
-
-// Restore a Mind item's slot stars (slots = array of 5 booleans)
-function setMindSlots(itemId, slots) {
-  MIND_SLOTS.forEach(s => {
-    const star = document.getElementById('mindstar_' + itemId + '_' + s.id);
-    if (!star) return;
-    const on = !!(slots && slots[s.id]);
-    star.classList.toggle('on', on);
-    star.textContent = on ? '★' : '☆';
-  });
-  updateMindTotal(itemId);
+  if (badge) badge.textContent = rating + '/5';
 }
 
 function setPracticeState(id, state) {
@@ -5177,13 +5196,26 @@ function readForm() {
     minutes: {}
   };
   entry.dailyNo = {};
-  entry.mindSlots = {};
+  // Previously-stored entry for this date — used to preserve retired practices'
+  // records, which have no form controls to read from anymore.
+  const _prevEntry = getAllEntries()[entry.date] || null;
   DAILY_ITEMS.forEach(i => {
+    if (i.retired) {
+      // Retired practice: no toggle is rendered, so carry over any past records
+      // verbatim instead of overwriting them with a default "false".
+      if (_prevEntry && _prevEntry.daily) {
+        Object.keys(_prevEntry.daily).forEach(k => {
+          if (k === i.id || k === i.id + 'Rating' || k.indexOf(i.id + '_') === 0) {
+            entry.daily[k] = _prevEntry.daily[k];
+          }
+        });
+      }
+      if (_prevEntry && _prevEntry.dailyNo && _prevEntry.dailyNo[i.id]) entry.dailyNo[i.id] = true;
+      return;
+    }
     if (i.mindSlot) {
-      // Slot-rated Mind item: rating = number of slots starred
-      const slots = readMindSlots(i.id);
-      entry.mindSlots[i.id] = slots;
-      entry.daily[i.id + 'Rating'] = slots.filter(Boolean).length;
+      // Mind item: single whole-day rating out of 5
+      entry.daily[i.id + 'Rating'] = getMindRating(i.id);
       return;
     }
     if (i.rateOnly) {
@@ -5329,14 +5361,15 @@ function writeForm(entry) {
   if (_csEl) _csEl.value = (entry.conscienceScore !== undefined && entry.conscienceScore !== null) ? entry.conscienceScore : '';
   DAILY_ITEMS.forEach(i => {
     if (i.mindSlot) {
-      // Restore slot stars. Prefer saved mindSlots; else derive from legacy rating/boolean.
-      let slots = entry.mindSlots && entry.mindSlots[i.id];
-      if (!slots) {
-        let r = entry.daily && entry.daily[i.id + 'Rating'];
-        if (r === undefined || r === null) r = (entry.daily && entry.daily[i.id] === true) ? 5 : 0;
-        slots = MIND_SLOTS.map(s => s.id < r);
+      // Restore the whole-day rating. Prefer the saved Rating (old entries already
+      // stored it as the count of starred slots); else derive from legacy slots/boolean.
+      let r = entry.daily && entry.daily[i.id + 'Rating'];
+      if (r === undefined || r === null) {
+        const slots = entry.mindSlots && entry.mindSlots[i.id];
+        if (slots) r = slots.filter(Boolean).length;
+        else r = (entry.daily && entry.daily[i.id] === true) ? 5 : 0;
       }
-      setMindSlots(i.id, slots);
+      setMindRating(i.id, r);
       return;
     }
     if (i.rateOnly) {
@@ -6286,6 +6319,7 @@ function getDailyItemLabel(id) {
 // A practice only counts toward the day's max when it's actually shown that day
 function isPracticeApplicable(item, entry, dateStr) {
   if (!item) return true;
+  if (item.retired) return false;
   if (item.sundayOnly && !isSunday(dateStr)) return false;
   if (item.homeOnly && (entry.dayType || '') !== 'home') return false;
   if (item.officeOnly && (entry.dayType || '') !== 'office') return false;
@@ -6802,6 +6836,7 @@ function renderPracticeTrackerHtml(dayResults, allEntries) {
 
   // Data rows — one per practice
   DAILY_ITEMS.forEach(item => {
+    if (item.retired) return;   // retired practices live in their own Stats card
     // Consolidate all 6 water items into a single count row
     if (WATER_IDS.includes(item.id)) {
       if (waterRowInserted) return; // skip the remaining 5
@@ -7970,7 +8005,7 @@ function renderLast30DaysReport(c) {
 
   // Practice completion rate over 30 days
   const practiceStats = {};
-  DAILY_ITEMS.filter(i => !i.mindSlot && !i.rateOnly).forEach(item => {
+  DAILY_ITEMS.filter(i => !i.mindSlot && !i.rateOnly && !i.retired).forEach(item => {
     let done = 0, applicable = 0;
     dayResults.forEach(d => {
       if (!d.hasEntry) return;
@@ -7998,6 +8033,42 @@ function renderLast30DaysReport(c) {
       html += '<div class="progress-row"><span>' + esc(p.label) + ' <span style="color:var(--soft); font-size:0.85em;">(' + p.done + '/' + p.applicable + ')</span></span>';
       html += '<div class="progress-bar"><div class="progress-fill" style="width:' + p.pct + '%"></div></div>';
       html += '<span class="pct">' + p.pct + '%</span></div>';
+    });
+    html += '</div>';
+  }
+
+  // Retired practices — no longer tracked daily, but their full lifetime history
+  // is preserved here so the records stay viewable. Scans ALL entries, not the range.
+  const retiredItems = DAILY_ITEMS.filter(i => i.retired);
+  if (retiredItems.length > 0) {
+    const retiredStats = retiredItems.map(item => {
+      let done = 0, recorded = 0, firstDate = null, lastDate = null;
+      Object.keys(all).forEach(date => {
+        const e = all[date];
+        if (!e || !e.daily) return;
+        const isYes = e.daily[item.id] === true;
+        const isNo  = !!(e.dailyNo && e.dailyNo[item.id]);
+        if (!isYes && !isNo) return;   // not recorded that day
+        recorded++;
+        if (isYes) done++;
+        if (!firstDate || date < firstDate) firstDate = date;   // ISO dates sort lexically
+        if (!lastDate  || date > lastDate)  lastDate  = date;
+      });
+      return { item, done, recorded, firstDate, lastDate };
+    });
+    html += '<div class="card"><h2>🗄️ Retired Practices</h2>';
+    html += '<p style="color:var(--soft); margin-top:0; font-size:0.88em;">No longer tracked daily — kept here so their past records stay viewable.</p>';
+    retiredStats.forEach(s => {
+      const pct = s.recorded > 0 ? Math.round(s.done / s.recorded * 100) : 0;
+      const range = s.recorded > 0 ? (s.firstDate + ' → ' + s.lastDate) : 'No records';
+      html += '<div style="padding:10px 0; border-top:1px solid var(--line);">';
+      html += '<div style="font-weight:600;">' + esc(s.item.label) + '</div>';
+      html += '<div class="progress-row" style="margin-top:6px;"><span>Done <span style="color:var(--soft); font-size:0.85em;">(' + s.done + '/' + s.recorded + ' days recorded)</span></span>';
+      html += '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+      html += '<span class="pct">' + pct + '%</span></div>';
+      html += '<div style="color:var(--soft); font-size:0.82em; margin-top:4px;">Tracked ' + esc(range)
+            + (s.item.retiredOn ? ' · retired ' + esc(s.item.retiredOn) : '') + '</div>';
+      html += '</div>';
     });
     html += '</div>';
   }
