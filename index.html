@@ -783,6 +783,157 @@
     padding-left: 10px;
   }
 
+  /* ── Reflections report — book view ── */
+  .refl-book-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .refl-book-filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    color: var(--soft);
+    font-size: 0.88em;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .refl-book-filter input { width: 15px; height: 15px; cursor: pointer; }
+
+  .book-stage {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .book-arrow {
+    flex-shrink: 0;
+    align-self: center;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.4em;
+    line-height: 1;
+    color: var(--accent);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: background 0.15s, transform 0.15s, opacity 0.15s;
+  }
+  .book-arrow:hover:not(:disabled) { background: #f3ede1; transform: scale(1.08); }
+  .book-arrow:disabled { opacity: 0.3; cursor: default; }
+
+  .book-page {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(90deg, #fdfaf3 0%, #fffdf8 6%, #fffdf8 100%);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--accent-soft);
+    border-radius: 4px 10px 10px 4px;
+    box-shadow: var(--shadow), inset 14px 0 18px -16px rgba(90, 70, 40, 0.35);
+    padding: 26px 30px 18px;
+    animation: bookTurn 0.28s ease-out;
+  }
+  @keyframes bookTurn {
+    from { opacity: 0; transform: translateX(6px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .book-page.turn-back { animation: bookTurnBack 0.28s ease-out; }
+  @keyframes bookTurnBack {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .book-head {
+    text-align: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .book-weekday {
+    font-size: 1.5em;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .book-fulldate {
+    color: var(--soft);
+    font-size: 0.88em;
+    margin-top: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .book-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 12px;
+  }
+  .book-flag {
+    background: #f6f1e7;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 11px;
+    font-size: 0.82em;
+    color: var(--ink);
+  }
+
+  .book-sec { margin-bottom: 20px; }
+  .book-sec.starred {
+    background: #fffaf0;
+    border-left: 3px solid #e6b800;
+    border-radius: 4px;
+    padding: 8px 10px 8px 12px;
+    margin-left: -12px;
+  }
+  .book-sec-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .book-sec-title {
+    flex: 1;
+    min-width: 0;
+    font-weight: bold;
+    color: var(--accent);
+    font-size: 0.95em;
+  }
+  .book-sec-text {
+    color: var(--ink);
+    white-space: pre-line;
+    line-height: 1.75;
+  }
+  .book-empty {
+    text-align: center;
+    color: var(--soft);
+    padding: 40px 0;
+  }
+  .book-folio {
+    margin-top: 22px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+    color: var(--soft);
+    font-size: 0.82em;
+    letter-spacing: 1px;
+  }
+  .book-hint {
+    text-align: center;
+    color: var(--soft);
+    font-size: 0.82em;
+    margin: 10px 0 0;
+  }
+  @media (max-width: 700px) {
+    .book-page { padding: 20px 16px 14px; }
+    .book-arrow { width: 34px; height: 34px; font-size: 1.2em; }
+    .book-stage { gap: 6px; }
+    .book-weekday { font-size: 1.25em; }
+  }
+
   /* ── Weekly Food Log (Data & History) navigation header ── */
   .food-log-header {
     display: flex;
@@ -3316,6 +3467,7 @@
       <button type="button" class="report-seg-btn" data-period="last30" onclick="selectReportPeriod('last30')">Last 30 Days</button>
       <button type="button" class="report-seg-btn" data-period="month" onclick="selectReportPeriod('month')">Month</button>
       <button type="button" class="report-seg-btn" data-period="year"  onclick="selectReportPeriod('year')">Year</button>
+      <button type="button" class="report-seg-btn" data-period="reflections" onclick="selectReportPeriod('reflections')">Reflections</button>
     </div>
 
     <!-- Day: native date picker -->
@@ -3349,6 +3501,23 @@
     <!-- Last 30 days info -->
     <div id="reportLast30Row" class="report-ctrl-row" style="display:none;">
       <span class="report-ctrl-label" id="reportLast30Label" style="font-size:0.9em; color:var(--soft);"></span>
+    </div>
+
+    <!-- Reflections book navigator -->
+    <div id="reportReflRow" class="report-ctrl-row" style="display:none;">
+      <span class="report-ctrl-label">Entry</span>
+      <div class="refl-book-ctrl">
+        <div class="report-year-nav">
+          <button type="button" onclick="shiftReflectionPage(-1)" title="Previous day (←)">‹</button>
+          <span id="reflectionPageLabel">—</span>
+          <button type="button" onclick="shiftReflectionPage(1)" title="Next day (→)">›</button>
+        </div>
+        <input type="date" id="reflectionDay" onchange="jumpReflectionDay(this.value)" style="max-width:180px;">
+        <label class="refl-book-filter">
+          <input type="checkbox" id="reflStarredOnly" onchange="toggleReflStarredOnly()">
+          <span>★ starred only</span>
+        </label>
+      </div>
     </div>
   </div>
   <div id="reportContent"></div>
@@ -6552,7 +6721,9 @@ function initReportSelectors() {
     period: 'month',
     year:   now.getFullYear(),
     month:  now.getMonth(),        // 0–11
-    weekIdx: defaultWeekIdx(now.getFullYear(), now.getMonth())
+    weekIdx: defaultWeekIdx(now.getFullYear(), now.getMonth()),
+    reflDate: null,                // Reflections book — current page (ISO date)
+    reflStarredOnly: false
   };
   renderReportControls();
 }
@@ -6567,6 +6738,7 @@ function defaultWeekIdx(year, month) {
 function selectReportPeriod(p) {
   reportState.period = p;
   if (p === 'week') reportState.weekIdx = defaultWeekIdx(reportState.year, reportState.month);
+  if (p === 'reflections') ensureReflectionPage();
   renderReportControls();
   renderReport();
 }
@@ -6604,6 +6776,7 @@ function renderReportControls() {
   show('reportMonthRow', p === 'week' || p === 'month');
   show('reportWeekRow',  p === 'week');
   show('reportLast30Row', p === 'last30');
+  show('reportReflRow',  p === 'reflections');
 
   // Year label
   const yl = document.getElementById('reportYearLabel');
@@ -6636,6 +6809,9 @@ function renderReportControls() {
     const lbl = document.getElementById('reportLast30Label');
     if (lbl) lbl.textContent = isoDate(startD) + '  →  ' + isoDate(endD);
   }
+
+  // Reflections book navigator
+  if (p === 'reflections') updateReflectionControls();
 }
 
 function formatShortDateRange(start, end) {
@@ -6656,6 +6832,7 @@ function renderReport() {
   if (period === 'last30') return renderLast30DaysReport(c);
   if (period === 'month')  return renderMonthReport(c);
   if (period === 'year')   return renderYearReport(c);
+  if (period === 'reflections') return renderReflectionsBookReport(c);
 }
 
 function renderDayReport(c) {
@@ -8149,6 +8326,200 @@ function renderLast30ReflectionsHtml(dayResults, allEntries) {
   html += '</div>';
   return html;
 }
+
+/* ==========================================================================
+   REFLECTIONS — book view (one day per page, ← / → to turn)
+   ========================================================================== */
+
+// Checkbox-style reflections from the daily entry — shown as chips on the page
+const REFLECTION_FLAGS = [
+  { key: 'specialEvent', textKey: 'specialEventText', emoji: '⭐', title: 'Special day' },
+  { key: 'outsideFood',  textKey: 'outsideFoodText',  emoji: '🍔', title: 'Outside food' },
+  { key: 'unwell',       textKey: 'unwellText',       emoji: '🤒', title: 'Unwell / tired' },
+  { key: 'nsfwSlip',     textKey: 'nsfwSlipText',     emoji: '🚫', title: 'NSFW slip' },
+];
+
+const DAY_NAMES_LONG = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+// Direction of the last page turn, for the flip animation
+let _reflTurnDir = 1;
+
+// Does this entry hold anything the Reflection section captured?
+function hasReflectionContent(e) {
+  if (!e) return false;
+  if (REFLECTION_SECTIONS.some(s => getReflectionText(e, s).trim())) return true;
+  return REFLECTION_FLAGS.some(f => e[f.key]);
+}
+
+// Every date with reflection content, oldest → newest. The book's pages.
+function getReflectionPages() {
+  const all = getAllEntries();
+  const starredOnly = reportState && reportState.reflStarredOnly;
+  return Object.keys(all)
+    .filter(date => {
+      if (!hasReflectionContent(all[date])) return false;
+      if (!starredOnly) return true;
+      return REFLECTION_SECTIONS.some(s =>
+        isReflectionHighlighted(date, s.key) && getReflectionText(all[date], s).trim());
+    })
+    .sort();
+}
+
+// Keep reportState.reflDate pointing at a real page (defaults to the newest)
+function ensureReflectionPage() {
+  const pages = getReflectionPages();
+  if (pages.length === 0) { reportState.reflDate = null; return pages; }
+  if (!reportState.reflDate || pages.indexOf(reportState.reflDate) === -1) {
+    // Land on the page nearest the one we were on, else the most recent
+    const want = reportState.reflDate;
+    reportState.reflDate = want
+      ? (pages.filter(d => d <= want).pop() || pages[0])
+      : pages[pages.length - 1];
+  }
+  return pages;
+}
+
+function updateReflectionControls() {
+  const pages = getReflectionPages();
+  const idx = pages.indexOf(reportState.reflDate);
+  const lbl = document.getElementById('reflectionPageLabel');
+  if (lbl) lbl.textContent = pages.length ? ('Page ' + (idx + 1) + ' of ' + pages.length) : 'No entries';
+  const di = document.getElementById('reflectionDay');
+  if (di) di.value = reportState.reflDate || '';
+  const so = document.getElementById('reflStarredOnly');
+  if (so) so.checked = !!reportState.reflStarredOnly;
+}
+
+function shiftReflectionPage(delta) {
+  const pages = ensureReflectionPage();
+  if (pages.length === 0) return;
+  const idx = pages.indexOf(reportState.reflDate);
+  const next = idx + delta;
+  if (next < 0 || next >= pages.length) return;
+  _reflTurnDir = delta;
+  reportState.reflDate = pages[next];
+  updateReflectionControls();
+  renderReport();
+}
+
+// Jump from the date picker — snaps to the nearest page on or before that date
+function jumpReflectionDay(dateStr) {
+  const pages = getReflectionPages();
+  if (pages.length === 0) return;
+  if (dateStr) {
+    _reflTurnDir = (reportState.reflDate && dateStr < reportState.reflDate) ? -1 : 1;
+    reportState.reflDate = pages.indexOf(dateStr) !== -1
+      ? dateStr
+      : (pages.filter(d => d <= dateStr).pop() || pages[0]);
+  }
+  updateReflectionControls();
+  renderReport();
+}
+
+function toggleReflStarredOnly() {
+  const so = document.getElementById('reflStarredOnly');
+  reportState.reflStarredOnly = !!(so && so.checked);
+  ensureReflectionPage();
+  updateReflectionControls();
+  renderReport();
+}
+
+function formatBookDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return { weekday: DAY_NAMES_LONG[d.getDay()],
+           full: d.getDate() + ' ' + MONTH_NAMES_FULL[d.getMonth()] + ' ' + d.getFullYear() };
+}
+
+function renderReflectionsBookReport(c) {
+  const pages = ensureReflectionPage();
+  updateReflectionControls();
+
+  if (pages.length === 0) {
+    c.innerHTML = '<div class="card"><h2>📖 Reflections</h2><div class="book-empty">'
+      + (reportState.reflStarredOnly
+          ? 'No starred reflections yet — tap the ☆ next to any reflection to mark it.'
+          : 'Nothing written yet. Fill in the Reflection section on the Today tab and it will show up here.')
+      + '</div></div>';
+    return;
+  }
+
+  const date  = reportState.reflDate;
+  const idx   = pages.indexOf(date);
+  const entry = getAllEntries()[date] || {};
+  const { weekday, full } = formatBookDate(date);
+
+  let html = '<div class="card">';
+  html += '<h2 style="margin-top:0;">📖 Reflections</h2>';
+  html += '<div class="book-stage">';
+
+  html += '<button type="button" class="book-arrow" onclick="shiftReflectionPage(-1)" title="Previous day (←)"'
+        + (idx === 0 ? ' disabled' : '') + '>‹</button>';
+
+  html += '<div class="book-page' + (_reflTurnDir < 0 ? ' turn-back' : '') + '">';
+
+  // Page header — the date, written out
+  html += '<div class="book-head">';
+  html += '<div class="book-weekday">' + weekday + '</div>';
+  html += '<div class="book-fulldate">' + full + '</div>';
+  const flags = REFLECTION_FLAGS.filter(f => entry[f.key]);
+  if (flags.length) {
+    html += '<div class="book-flags">';
+    flags.forEach(f => {
+      const note = (entry[f.textKey] || '').trim();
+      html += '<span class="book-flag">' + f.emoji + ' ' + f.title
+            + (note ? ' — ' + esc(note) : '') + '</span>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // The reflections themselves, each star-markable
+  let wrote = false;
+  REFLECTION_SECTIONS.forEach(sec => {
+    const text = getReflectionText(entry, sec).trim();
+    if (!text) return;
+    const hl = isReflectionHighlighted(date, sec.key);
+    if (reportState.reflStarredOnly && !hl) return;
+    wrote = true;
+    html += '<div class="book-sec' + (hl ? ' starred' : '') + '">';
+    html += '<div class="book-sec-head">';
+    html += '<span class="book-sec-title">' + sec.emoji + ' ' + sec.title + '</span>';
+    html += '<button type="button" class="refl-star' + (hl ? ' active' : '') + '" '
+          + 'onclick="toggleReflectionHighlight(\'' + date + '\',\'' + sec.key + '\')" '
+          + 'title="' + (hl ? 'Starred — tap to remove' : 'Star this reflection') + '">'
+          + (hl ? '★' : '☆') + '</button>';
+    html += '</div>';
+    html += '<div class="book-sec-text">' + esc(text) + '</div>';
+    html += '</div>';
+  });
+  if (!wrote) html += '<div class="book-empty">Nothing written on this day.</div>';
+
+  html += '<div class="book-folio">' + (idx + 1) + ' / ' + pages.length + ' · ' + date + '</div>';
+  html += '</div>';
+
+  html += '<button type="button" class="book-arrow" onclick="shiftReflectionPage(1)" title="Next day (→)"'
+        + (idx === pages.length - 1 ? ' disabled' : '') + '>›</button>';
+
+  html += '</div>';
+  html += '<p class="book-hint">Use ← / → to turn the page · tap ☆ to star a reflection'
+        + ' (starred ones also show in the Monthly report)</p>';
+  html += '</div>';
+
+  c.innerHTML = html;
+}
+
+// ← / → turn pages while the Reflections report is open
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+  if (!reportState || reportState.period !== 'reflections') return;
+  const panel = document.getElementById('reports');
+  if (!panel || !panel.classList.contains('active')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  e.preventDefault();
+  shiftReflectionPage(e.key === 'ArrowLeft' ? -1 : 1);
+});
 
 function renderYearReport(c) {
   const year = reportState.year;
