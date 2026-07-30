@@ -3163,10 +3163,92 @@
     transition: opacity 0.4s;
   }
   .fin-savemsg.show { opacity: 1; }
+
+  /* ── Financial Goals (class ladder) ── */
+  .fin-goals-intro {
+    color: var(--soft);
+    font-size: 0.9em;
+    margin: 4px 0 14px;
+  }
+  .fin-salary-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .fin-salary-row label {
+    font-size: 0.9em;
+    color: var(--soft);
+    font-weight: 600;
+  }
+  .fin-salary-input {
+    width: 160px;
+    padding: 8px 10px;
+    text-align: right;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--card);
+    font-family: inherit;
+    font-size: 1em;
+    color: inherit;
+  }
+  .fin-salary-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+  .fin-goals-result { margin-top: 16px; }
+  .fin-ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .fin-ladder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .fin-ladder-name { font-weight: 600; }
+  .fin-ladder-range { font-size: 0.82em; color: var(--soft); white-space: nowrap; }
+  .fin-ladder-item.current {
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .fin-ladder-item.current .fin-ladder-name { color: var(--accent); }
+  .fin-ladder-item.goal {
+    border-color: var(--good);
+    border-style: dashed;
+    border-width: 2px;
+  }
+  .fin-ladder-item.goal .fin-ladder-name { color: var(--good); }
+  .fin-ladder-badge {
+    font-size: 0.66em;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 11px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .fin-ladder-badge.current { background: var(--accent); }
+  .fin-ladder-badge.goal { background: var(--good); }
+  .fin-ladder-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   @media (max-width: 700px) {
     .fin-num-input { width: 80px; font-size: 0.88em; }
     .fin-cat-cell { min-width: 130px; }
     .fin-table th, .fin-table td { padding: 6px 4px; }
+    .fin-salary-input { width: 130px; }
+    .fin-ladder-item { padding: 9px 11px; }
+    .fin-ladder-range { font-size: 0.76em; }
   }
 
   /* ── "Don't miss twice" banner ── */
@@ -3376,6 +3458,9 @@
 
   <!-- Birthday reminders — rendered dynamically -->
   <div id="birthdayRemindersCard"></div>
+
+  <!-- Upcoming special events/days — rendered dynamically -->
+  <div id="upcomingEventsCard"></div>
 
   <!-- Today's Medicines — rendered dynamically when medicines are active -->
   <div id="todayMedicinesCard"></div>
@@ -3721,6 +3806,8 @@
     <h2>A Good Year</h2>
     <ul>
       <li>One Full Complete Month Bramhacharya</li>
+      <li>One Hike in the Himalayas</li>
+      <li>One Vacation Tour in India or Outside</li>
     </ul>
   </div>
 
@@ -4406,6 +4493,7 @@ function init() {
   initReportSelectors();
   renderTodayMedicines(todayISO());
   renderBirthdayReminders(todayISO());
+  renderUpcomingEvents(todayISO());
   renderMission30();
   renderDietPlan();
   refreshSocialCircleDatalist();
@@ -5836,6 +5924,7 @@ function writeForm(entry) {
   });
   renderTodayMedicines(_dateVal);
   renderBirthdayReminders(_dateVal);
+  renderUpcomingEvents(_dateVal);
   renderNeverMissTwice(_dateVal);
 
   // Weekly-shared fields (e.g. weekShabad): editable on Monday, read-only & filled
@@ -10415,6 +10504,70 @@ function renderBirthdayReminders(dateStr) {
   el.innerHTML = html;
 }
 
+function formatEventDate(dateStr) {
+  // dateStr = "YYYY-MM-DD"
+  if (!dateStr || !dateStr.includes('-')) return '';
+  const [, mm, dd] = dateStr.split('-').map(Number);
+  if (!mm || !dd) return '';
+  return dd + ' ' + (MONTH_SHORT[mm - 1] || '');
+}
+
+function renderUpcomingEvents(dateStr) {
+  const el = document.getElementById('upcomingEventsCard');
+  if (!el) return;
+  const data = getCalendarData();
+  const base = new Date((dateStr || todayISO()) + 'T00:00:00');
+
+  const WINDOW_DAYS = 15;
+  const events = [];
+
+  // Special events
+  (data.specialEvents || []).forEach(e => {
+    if (!e.date) return;
+    const when = new Date(e.date + 'T00:00:00');
+    if (isNaN(when)) return;
+    const diff = Math.round((when - base) / 86400000);
+    if (diff >= 0 && diff <= WINDOW_DAYS) {
+      events.push({ diff, date: e.date, name: e.name || 'Special event', kind: 'special' });
+    }
+  });
+
+  // Holidays
+  (data.holidays || []).forEach(h => {
+    if (!h.date) return;
+    const when = new Date(h.date + 'T00:00:00');
+    if (isNaN(when)) return;
+    const diff = Math.round((when - base) / 86400000);
+    if (diff >= 0 && diff <= WINDOW_DAYS) {
+      events.push({ diff, date: h.date, name: h.name || 'Holiday', kind: h.gazetted ? 'gazetted' : 'holiday' });
+    }
+  });
+
+  if (events.length === 0) { el.innerHTML = ''; return; }
+
+  // Sort: soonest first, then special events before holidays on the same day
+  events.sort((a, b) => a.diff - b.diff || (a.kind === 'special' ? -1 : 1));
+
+  let html = '<div class="card" style="border-left:3px solid var(--accent); padding-bottom:16px;">';
+  html += '<h2 style="margin-bottom:10px;">🗓 Upcoming Events</h2>';
+
+  events.forEach(({ diff, date, name, kind }) => {
+    const isToday = diff === 0;
+    const cls = isToday ? 'bday-r-today' : 'bday-r-soon';
+    const icon = kind === 'special' ? '⭐' : kind === 'gazetted' ? '🏛' : '🎉';
+    html += '<div class="bday-reminder-row ' + cls + '">';
+    html += '<span>' + icon + '</span>';
+    html += '<span class="bday-reminder-name">' + (isToday ? '🎉 Today! ' : '') + esc(name) + '</span>';
+    if (kind === 'gazetted') html += '<span class="cal-gazetted-badge">Gazetted</span>';
+    if (!isToday) html += '<span style="color:var(--soft); font-size:0.92em;">in ' + diff + ' day' + (diff === 1 ? '' : 's') + '</span>';
+    html += '<span class="bday-reminder-date">' + formatEventDate(date) + '</span>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderPersonRow(p) {
   const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
   let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '" data-notes="' + esc((p.notes || '').toLowerCase()) + '">';
@@ -10691,10 +10844,42 @@ const DEFAULT_FINANCE_CATEGORIES = [
   { id: 'others',       label: 'Others' }
 ];
 
+// --- Financial class ladder (based on mean family salary, ₹/month) ---
+const FINANCE_CLASS_TIERS = [
+  { name: 'Poor Class',         min: 0 },
+  { name: 'Lower Middle Class', min: 25000 },
+  { name: 'Middle Class',       min: 40000 },
+  { name: 'Upper Middle Class', min: 65000 },
+  { name: 'Lower Rich Class',   min: 100000 },
+  { name: 'Middle Rich Class',  min: 170000 },
+  { name: 'Upper Rich Class',   min: 300000 }
+];
+
+// Index of the tier the given salary falls into (highest tier whose min it meets).
+// Returns -1 when no valid salary has been entered.
+function _finClassifySalary(salary) {
+  if (typeof salary !== 'number' || isNaN(salary) || salary <= 0) return -1;
+  let idx = 0;
+  for (let i = 0; i < FINANCE_CLASS_TIERS.length; i++) {
+    if (salary >= FINANCE_CLASS_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+// Human-readable salary range for a tier row.
+function _finTierRange(i) {
+  const t = FINANCE_CLASS_TIERS[i];
+  const next = FINANCE_CLASS_TIERS[i + 1];
+  if (i === 0) return 'Below ' + _finFormatINR(FINANCE_CLASS_TIERS[1].min);
+  if (!next)   return _finFormatINR(t.min) + ' & above';
+  return _finFormatINR(t.min) + ' – ' + _finFormatINR(next.min - 1);
+}
+
 // --- Storage ---
 // {
 //   categories: [{ id, label, hint, budget }, ...],
-//   actuals:    { "YYYY-MM": { catId: { actual, remarks } } }
+//   actuals:    { "YYYY-MM": { catId: { actual, remarks } } },
+//   meanSalary: <number | null>   // mean family salary, ₹/month
 // }
 function getFinanceData() {
   try {
@@ -10707,11 +10892,13 @@ function getFinanceData() {
       }
     });
     if (!raw.actuals) raw.actuals = {};
+    if (raw.meanSalary === undefined) raw.meanSalary = null;
     return raw;
   } catch (e) {
     return {
       categories: DEFAULT_FINANCE_CATEGORIES.map(c => ({ ...c, budget: 0 })),
-      actuals: {}
+      actuals: {},
+      meanSalary: null
     };
   }
 }
@@ -10829,7 +11016,98 @@ function renderFinancialTab() {
   html += '</tbody></table></div>';
   html += '</div>';
 
+  // Financial Goals card (collapsible)
+  html += _finGoalsCardHTML(data);
+
   el.innerHTML = html;
+}
+
+// --- Financial Goals card ---
+function _finGoalsCardHTML(data) {
+  const salary = (typeof data.meanSalary === 'number' && !isNaN(data.meanSalary)) ? data.meanSalary : null;
+  let h = '';
+  h += '<div class="card">';
+  h += '<button class="collapsible-toggle" id="finGoalsToggle" onclick="toggleSection(\'finGoalsBody\',\'finGoalsToggle\')" aria-expanded="true">';
+  h += '<span>🎯 Financial Goals</span>';
+  h += '<span class="collapsible-icon" style="transform:rotate(90deg);">▸</span>';
+  h += '</button>';
+  h += '<div id="finGoalsBody" class="collapsible-body">';
+  h += '<p class="fin-goals-intro">Enter your family\'s <strong>mean monthly salary</strong> to see which economic class you\'re in. Your <strong>Financial Goal</strong> is the next class up the ladder.</p>';
+  h += '<div class="fin-salary-row">';
+  h += '<label for="finMeanSalary">Mean Family Salary (₹/month):</label>';
+  h += '<input type="number" min="0" step="1000" class="fin-salary-input" id="finMeanSalary" '
+     + 'value="' + (salary !== null ? salary : '') + '" '
+     + 'placeholder="e.g. 50000" '
+     + 'oninput="finUpdateMeanSalary(this.value)">';
+  h += '</div>';
+  h += '<div id="finSalarySaveMsg" class="fin-savemsg">✓ Saved</div>';
+  h += '<div id="finGoalsResult" class="fin-goals-result">' + _finGoalsResultHTML(salary) + '</div>';
+  h += '</div>'; // body
+  h += '</div>'; // card
+  return h;
+}
+
+// Inner content of the goals card (summary + ladder). Re-rendered live on input.
+function _finGoalsResultHTML(salary) {
+  const curIdx  = _finClassifySalary(salary);
+  const nextIdx = (curIdx >= 0 && curIdx < FINANCE_CLASS_TIERS.length - 1) ? curIdx + 1 : -1;
+
+  let h = '';
+
+  // Summary boxes: Current Class + Financial Goal
+  h += '<div class="fin-summary-grid">';
+  h += '<div class="fin-summary-box"><div class="fin-summary-num">'
+     + (curIdx >= 0 ? esc(FINANCE_CLASS_TIERS[curIdx].name) : '—')
+     + '</div><div class="fin-summary-label">Current Class</div></div>';
+  h += '<div class="fin-summary-box"><div class="fin-summary-num under">'
+     + (nextIdx >= 0 ? esc(FINANCE_CLASS_TIERS[nextIdx].name)
+                     : (curIdx >= 0 ? '🏆 Top Class' : '—'))
+     + '</div><div class="fin-summary-label">Financial Goal</div></div>';
+  h += '</div>';
+
+  if (nextIdx >= 0) {
+    const gap = FINANCE_CLASS_TIERS[nextIdx].min - salary;
+    h += '<p class="fin-goals-intro" style="margin:12px 0 0;">You are <strong>' + _finFormatINR(gap)
+       + '</strong> away from becoming <strong>' + esc(FINANCE_CLASS_TIERS[nextIdx].name) + '</strong>.</p>';
+  } else if (curIdx >= 0) {
+    h += '<p class="fin-goals-intro" style="margin:12px 0 0;">You\'ve reached the top of the ladder — <strong>'
+       + esc(FINANCE_CLASS_TIERS[curIdx].name) + '</strong>. 🎉</p>';
+  }
+
+  // The full ladder
+  h += '<div class="fin-ladder">';
+  FINANCE_CLASS_TIERS.forEach((t, i) => {
+    let cls = 'fin-ladder-item';
+    let badge = '';
+    if (i === curIdx)  { cls += ' current'; badge = '<span class="fin-ladder-badge current">You are here</span>'; }
+    else if (i === nextIdx) { cls += ' goal'; badge = '<span class="fin-ladder-badge goal">Goal</span>'; }
+    h += '<div class="' + cls + '">';
+    h += '<div class="fin-ladder-left"><span class="fin-ladder-name">' + esc(t.name) + '</span>' + badge + '</div>';
+    h += '<span class="fin-ladder-range">' + _finTierRange(i) + '</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+
+  return h;
+}
+
+// --- Mean salary update handler ---
+let _finSalarySaveTimer = null;
+function finUpdateMeanSalary(value) {
+  const data = getFinanceData();
+  const trimmed = String(value).trim();
+  data.meanSalary = trimmed === '' ? null : (Number(value) || 0);
+  setFinanceData(data);
+  // Show saved indicator
+  const msg = document.getElementById('finSalarySaveMsg');
+  if (msg) {
+    msg.classList.add('show');
+    clearTimeout(_finSalarySaveTimer);
+    _finSalarySaveTimer = setTimeout(() => { msg.classList.remove('show'); }, 2000);
+  }
+  // Live-update the classification without rebuilding the input (keeps focus)
+  const result = document.getElementById('finGoalsResult');
+  if (result) result.innerHTML = _finGoalsResultHTML(data.meanSalary);
 }
 
 // --- Month navigation ---
@@ -11233,6 +11511,7 @@ function renderSpecialEventsList() {
     html += '<span class="cal-event-name">' + esc(s.name || '(unnamed event)') + '</span>';
     html += '<span class="cal-event-date">' + s.date + '</span>';
     html += '</div>';
+    html += '<button style="font-size:0.78em; padding:3px 8px;" onclick="editSpecialEvent(\'' + s.id + '\')">Edit</button>';
     html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteSpecialEvent(\'' + s.id + '\')">Remove</button>';
     html += '</div>';
   });
@@ -11263,6 +11542,34 @@ function addSpecialEvent() {
     const chk = document.getElementById('specialEventChk');
     const txt = document.getElementById('specialEventText');
     if (chk && txt) { chk.checked = true; txt.value = name; txt.style.display = ''; }
+  }
+}
+function editSpecialEvent(id) {
+  const data = getCalendarData();
+  const ev = data.specialEvents.find(e => e.id === id);
+  if (!ev) return;
+  const name = prompt('Update the special event name:', ev.name || '');
+  if (name === null) return; // cancelled
+  const trimmed = name.trim();
+  if (!trimmed) { alert('Please enter a name for the special event.'); return; }
+  if (trimmed === (ev.name || '')) return; // unchanged
+  ev.name = trimmed;
+  setCalendarData(data);
+  // Keep that day's saved entry in step, so the sync stays two-way.
+  const all = getAllEntries();
+  if (all[ev.date]) {
+    all[ev.date].specialEvent = true;
+    all[ev.date].specialEventText = trimmed;
+    setAllEntries(all);
+  }
+  renderSpecialEventsList();
+  renderCalMiniGrid();
+  // If the currently-open Daily Entry is this date, refresh its fields live.
+  const openDate = document.getElementById('entryDate');
+  if (openDate && openDate.value === ev.date) {
+    const chk = document.getElementById('specialEventChk');
+    const txt = document.getElementById('specialEventText');
+    if (chk && txt) { chk.checked = true; txt.value = trimmed; txt.style.display = ''; }
   }
 }
 function deleteSpecialEvent(id) {
