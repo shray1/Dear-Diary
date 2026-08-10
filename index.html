@@ -957,6 +957,154 @@
   }
   .food-log-range .flr-current { color: var(--good); font-weight: normal; font-style: italic; }
 
+  /* ── Body Weights & Measurements ── */
+  .bm-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 4px 0 20px;
+  }
+  .bm-field { display: flex; flex-direction: column; gap: 4px; }
+  .bm-field label {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .bm-field.bm-type   { flex: 1 1 180px; }
+  .bm-field.bm-value  { flex: 0 1 150px; }
+  .bm-field.bm-date   { flex: 0 1 170px; }
+  .bm-value-wrap { position: relative; display: flex; align-items: center; }
+  .bm-value-wrap input { padding-right: 42px; }
+  .bm-value-unit {
+    position: absolute;
+    right: 12px;
+    color: var(--soft);
+    font-size: 0.9em;
+    font-style: italic;
+    pointer-events: none;
+  }
+  .bm-add-btn {
+    flex: 0 0 auto;
+    padding: 10px 20px;
+    font-size: 0.95em;
+    white-space: nowrap;
+  }
+  .bm-type-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .bm-type-tab {
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--card);
+    color: var(--soft);
+    font-family: inherit;
+    font-size: 0.85em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bm-type-tab:hover { border-color: var(--accent-soft); }
+  .bm-type-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: bold;
+  }
+  .bm-type-tab .bm-tab-count {
+    opacity: 0.7;
+    font-size: 0.9em;
+    margin-left: 4px;
+  }
+  .bm-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+  .bm-stat {
+    flex: 1 1 120px;
+    min-width: 110px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .bm-stat-val { font-size: 1.5em; font-weight: bold; color: var(--ink); line-height: 1.2; }
+  .bm-stat-val .bm-stat-unit { font-size: 0.55em; color: var(--soft); font-weight: normal; margin-left: 2px; }
+  .bm-stat-label {
+    font-size: 0.72em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--soft);
+    margin-top: 4px;
+  }
+  .bm-delta-up   { color: var(--warn); }
+  .bm-delta-down { color: var(--good); }
+  .bm-delta-flat { color: var(--soft); }
+  .bm-chart-wrap {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 12px 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .bm-chart-wrap svg { display: block; max-width: 100%; }
+  .bm-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .bm-table { border-collapse: collapse; width: 100%; }
+  .bm-table th, .bm-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 0.92em;
+  }
+  .bm-table thead th {
+    background: var(--bg);
+    font-size: 0.72em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .bm-table tbody tr:last-child td { border-bottom: none; }
+  .bm-table .bm-td-val { font-weight: bold; }
+  .bm-table .bm-td-num { color: var(--soft); font-size: 0.85em; white-space: nowrap; }
+  .bm-del-btn {
+    background: none;
+    border: none;
+    color: var(--soft);
+    cursor: pointer;
+    font-size: 1em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+  .bm-del-btn:hover { color: #c0392b; background: #fdecea; }
+  .bm-empty {
+    text-align: center;
+    color: var(--soft);
+    font-style: italic;
+    padding: 22px 10px;
+  }
+  @media (max-width: 600px) {
+    .bm-add-form { gap: 10px; }
+    .bm-field.bm-type, .bm-field.bm-value, .bm-field.bm-date { flex: 1 1 100%; }
+    .bm-add-btn { flex: 1 1 100%; }
+  }
+
   /* ── Diet Plan editable table ── */
   .diet-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 8px; }
   .diet-table { border-collapse: collapse; width: 100%; min-width: 760px; }
@@ -3017,10 +3165,92 @@
     transition: opacity 0.4s;
   }
   .fin-savemsg.show { opacity: 1; }
+
+  /* ── Financial Goals (class ladder) ── */
+  .fin-goals-intro {
+    color: var(--soft);
+    font-size: 0.9em;
+    margin: 4px 0 14px;
+  }
+  .fin-salary-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .fin-salary-row label {
+    font-size: 0.9em;
+    color: var(--soft);
+    font-weight: 600;
+  }
+  .fin-salary-input {
+    width: 160px;
+    padding: 8px 10px;
+    text-align: right;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--card);
+    font-family: inherit;
+    font-size: 1em;
+    color: inherit;
+  }
+  .fin-salary-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg);
+  }
+  .fin-goals-result { margin-top: 16px; }
+  .fin-ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .fin-ladder-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .fin-ladder-name { font-weight: 600; }
+  .fin-ladder-range { font-size: 0.82em; color: var(--soft); white-space: nowrap; }
+  .fin-ladder-item.current {
+    border-color: var(--accent);
+    background: var(--card);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .fin-ladder-item.current .fin-ladder-name { color: var(--accent); }
+  .fin-ladder-item.goal {
+    border-color: var(--good);
+    border-style: dashed;
+    border-width: 2px;
+  }
+  .fin-ladder-item.goal .fin-ladder-name { color: var(--good); }
+  .fin-ladder-badge {
+    font-size: 0.66em;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 11px;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .fin-ladder-badge.current { background: var(--accent); }
+  .fin-ladder-badge.goal { background: var(--good); }
+  .fin-ladder-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
   @media (max-width: 700px) {
     .fin-num-input { width: 80px; font-size: 0.88em; }
     .fin-cat-cell { min-width: 130px; }
     .fin-table th, .fin-table td { padding: 6px 4px; }
+    .fin-salary-input { width: 130px; }
+    .fin-ladder-item { padding: 9px 11px; }
+    .fin-ladder-range { font-size: 0.76em; }
   }
 
   /* ── "Don't miss twice" banner ── */
@@ -3230,6 +3460,9 @@
 
   <!-- Birthday reminders — rendered dynamically -->
   <div id="birthdayRemindersCard"></div>
+
+  <!-- Upcoming special events/days — rendered dynamically -->
+  <div id="upcomingEventsCard"></div>
 
   <!-- Today's Medicines — rendered dynamically when medicines are active -->
   <div id="todayMedicinesCard"></div>
@@ -3575,6 +3808,8 @@
     <h2>A Good Year</h2>
     <ul>
       <li>One Full Complete Month Bramhacharya</li>
+      <li>One Hike in the Himalayas</li>
+      <li>One Vacation Tour in India or Outside</li>
     </ul>
   </div>
 
@@ -3759,6 +3994,9 @@
 
   <!-- Weekly Food Log (navigable) -->
   <div id="foodLogSection"></div>
+
+  <!-- Body Weights & Measurements -->
+  <div id="bodyMeasurementsSection"></div>
 
   <!-- Entry List -->
   <div class="card">
@@ -4257,6 +4495,7 @@ function init() {
   initReportSelectors();
   renderTodayMedicines(todayISO());
   renderBirthdayReminders(todayISO());
+  renderUpcomingEvents(todayISO());
   renderMission30();
   renderDietPlan();
   refreshSocialCircleDatalist();
@@ -5687,6 +5926,7 @@ function writeForm(entry) {
   });
   renderTodayMedicines(_dateVal);
   renderBirthdayReminders(_dateVal);
+  renderUpcomingEvents(_dateVal);
   renderNeverMissTwice(_dateVal);
 
   // Weekly-shared fields (e.g. weekShabad): editable on Monday, read-only & filled
@@ -7382,6 +7622,222 @@ function downloadFoodLogJSON() {
   URL.revokeObjectURL(url);
 }
 
+/* ── Body Weights & Measurements (Data & History) ── */
+const BODY_MEASUREMENTS_KEY = 'dearDiary_bodyMeasurements_v1';
+const BM_TYPES = [
+  { id: 'bodyWeight', label: 'Body Weight', short: 'Weight', unit: 'kg', emoji: '⚖️' },
+  { id: 'biceps',     label: 'Biceps',      short: 'Biceps', unit: 'cm', emoji: '💪' },
+  { id: 'chest',      label: 'Chest',       short: 'Chest',  unit: 'cm', emoji: '🫁' },
+  { id: 'waist',      label: 'Waist',       short: 'Waist',  unit: 'cm', emoji: '📏' },
+  { id: 'thighs',     label: 'Thighs',      short: 'Thighs', unit: 'cm', emoji: '🦵' }
+];
+const BM_TYPE_MAP = {};
+BM_TYPES.forEach(t => { BM_TYPE_MAP[t.id] = t; });
+let bmActiveType = 'bodyWeight';
+
+function getBodyMeasurements() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(BODY_MEASUREMENTS_KEY));
+    if (Array.isArray(saved)) return saved;
+  } catch (e) { /* ignore */ }
+  return [];
+}
+function setBodyMeasurements(list) {
+  localStorage.setItem(BODY_MEASUREMENTS_KEY, JSON.stringify(list));
+}
+
+function addBodyMeasurement() {
+  const typeSel = document.getElementById('bmTypeSelect');
+  const valInput = document.getElementById('bmValueInput');
+  const dateInput = document.getElementById('bmDateInput');
+  if (!typeSel || !valInput || !dateInput) return;
+  const type = typeSel.value;
+  const value = parseFloat(valInput.value);
+  const date = dateInput.value || isoDate(new Date());
+  if (!BM_TYPE_MAP[type]) { alert('Please choose a measurement type.'); return; }
+  if (isNaN(value) || value <= 0) { alert('Please enter a valid measurement value.'); valInput.focus(); return; }
+
+  const list = getBodyMeasurements();
+  list.push({
+    id: 'bm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    type: type,
+    value: Math.round(value * 100) / 100,
+    date: date,
+    recordedAt: new Date().toISOString()
+  });
+  setBodyMeasurements(list);
+  bmActiveType = type;
+  valInput.value = '';
+  renderBodyMeasurementsSection();
+}
+
+function deleteBodyMeasurement(id) {
+  const list = getBodyMeasurements();
+  const rec = list.find(r => r.id === id);
+  if (!rec) return;
+  const t = BM_TYPE_MAP[rec.type];
+  if (!confirm('Delete this ' + (t ? t.label : 'measurement') + ' entry (' + rec.value + (t ? ' ' + t.unit : '') + ' on ' + rec.date + ')?')) return;
+  setBodyMeasurements(list.filter(r => r.id !== id));
+  renderBodyMeasurementsSection();
+}
+
+function bmFormatDelta(delta, unit) {
+  if (delta === null) return '<span class="bm-delta-flat">—</span>';
+  const rounded = Math.round(delta * 100) / 100;
+  if (rounded === 0) return '<span class="bm-delta-flat">±0 ' + unit + '</span>';
+  const cls = rounded > 0 ? 'bm-delta-up' : 'bm-delta-down';
+  const arrow = rounded > 0 ? '▲' : '▼';
+  return '<span class="' + cls + '">' + arrow + ' ' + Math.abs(rounded) + ' ' + unit + '</span>';
+}
+
+function bmSparklineSvg(records, unit) {
+  // records: chronological (oldest → newest) [{date, value}]
+  if (records.length < 2) return '';
+  const W = 640, H = 150, padL = 44, padR = 16, padT = 14, padB = 26;
+  const vals = records.map(r => r.value);
+  let min = Math.min(...vals), max = Math.max(...vals);
+  if (min === max) { min -= 1; max += 1; }
+  const pad = (max - min) * 0.12;
+  min -= pad; max += pad;
+  const n = records.length;
+  const x = i => padL + (n === 1 ? 0 : (i / (n - 1)) * (W - padL - padR));
+  const y = v => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+
+  let pts = records.map((r, i) => x(i).toFixed(1) + ',' + y(r.value).toFixed(1)).join(' ');
+  // Area fill path
+  const area = 'M' + x(0).toFixed(1) + ',' + (H - padB).toFixed(1)
+    + ' L' + records.map((r, i) => x(i).toFixed(1) + ',' + y(r.value).toFixed(1)).join(' L')
+    + ' L' + x(n - 1).toFixed(1) + ',' + (H - padB).toFixed(1) + ' Z';
+
+  let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" preserveAspectRatio="xMidYMid meet" role="img">';
+  // Gridlines + y labels (min, mid, max)
+  [max, (max + min) / 2, min].forEach(gv => {
+    const gy = y(gv).toFixed(1);
+    svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1"/>';
+    svg += '<text x="' + (padL - 6) + '" y="' + (parseFloat(gy) + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="var(--soft)" font-family="Georgia,serif">' + (Math.round(gv * 10) / 10) + '</text>';
+  });
+  svg += '<path d="' + area + '" fill="var(--accent-soft)" fill-opacity="0.22" stroke="none"/>';
+  svg += '<polyline points="' + pts + '" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>';
+  // Dots + endpoint labels
+  records.forEach((r, i) => {
+    const cx = x(i).toFixed(1), cy = y(r.value).toFixed(1);
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="3.2" fill="var(--accent)"/>';
+  });
+  // First & last date labels on x-axis
+  svg += '<text x="' + x(0).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="start" font-size="10" fill="var(--soft)" font-family="Georgia,serif">' + records[0].date + '</text>';
+  svg += '<text x="' + x(n - 1).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="end" font-size="10" fill="var(--soft)" font-family="Georgia,serif">' + records[n - 1].date + '</text>';
+  svg += '</svg>';
+  return svg;
+}
+
+function renderBodyMeasurementsSection() {
+  const el = document.getElementById('bodyMeasurementsSection');
+  if (!el) return;
+  const all = getBodyMeasurements();
+  if (!BM_TYPE_MAP[bmActiveType]) bmActiveType = 'bodyWeight';
+  const today = isoDate(new Date());
+
+  let html = '<div class="card">';
+  html += '<h2>📏 Body Weights &amp; Measurements</h2>';
+  html += '<p style="color:var(--soft); margin-top:0;">Log your body weight and measurements whenever you like — the date is saved automatically so you can track your progress over time.</p>';
+
+  // ── Add form ──
+  html += '<div class="bm-add-form">';
+  html += '<div class="bm-field bm-type"><label for="bmTypeSelect">Measurement</label>';
+  html += '<select id="bmTypeSelect" onchange="bmUpdateUnitLabel()">';
+  BM_TYPES.forEach(t => {
+    html += '<option value="' + t.id + '"' + (t.id === bmActiveType ? ' selected' : '') + '>' + t.emoji + ' ' + t.label + '</option>';
+  });
+  html += '</select></div>';
+
+  html += '<div class="bm-field bm-value"><label for="bmValueInput">Value</label>';
+  html += '<div class="bm-value-wrap">';
+  html += '<input type="number" id="bmValueInput" step="0.1" min="0" placeholder="0.0" '
+        + 'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addBodyMeasurement();}">';
+  html += '<span class="bm-value-unit" id="bmValueUnit">' + BM_TYPE_MAP[bmActiveType].unit + '</span>';
+  html += '</div></div>';
+
+  html += '<div class="bm-field bm-date"><label for="bmDateInput">Date</label>';
+  html += '<input type="date" id="bmDateInput" value="' + today + '" max="' + today + '"></div>';
+
+  html += '<button class="bm-add-btn" onclick="addBodyMeasurement()">+ Add</button>';
+  html += '</div>';
+
+  // ── Type tabs ──
+  html += '<div class="bm-type-tabs">';
+  BM_TYPES.forEach(t => {
+    const count = all.filter(r => r.type === t.id).length;
+    html += '<button type="button" class="bm-type-tab' + (t.id === bmActiveType ? ' active' : '') + '" '
+          + 'onclick="bmSelectType(\'' + t.id + '\')">' + t.emoji + ' ' + t.short
+          + '<span class="bm-tab-count">(' + count + ')</span></button>';
+  });
+  html += '</div>';
+
+  // ── Selected type detail ──
+  const t = BM_TYPE_MAP[bmActiveType];
+  const records = all.filter(r => r.type === bmActiveType)
+    .slice()
+    .sort((a, b) => a.date === b.date
+      ? (a.recordedAt || '').localeCompare(b.recordedAt || '')
+      : a.date.localeCompare(b.date)); // chronological
+
+  if (!records.length) {
+    html += '<div class="bm-empty">No ' + t.label.toLowerCase() + ' entries yet. Add your first one above.</div>';
+  } else {
+    const values = records.map(r => r.value);
+    const latest = records[records.length - 1];
+    const first = records[0];
+    const prev = records.length >= 2 ? records[records.length - 2] : null;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const deltaPrev = prev ? latest.value - prev.value : null;
+    const deltaFirst = records.length >= 2 ? latest.value - first.value : null;
+
+    // Summary stats
+    html += '<div class="bm-summary">';
+    html += '<div class="bm-stat"><div class="bm-stat-val">' + latest.value + '<span class="bm-stat-unit">' + t.unit + '</span></div><div class="bm-stat-label">Latest &middot; ' + latest.date + '</div></div>';
+    html += '<div class="bm-stat"><div class="bm-stat-val" style="font-size:1.1em;">' + bmFormatDelta(deltaPrev, t.unit) + '</div><div class="bm-stat-label">Since previous</div></div>';
+    html += '<div class="bm-stat"><div class="bm-stat-val" style="font-size:1.1em;">' + bmFormatDelta(deltaFirst, t.unit) + '</div><div class="bm-stat-label">Since first</div></div>';
+    html += '<div class="bm-stat"><div class="bm-stat-val">' + min + '<span class="bm-stat-unit">–</span>' + max + '<span class="bm-stat-unit">' + t.unit + '</span></div><div class="bm-stat-label">Range</div></div>';
+    html += '</div>';
+
+    // Chart
+    const chart = bmSparklineSvg(records, t.unit);
+    if (chart) html += '<div class="bm-chart-wrap">' + chart + '</div>';
+
+    // Table (newest first)
+    html += '<div class="bm-table-wrap"><table class="bm-table">';
+    html += '<thead><tr><th>Date</th><th>' + t.short + '</th><th>Change</th><th></th></tr></thead><tbody>';
+    for (let i = records.length - 1; i >= 0; i--) {
+      const r = records[i];
+      const p = i > 0 ? records[i - 1] : null;
+      const d = p ? r.value - p.value : null;
+      html += '<tr>';
+      html += '<td class="bm-td-num">' + r.date + '</td>';
+      html += '<td class="bm-td-val">' + r.value + ' ' + t.unit + '</td>';
+      html += '<td>' + bmFormatDelta(d, t.unit) + '</td>';
+      html += '<td style="text-align:right;"><button class="bm-del-btn" title="Delete entry" onclick="deleteBodyMeasurement(\'' + r.id + '\')">✕</button></td>';
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function bmSelectType(typeId) {
+  if (!BM_TYPE_MAP[typeId]) return;
+  bmActiveType = typeId;
+  renderBodyMeasurementsSection();
+}
+
+function bmUpdateUnitLabel() {
+  const sel = document.getElementById('bmTypeSelect');
+  const unitEl = document.getElementById('bmValueUnit');
+  if (sel && unitEl && BM_TYPE_MAP[sel.value]) unitEl.textContent = BM_TYPE_MAP[sel.value].unit;
+}
+
 function renderWeekReport(c) {
   const month = reportState.month;
   const year  = reportState.year;
@@ -8921,7 +9377,8 @@ function exportJSON() {
       dietPlan: getDietPlan(),
       reflectionHL: getReflectionHighlights(),
       mindPractices: getMindPractices(),
-      blogs: getBlogs()
+      blogs: getBlogs(),
+      bodyMeasurements: getBodyMeasurements()
     }
   });
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
@@ -8953,6 +9410,7 @@ function importJSON(ev) {
         if (data.__meta.reflectionHL) setReflectionHighlights(data.__meta.reflectionHL);
         if (data.__meta.mindPractices) { setMindPractices(data.__meta.mindPractices); applyMindPractices(); buildMindSlotTable(); }
         if (data.__meta.blogs) setBlogs(data.__meta.blogs);
+        if (data.__meta.bodyMeasurements) setBodyMeasurements(data.__meta.bodyMeasurements);
       }
       // Import diary entries (skip __meta key)
       const entries = Object.assign({}, getAllEntries());
@@ -8961,6 +9419,7 @@ function importJSON(ev) {
       setAllEntries(entries);
       refreshHistoryList();
       loadEntry();
+      if (document.getElementById('bodyMeasurementsSection')) renderBodyMeasurementsSection();
       showMsg('dataMsg', 'Imported ' + count + ' entries.' + (data.__meta ? ' Additional data restored.' : ''), 'success');
     } catch (e) {
       showMsg('dataMsg', 'Import failed: ' + e.message, 'warn');
@@ -8996,7 +9455,7 @@ function showTab(name) {
   });
   document.getElementById(name).classList.add('active');
   if (name === 'reports')   renderReport();
-  if (name === 'data-history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); renderCalendarSection(); renderFoodLogSection(); }
+  if (name === 'data-history')   { graphYear = new Date().getFullYear(); refreshHistoryList(); renderCalendarSection(); renderFoodLogSection(); renderBodyMeasurementsSection(); }
   if (name === 'goals-scoring')  { renderScoringTab(); renderMindManager(); }
   if (name === 'medicines') renderMedicinesTab();
   if (name === 'social')    renderSocialTab();
@@ -10061,6 +10520,70 @@ function renderBirthdayReminders(dateStr) {
   el.innerHTML = html;
 }
 
+function formatEventDate(dateStr) {
+  // dateStr = "YYYY-MM-DD"
+  if (!dateStr || !dateStr.includes('-')) return '';
+  const [, mm, dd] = dateStr.split('-').map(Number);
+  if (!mm || !dd) return '';
+  return dd + ' ' + (MONTH_SHORT[mm - 1] || '');
+}
+
+function renderUpcomingEvents(dateStr) {
+  const el = document.getElementById('upcomingEventsCard');
+  if (!el) return;
+  const data = getCalendarData();
+  const base = new Date((dateStr || todayISO()) + 'T00:00:00');
+
+  const WINDOW_DAYS = 15;
+  const events = [];
+
+  // Special events
+  (data.specialEvents || []).forEach(e => {
+    if (!e.date) return;
+    const when = new Date(e.date + 'T00:00:00');
+    if (isNaN(when)) return;
+    const diff = Math.round((when - base) / 86400000);
+    if (diff >= 0 && diff <= WINDOW_DAYS) {
+      events.push({ diff, date: e.date, name: e.name || 'Special event', kind: 'special' });
+    }
+  });
+
+  // Holidays
+  (data.holidays || []).forEach(h => {
+    if (!h.date) return;
+    const when = new Date(h.date + 'T00:00:00');
+    if (isNaN(when)) return;
+    const diff = Math.round((when - base) / 86400000);
+    if (diff >= 0 && diff <= WINDOW_DAYS) {
+      events.push({ diff, date: h.date, name: h.name || 'Holiday', kind: h.gazetted ? 'gazetted' : 'holiday' });
+    }
+  });
+
+  if (events.length === 0) { el.innerHTML = ''; return; }
+
+  // Sort: soonest first, then special events before holidays on the same day
+  events.sort((a, b) => a.diff - b.diff || (a.kind === 'special' ? -1 : 1));
+
+  let html = '<div class="card" style="border-left:3px solid var(--accent); padding-bottom:16px;">';
+  html += '<h2 style="margin-bottom:10px;">🗓 Upcoming Events</h2>';
+
+  events.forEach(({ diff, date, name, kind }) => {
+    const isToday = diff === 0;
+    const cls = isToday ? 'bday-r-today' : 'bday-r-soon';
+    const icon = kind === 'special' ? '⭐' : kind === 'gazetted' ? '🏛' : '🎉';
+    html += '<div class="bday-reminder-row ' + cls + '">';
+    html += '<span>' + icon + '</span>';
+    html += '<span class="bday-reminder-name">' + (isToday ? '🎉 Today! ' : '') + esc(name) + '</span>';
+    if (kind === 'gazetted') html += '<span class="cal-gazetted-badge">Gazetted</span>';
+    if (!isToday) html += '<span style="color:var(--soft); font-size:0.92em;">in ' + diff + ' day' + (diff === 1 ? '' : 's') + '</span>';
+    html += '<span class="bday-reminder-date">' + formatEventDate(date) + '</span>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
 function renderPersonRow(p) {
   const catInfo = SOCIAL_CATS.find(c => c.id === p.category) || SOCIAL_CATS[3];
   let html = '<div class="person-row" id="prow_' + p.id + '" data-name="' + esc(p.name).toLowerCase() + '" data-notes="' + esc((p.notes || '').toLowerCase()) + '">';
@@ -10337,10 +10860,42 @@ const DEFAULT_FINANCE_CATEGORIES = [
   { id: 'others',       label: 'Others' }
 ];
 
+// --- Financial class ladder (based on mean family salary, ₹/month) ---
+const FINANCE_CLASS_TIERS = [
+  { name: 'Poor Class',         min: 0 },
+  { name: 'Lower Middle Class', min: 25000 },
+  { name: 'Middle Class',       min: 40000 },
+  { name: 'Upper Middle Class', min: 65000 },
+  { name: 'Lower Rich Class',   min: 100000 },
+  { name: 'Middle Rich Class',  min: 170000 },
+  { name: 'Upper Rich Class',   min: 300000 }
+];
+
+// Index of the tier the given salary falls into (highest tier whose min it meets).
+// Returns -1 when no valid salary has been entered.
+function _finClassifySalary(salary) {
+  if (typeof salary !== 'number' || isNaN(salary) || salary <= 0) return -1;
+  let idx = 0;
+  for (let i = 0; i < FINANCE_CLASS_TIERS.length; i++) {
+    if (salary >= FINANCE_CLASS_TIERS[i].min) idx = i;
+  }
+  return idx;
+}
+
+// Human-readable salary range for a tier row.
+function _finTierRange(i) {
+  const t = FINANCE_CLASS_TIERS[i];
+  const next = FINANCE_CLASS_TIERS[i + 1];
+  if (i === 0) return 'Below ' + _finFormatINR(FINANCE_CLASS_TIERS[1].min);
+  if (!next)   return _finFormatINR(t.min) + ' & above';
+  return _finFormatINR(t.min) + ' – ' + _finFormatINR(next.min - 1);
+}
+
 // --- Storage ---
 // {
 //   categories: [{ id, label, hint, budget }, ...],
-//   actuals:    { "YYYY-MM": { catId: { actual, remarks } } }
+//   actuals:    { "YYYY-MM": { catId: { actual, remarks } } },
+//   meanSalary: <number | null>   // mean family salary, ₹/month
 // }
 function getFinanceData() {
   try {
@@ -10353,11 +10908,13 @@ function getFinanceData() {
       }
     });
     if (!raw.actuals) raw.actuals = {};
+    if (raw.meanSalary === undefined) raw.meanSalary = null;
     return raw;
   } catch (e) {
     return {
       categories: DEFAULT_FINANCE_CATEGORIES.map(c => ({ ...c, budget: 0 })),
-      actuals: {}
+      actuals: {},
+      meanSalary: null
     };
   }
 }
@@ -10475,7 +11032,98 @@ function renderFinancialTab() {
   html += '</tbody></table></div>';
   html += '</div>';
 
+  // Financial Goals card (collapsible)
+  html += _finGoalsCardHTML(data);
+
   el.innerHTML = html;
+}
+
+// --- Financial Goals card ---
+function _finGoalsCardHTML(data) {
+  const salary = (typeof data.meanSalary === 'number' && !isNaN(data.meanSalary)) ? data.meanSalary : null;
+  let h = '';
+  h += '<div class="card">';
+  h += '<button class="collapsible-toggle" id="finGoalsToggle" onclick="toggleSection(\'finGoalsBody\',\'finGoalsToggle\')" aria-expanded="true">';
+  h += '<span>🎯 Financial Goals</span>';
+  h += '<span class="collapsible-icon" style="transform:rotate(90deg);">▸</span>';
+  h += '</button>';
+  h += '<div id="finGoalsBody" class="collapsible-body">';
+  h += '<p class="fin-goals-intro">Enter your family\'s <strong>mean monthly salary</strong> to see which economic class you\'re in. Your <strong>Financial Goal</strong> is the next class up the ladder.</p>';
+  h += '<div class="fin-salary-row">';
+  h += '<label for="finMeanSalary">Mean Family Salary (₹/month):</label>';
+  h += '<input type="number" min="0" step="1000" class="fin-salary-input" id="finMeanSalary" '
+     + 'value="' + (salary !== null ? salary : '') + '" '
+     + 'placeholder="e.g. 50000" '
+     + 'oninput="finUpdateMeanSalary(this.value)">';
+  h += '</div>';
+  h += '<div id="finSalarySaveMsg" class="fin-savemsg">✓ Saved</div>';
+  h += '<div id="finGoalsResult" class="fin-goals-result">' + _finGoalsResultHTML(salary) + '</div>';
+  h += '</div>'; // body
+  h += '</div>'; // card
+  return h;
+}
+
+// Inner content of the goals card (summary + ladder). Re-rendered live on input.
+function _finGoalsResultHTML(salary) {
+  const curIdx  = _finClassifySalary(salary);
+  const nextIdx = (curIdx >= 0 && curIdx < FINANCE_CLASS_TIERS.length - 1) ? curIdx + 1 : -1;
+
+  let h = '';
+
+  // Summary boxes: Current Class + Financial Goal
+  h += '<div class="fin-summary-grid">';
+  h += '<div class="fin-summary-box"><div class="fin-summary-num">'
+     + (curIdx >= 0 ? esc(FINANCE_CLASS_TIERS[curIdx].name) : '—')
+     + '</div><div class="fin-summary-label">Current Class</div></div>';
+  h += '<div class="fin-summary-box"><div class="fin-summary-num under">'
+     + (nextIdx >= 0 ? esc(FINANCE_CLASS_TIERS[nextIdx].name)
+                     : (curIdx >= 0 ? '🏆 Top Class' : '—'))
+     + '</div><div class="fin-summary-label">Financial Goal</div></div>';
+  h += '</div>';
+
+  if (nextIdx >= 0) {
+    const gap = FINANCE_CLASS_TIERS[nextIdx].min - salary;
+    h += '<p class="fin-goals-intro" style="margin:12px 0 0;">You are <strong>' + _finFormatINR(gap)
+       + '</strong> away from becoming <strong>' + esc(FINANCE_CLASS_TIERS[nextIdx].name) + '</strong>.</p>';
+  } else if (curIdx >= 0) {
+    h += '<p class="fin-goals-intro" style="margin:12px 0 0;">You\'ve reached the top of the ladder — <strong>'
+       + esc(FINANCE_CLASS_TIERS[curIdx].name) + '</strong>. 🎉</p>';
+  }
+
+  // The full ladder
+  h += '<div class="fin-ladder">';
+  FINANCE_CLASS_TIERS.forEach((t, i) => {
+    let cls = 'fin-ladder-item';
+    let badge = '';
+    if (i === curIdx)  { cls += ' current'; badge = '<span class="fin-ladder-badge current">You are here</span>'; }
+    else if (i === nextIdx) { cls += ' goal'; badge = '<span class="fin-ladder-badge goal">Goal</span>'; }
+    h += '<div class="' + cls + '">';
+    h += '<div class="fin-ladder-left"><span class="fin-ladder-name">' + esc(t.name) + '</span>' + badge + '</div>';
+    h += '<span class="fin-ladder-range">' + _finTierRange(i) + '</span>';
+    h += '</div>';
+  });
+  h += '</div>';
+
+  return h;
+}
+
+// --- Mean salary update handler ---
+let _finSalarySaveTimer = null;
+function finUpdateMeanSalary(value) {
+  const data = getFinanceData();
+  const trimmed = String(value).trim();
+  data.meanSalary = trimmed === '' ? null : (Number(value) || 0);
+  setFinanceData(data);
+  // Show saved indicator
+  const msg = document.getElementById('finSalarySaveMsg');
+  if (msg) {
+    msg.classList.add('show');
+    clearTimeout(_finSalarySaveTimer);
+    _finSalarySaveTimer = setTimeout(() => { msg.classList.remove('show'); }, 2000);
+  }
+  // Live-update the classification without rebuilding the input (keeps focus)
+  const result = document.getElementById('finGoalsResult');
+  if (result) result.innerHTML = _finGoalsResultHTML(data.meanSalary);
 }
 
 // --- Month navigation ---
@@ -10879,6 +11527,7 @@ function renderSpecialEventsList() {
     html += '<span class="cal-event-name">' + esc(s.name || '(unnamed event)') + '</span>';
     html += '<span class="cal-event-date">' + s.date + '</span>';
     html += '</div>';
+    html += '<button style="font-size:0.78em; padding:3px 8px;" onclick="editSpecialEvent(\'' + s.id + '\')">Edit</button>';
     html += '<button class="danger" style="font-size:0.78em; padding:3px 8px;" onclick="deleteSpecialEvent(\'' + s.id + '\')">Remove</button>';
     html += '</div>';
   });
@@ -10909,6 +11558,34 @@ function addSpecialEvent() {
     const chk = document.getElementById('specialEventChk');
     const txt = document.getElementById('specialEventText');
     if (chk && txt) { chk.checked = true; txt.value = name; txt.style.display = ''; }
+  }
+}
+function editSpecialEvent(id) {
+  const data = getCalendarData();
+  const ev = data.specialEvents.find(e => e.id === id);
+  if (!ev) return;
+  const name = prompt('Update the special event name:', ev.name || '');
+  if (name === null) return; // cancelled
+  const trimmed = name.trim();
+  if (!trimmed) { alert('Please enter a name for the special event.'); return; }
+  if (trimmed === (ev.name || '')) return; // unchanged
+  ev.name = trimmed;
+  setCalendarData(data);
+  // Keep that day's saved entry in step, so the sync stays two-way.
+  const all = getAllEntries();
+  if (all[ev.date]) {
+    all[ev.date].specialEvent = true;
+    all[ev.date].specialEventText = trimmed;
+    setAllEntries(all);
+  }
+  renderSpecialEventsList();
+  renderCalMiniGrid();
+  // If the currently-open Daily Entry is this date, refresh its fields live.
+  const openDate = document.getElementById('entryDate');
+  if (openDate && openDate.value === ev.date) {
+    const chk = document.getElementById('specialEventChk');
+    const txt = document.getElementById('specialEventText');
+    if (chk && txt) { chk.checked = true; txt.value = trimmed; txt.style.display = ''; }
   }
 }
 function deleteSpecialEvent(id) {
