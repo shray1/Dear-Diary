@@ -1054,6 +1054,8 @@
   }
   .wtask-carry { font-size: 0.95em; font-weight: bold; }
   .wtask-carry:hover { border-color: var(--accent); color: var(--accent); background: #fdf8f2; transform: translateX(1px); }
+  .wtask-done { font-size: 0.9em; font-weight: bold; }
+  .wtask-done:hover { border-color: var(--good); color: var(--good); background: #eff5ef; }
   .wtask-remove:hover { border-color: var(--warn); color: var(--warn); background: #fdf3ec; }
 
   /* ── Body & Rhythm streak badge ── */
@@ -4092,9 +4094,9 @@ const MONTH_NAMES_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'
 const DAY_NAMES_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
 /* ---------- MISSION 30 ---------- */
-const MISSION_START = '2026-07-11';   // Day 1
-const MISSION_DAYS  = 30;
-const MISSION_TITLE = '🛡 Mission 30 (2)';
+const MISSION_START = '2026-08-10';   // Day 1
+const MISSION_DAYS  = 10;
+const MISSION_TITLE = '🛡 Mission 10/30';
 
 function renderMission30() {
   const el = document.getElementById('mission30');
@@ -7706,7 +7708,7 @@ function renderWeekTasksHtml(dayResults, allEntries, opts) {
       + '</div>';
   };
 
-  // Not-Done row with Carry-Forward + Remove actions
+  // Not-Done row with Mark-Done + Carry-Forward + Remove actions
   const notDoneRow = (item) => {
     const safeId = String(item.goalId).replace(/'/g, "\\'");
     return '<div class="wtask-row">'
@@ -7715,6 +7717,8 @@ function renderWeekTasksHtml(dayResults, allEntries, opts) {
       + '<span class="wtask-meta">'
       +   '<span class="wtask-day">' + esc(item.day) + '</span>'
       +   '<span class="wtask-dur">' + durLabel(item.dur) + '</span>'
+      +   '<button class="wtask-btn wtask-done" title="Mark this task as done" '
+      +     'onclick="markWeekTaskDone(\'' + item.date + '\',\'' + safeId + '\')">✓</button>'
       +   '<button class="wtask-btn wtask-carry" title="Carry forward to the next day" '
       +     'onclick="carryForwardWeekTask(\'' + item.date + '\',\'' + safeId + '\')">→</button>'
       +   '<button class="wtask-btn wtask-remove" title="Remove this task" '
@@ -7794,7 +7798,8 @@ function renderWeekTasksHtml(dayResults, allEntries, opts) {
   } else {
     notDone.forEach(item => { html += notDoneRow(item); });
     html += '<p style="color:var(--soft); font-size:0.8em; margin-top:10px; margin-bottom:0;">'
-          + '<span style="color:var(--accent); font-weight:bold;">→</span> carry a task to the next day &nbsp;·&nbsp; '
+          + '<span style="color:var(--good); font-weight:bold;">✓</span> mark a task done &nbsp;·&nbsp; '
+          + '<span style="color:var(--accent); font-weight:bold;">→</span> carry it to the next day &nbsp;·&nbsp; '
           + '<span style="color:var(--warn); font-weight:bold;">✕</span> remove it</p>';
   }
   html += '</div>';
@@ -7811,6 +7816,17 @@ function removeWeekTask(dateStr, goalId) {
   const entry = all[dateStr];
   if (!entry || !entry.goals) return;
   entry.goals = entry.goals.filter(g => String(g.id) !== String(goalId));
+  setAllEntries(all);
+  afterWeekTaskChange([dateStr]);
+}
+
+function markWeekTaskDone(dateStr, goalId) {
+  const all = getAllEntries();
+  const entry = all[dateStr];
+  if (!entry || !entry.goals) return;
+  const goal = entry.goals.find(g => String(g.id) === String(goalId));
+  if (!goal) return;
+  goal.done = true;
   setAllEntries(all);
   afterWeekTaskChange([dateStr]);
 }
