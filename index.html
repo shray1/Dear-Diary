@@ -3005,6 +3005,18 @@
   }
   .blog-pin-mark { font-size: 0.9em; }
   .blog-item.pinned { background: rgba(139,111,71,0.04); }
+  .blog-archive-search {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .blog-archive-search input { flex: 1; min-width: 0; margin: 0; }
+  .blog-archive-count { font-size: 0.82em; color: var(--soft); white-space: nowrap; }
+  .blog-item.archived .blog-title { color: var(--soft); }
+  .blog-item.archived .blog-title-wrap:hover .blog-title { color: var(--accent); }
+  .blog-archive-mark {
+    font-size: 0.72em; color: var(--soft); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1px 7px; margin-left: 6px; vertical-align: middle;
+  }
+  .blog-search-hit { background: var(--accent-soft); border-radius: 3px; }
 
   /* ── Financial tab ── */
   .fin-month-bar {
@@ -11793,6 +11805,7 @@ function blogGenId() { return 'blog_' + Date.now() + '_' + Math.floor(Math.rando
 
 let _blogEditId = null;
 const _blogExpanded = new Set();
+let _blogArchiveSearch = '';
 
 function toggleBlogExpand(id) {
   if (_blogExpanded.has(id)) _blogExpanded.delete(id);
@@ -11810,7 +11823,7 @@ function toggleBlogPin(id) {
 function renderBlogsTab() {
   const el = document.getElementById('blogsContent');
   if (!el) return;
-  const blogs = getBlogs().sort((a, b) => {
+  const blogs = getBlogs().filter(b => !b.archived).sort((a, b) => {
     // Pinned blogs first, then by date (newest first)
     if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
     return b.date.localeCompare(a.date);
@@ -11851,6 +11864,7 @@ function renderBlogsTab() {
         html += '<div class="blog-actions">';
         html += '<button class="secondary blog-pin-btn' + (b.pinned ? ' active' : '') + '" style="font-size:0.78em; padding:3px 9px;" onclick="toggleBlogPin(\'' + b.id + '\')" title="' + (b.pinned ? 'Unpin' : 'Pin to top') + '">📌 ' + (b.pinned ? 'Pinned' : 'Pin') + '</button>';
         html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="startBlogEdit(\'' + b.id + '\')">Edit</button>';
+        html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="archiveBlog(\'' + b.id + '\')" title="Move to archive">🗄 Archive</button>';
         html += '<button class="danger" style="font-size:0.78em; padding:3px 9px;" onclick="deleteBlog(\'' + b.id + '\')">✕</button>';
         html += '</div>';
         html += '</div>';
@@ -11874,7 +11888,120 @@ function renderBlogsTab() {
   html += '<div class="button-row"><button class="primary" onclick="addBlog()">Publish Blog</button></div>';
   html += '</div>';
 
+  // Archive
+  html += '<div class="card">';
+  html += '<h3 style="margin-top:0;">🗄 Archive</h3>';
+  html += '<div class="blog-archive-search">';
+  html += '<input type="text" id="blogArchiveSearch" placeholder="Search archived blogs (title or text)…" value="' + escAttr(_blogArchiveSearch) + '" oninput="onBlogArchiveSearch(this.value)">';
+  html += '<button class="secondary" style="font-size:0.78em; padding:5px 10px;" onclick="clearBlogArchiveSearch()">Clear</button>';
+  html += '</div>';
+  html += '<div id="blogArchiveList"></div>';
+  html += '</div>';
+
   el.innerHTML = html;
+  renderBlogArchiveList();
+}
+
+function onBlogArchiveSearch(val) {
+  _blogArchiveSearch = val || '';
+  renderBlogArchiveList();
+}
+
+function clearBlogArchiveSearch() {
+  _blogArchiveSearch = '';
+  const input = document.getElementById('blogArchiveSearch');
+  if (input) input.value = '';
+  renderBlogArchiveList();
+}
+
+// esc() plus quotes, for use inside an HTML attribute value
+function escAttr(s) { return esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+// Escape a user string for safe use inside a RegExp
+function blogEscapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// Wrap query matches in a highlight span; every raw fragment is esc()'d individually
+function blogHighlight(text, query) {
+  const raw = String(text || '');
+  const q = (query || '').trim();
+  if (!q) return esc(raw);
+  const re = new RegExp(blogEscapeRe(q), 'gi');
+  let out = '', last = 0, m;
+  while ((m = re.exec(raw)) !== null) {
+    out += esc(raw.slice(last, m.index)) + '<span class="blog-search-hit">' + esc(m[0]) + '</span>';
+    last = m.index + m[0].length;
+    if (m[0].length === 0) re.lastIndex++;
+  }
+  return out + esc(raw.slice(last));
+}
+
+function renderBlogArchiveList() {
+  const wrap = document.getElementById('blogArchiveList');
+  if (!wrap) return;
+
+  const all = getBlogs().filter(b => b.archived);
+  const q = _blogArchiveSearch.trim().toLowerCase();
+  const archived = (q
+      ? all.filter(b => (b.title || '').toLowerCase().includes(q) || (b.body || '').toLowerCase().includes(q))
+      : all
+    ).sort((a, b) => b.date.localeCompare(a.date));
+
+  let html = '';
+  if (all.length === 0) {
+    html += '<p style="color:var(--soft); font-style:italic;">No archived blogs yet. Use the 🗄 Archive button on a blog to move it here.</p>';
+  } else if (archived.length === 0) {
+    html += '<p style="color:var(--soft); font-style:italic;">No archived blogs match “' + esc(_blogArchiveSearch) + '”.</p>';
+  } else {
+    html += '<div class="blog-archive-count" style="margin-bottom:8px;">' + archived.length + ' of ' + all.length + ' archived blog' + (all.length === 1 ? '' : 's') + '</div>';
+    html += '<div class="blog-list">';
+    archived.forEach(b => {
+      const expanded = _blogExpanded.has(b.id);
+      html += '<div class="blog-item archived" id="blogArchived_' + b.id + '">';
+      html += '<div class="blog-header">';
+      html += '<div class="blog-title-wrap" onclick="toggleBlogExpand(\'' + b.id + '\')">';
+      html += '<span class="blog-caret">' + (expanded ? '▾' : '▸') + '</span>';
+      html += '<div>';
+      html += '<div class="blog-title">' + blogHighlight(b.title, _blogArchiveSearch) + '<span class="blog-archive-mark">Archived</span></div>';
+      html += '<div class="blog-date">' + b.date + '</div>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="blog-actions">';
+      html += '<button class="secondary" style="font-size:0.78em; padding:3px 9px;" onclick="unarchiveBlog(\'' + b.id + '\')" title="Move back to My Blogs">↩ Restore</button>';
+      html += '<button class="danger" style="font-size:0.78em; padding:3px 9px;" onclick="deleteBlog(\'' + b.id + '\')">✕</button>';
+      html += '</div>';
+      html += '</div>';
+      if (b.body && expanded) {
+        html += '<div class="blog-body">' + blogHighlight(b.body, _blogArchiveSearch).replace(/\n/g, '<br>') + '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+function archiveBlog(id) {
+  const blogs = getBlogs();
+  const b = blogs.find(x => x.id === id);
+  if (!b) return;
+  b.archived = true;
+  b.archivedAt = new Date().toISOString();
+  setBlogs(blogs);
+  if (_blogEditId === id) _blogEditId = null;
+  _blogExpanded.delete(id);
+  renderBlogsTab();
+}
+
+function unarchiveBlog(id) {
+  const blogs = getBlogs();
+  const b = blogs.find(x => x.id === id);
+  if (!b) return;
+  b.archived = false;
+  delete b.archivedAt;
+  setBlogs(blogs);
+  _blogExpanded.delete(id);
+  renderBlogsTab();
 }
 
 function addBlog() {
