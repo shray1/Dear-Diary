@@ -3018,6 +3018,96 @@
   }
   .blog-search-hit { background: var(--accent-soft); border-radius: 3px; }
 
+  /* ── Vision Board tab (inspired by "The Secret") ── */
+  .vision-hero {
+    background: linear-gradient(135deg, rgba(139,111,71,0.10), rgba(139,111,71,0.02));
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 20px; text-align: center;
+  }
+  .vision-hero h2 { border: none; margin: 0 0 6px; padding: 0; font-size: 1.5em; }
+  .vision-hero .vision-quote {
+    font-style: italic; color: var(--soft); font-size: 0.95em;
+    max-width: 620px; margin: 0 auto 14px;
+  }
+  .vision-steps {
+    display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-top: 12px;
+  }
+  .vision-step {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 16px; font-size: 0.9em; color: var(--ink);
+  }
+  .vision-step .vs-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-size: 0.78em; font-weight: bold;
+  }
+  .vision-affirm-banner {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--accent-soft); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
+  }
+  .vision-affirm-banner .vab-label {
+    font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); font-weight: bold; white-space: nowrap;
+  }
+  .vision-affirm-banner .vab-text { flex: 1; min-width: 180px; font-size: 1.05em; font-style: italic; color: var(--ink); }
+
+  .vision-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px;
+  }
+  .vision-card {
+    position: relative; display: flex; flex-direction: column;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .vision-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,0.10); }
+  .vision-card-img {
+    width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--bg); display: block;
+  }
+  .vision-card-img.placeholder {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3em; color: var(--accent);
+    background: linear-gradient(135deg, var(--accent-soft), var(--bg));
+  }
+  .vision-cat-chip {
+    position: absolute; top: 10px; left: 10px;
+    font-size: 0.7em; font-weight: bold; letter-spacing: 0.03em;
+    background: rgba(0,0,0,0.55); color: #fff; padding: 3px 9px; border-radius: 999px;
+    backdrop-filter: blur(2px);
+  }
+  .vision-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; }
+  .vision-card-title { font-weight: bold; font-size: 1.05em; color: var(--ink); line-height: 1.35; }
+  .vision-card-affirm {
+    margin-top: 6px; font-size: 0.88em; font-style: italic; color: var(--soft);
+    line-height: 1.5; flex: 1; white-space: pre-line;
+  }
+  .vision-card-actions { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .vision-card-actions button { font-size: 0.75em; padding: 4px 10px; }
+  .vision-card.achieved { opacity: 0.72; }
+  .vision-card.achieved .vision-card-img { filter: grayscale(0.35); }
+  .vision-manifested-ribbon {
+    position: absolute; top: 10px; right: 10px;
+    background: #2e7d4f; color: #fff; font-size: 0.72em; font-weight: bold;
+    padding: 3px 10px; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  .vision-empty { color: var(--soft); font-style: italic; text-align: center; padding: 30px 10px; }
+  .vision-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vision-form-grid .full { grid-column: 1 / -1; }
+  .vision-img-preview {
+    margin-top: 8px; max-width: 160px; max-height: 120px; border-radius: 8px;
+    border: 1px solid var(--line); object-fit: cover; display: none;
+  }
+  .vision-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .vision-filter-btn {
+    background: var(--card); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 999px; padding: 5px 14px; cursor: pointer; font-family: inherit; font-size: 0.85em;
+    transition: all 0.15s;
+  }
+  .vision-filter-btn:hover { background: var(--accent-soft); }
+  .vision-filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  @media (max-width: 520px) { .vision-form-grid { grid-template-columns: 1fr; } }
+
   /* ── Financial tab ── */
   .fin-month-bar {
     display: flex;
@@ -3405,6 +3495,7 @@
   <button class="tab" onclick="showTab('social')">Social Circle</button>
   <button class="tab" onclick="showTab('financial')">Financial</button>
   <button class="tab" onclick="showTab('blogs')">Blogs</button>
+  <button class="tab" onclick="showTab('vision')">Vision Board</button>
 </div>
 
 <!-- TODAY TAB -->
@@ -4105,6 +4196,11 @@
 <!-- BLOGS TAB -->
 <div id="blogs" class="panel">
   <div id="blogsContent"></div>
+</div>
+
+<!-- VISION BOARD TAB -->
+<div id="vision" class="panel">
+  <div id="visionContent"></div>
 </div>
 
 <!-- Unchecked Goals Modal -->
@@ -9460,6 +9556,7 @@ function exportJSON() {
       reflectionHL: getReflectionHighlights(),
       mindPractices: getMindPractices(),
       blogs: getBlogs(),
+      vision: getVisionItems(),
       bodyMeasurements: getBodyMeasurements()
     }
   });
@@ -9492,6 +9589,7 @@ function importJSON(ev) {
         if (data.__meta.reflectionHL) setReflectionHighlights(data.__meta.reflectionHL);
         if (data.__meta.mindPractices) { setMindPractices(data.__meta.mindPractices); applyMindPractices(); buildMindSlotTable(); }
         if (data.__meta.blogs) setBlogs(data.__meta.blogs);
+        if (data.__meta.vision) setVisionItems(data.__meta.vision);
         if (data.__meta.bodyMeasurements) setBodyMeasurements(data.__meta.bodyMeasurements);
       }
       // Import diary entries (skip __meta key)
@@ -9543,6 +9641,7 @@ function showTab(name) {
   if (name === 'social')    renderSocialTab();
   if (name === 'financial') renderFinancialTab();
   if (name === 'blogs') renderBlogsTab();
+  if (name === 'vision') renderVisionTab();
   // Day-summary chip and section rail are only useful on Today
   const onToday = (name === 'today');
   setSectionRailVisible(onToday);
@@ -12120,6 +12219,300 @@ function saveBlogEdit(id) {
   setBlogs(blogs);
   _blogEditId = null;
   renderBlogsTab();
+}
+
+/* ========== VISION BOARD TAB (inspired by "The Secret" — Rhonda Byrne) ========== */
+
+const VISION_KEY = 'dearDiary_vision_v1';
+
+const VISION_CATS = [
+  { id: 'health',       label: 'Health & Body',    emoji: '🌿' },
+  { id: 'wealth',       label: 'Wealth & Abundance', emoji: '💰' },
+  { id: 'career',       label: 'Career & Purpose', emoji: '🚀' },
+  { id: 'relationships',label: 'Relationships',     emoji: '❤️' },
+  { id: 'growth',       label: 'Personal Growth',   emoji: '📈' },
+  { id: 'spiritual',    label: 'Spiritual',         emoji: '🕉️' },
+  { id: 'experiences',  label: 'Experiences & Travel', emoji: '✈️' },
+  { id: 'other',        label: 'Other',             emoji: '⭐' }
+];
+
+function visionCat(id) { return VISION_CATS.find(c => c.id === id) || VISION_CATS[VISION_CATS.length - 1]; }
+
+function getVisionItems() {
+  try { return JSON.parse(localStorage.getItem(VISION_KEY) || '[]'); } catch { return []; }
+}
+function setVisionItems(list) { localStorage.setItem(VISION_KEY, JSON.stringify(list)); }
+function visionGenId() { return 'vis_' + Date.now() + '_' + Math.floor(Math.random() * 9999); }
+
+let _visionEditId = null;
+let _visionFilter = 'all';
+let _visionPendingImg = ''; // data URL staged in the add/edit form
+
+function renderVisionTab() {
+  const el = document.getElementById('visionContent');
+  if (!el) return;
+  const items = getVisionItems();
+  let html = '';
+
+  // Hero — Ask · Believe · Receive
+  html += '<div class="vision-hero">';
+  html += '<h2>✨ Vision Board</h2>';
+  html += '<p class="vision-quote">“See the things that you want as already yours. Know that they will come to you at need. Then let them come.” Give your dreams a picture, feel the joy of already having them, and let the Law of Attraction do its work.</p>';
+  html += '<div class="vision-steps">';
+  html += '<div class="vision-step"><span class="vs-num">1</span> Ask — name what you truly want</div>';
+  html += '<div class="vision-step"><span class="vs-num">2</span> Believe — feel it as already yours</div>';
+  html += '<div class="vision-step"><span class="vs-num">3</span> Receive — act with gratitude</div>';
+  html += '</div>';
+  html += '</div>';
+
+  // Daily affirmation banner (rotates by day across the affirmations you've written)
+  const affirmations = items.filter(i => !i.achieved && (i.affirmation || '').trim())
+                            .map(i => i.affirmation.trim());
+  if (affirmations.length) {
+    const dayIdx = Math.floor(Date.now() / 86400000) % affirmations.length;
+    html += '<div class="vision-affirm-banner">';
+    html += '<span class="vab-label">Today’s Affirmation</span>';
+    html += '<span class="vab-text">“' + esc(affirmations[dayIdx]) + '”</span>';
+    html += '<button class="secondary" style="font-size:0.78em; padding:4px 10px;" onclick="renderVisionTab()" title="Show another">↻ Shuffle</button>';
+    html += '</div>';
+  }
+
+  // Add / edit form
+  html += renderVisionForm();
+
+  // Filter bar
+  const activeCount = items.filter(i => !i.achieved).length;
+  const doneCount = items.filter(i => i.achieved).length;
+  html += '<div class="card">';
+  html += '<h3 style="margin-top:0;">My Visions <span style="font-weight:normal; color:var(--soft); font-size:0.82em;">(' + activeCount + ' active' + (doneCount ? ' · ' + doneCount + ' manifested' : '') + ')</span></h3>';
+
+  html += '<div class="vision-filter-bar">';
+  html += '<button class="vision-filter-btn' + (_visionFilter === 'all' ? ' active' : '') + '" onclick="setVisionFilter(\'all\')">All</button>';
+  VISION_CATS.forEach(c => {
+    if (items.some(i => i.category === c.id)) {
+      html += '<button class="vision-filter-btn' + (_visionFilter === c.id ? ' active' : '') + '" onclick="setVisionFilter(\'' + c.id + '\')">' + c.emoji + ' ' + esc(c.label) + '</button>';
+    }
+  });
+  if (doneCount) html += '<button class="vision-filter-btn' + (_visionFilter === 'achieved' ? ' active' : '') + '" onclick="setVisionFilter(\'achieved\')">✓ Manifested</button>';
+  html += '</div>';
+
+  // Grid
+  let shown = items.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  if (_visionFilter === 'achieved') shown = shown.filter(i => i.achieved);
+  else if (_visionFilter !== 'all') shown = shown.filter(i => i.category === _visionFilter && !i.achieved);
+  else shown = shown.filter(i => !i.achieved).concat(shown.filter(i => i.achieved));
+
+  if (items.length === 0) {
+    html += '<div class="vision-empty">Your board is empty. Add your first vision above — picture it clearly and write it in the present tense, as if it is already yours.</div>';
+  } else if (shown.length === 0) {
+    html += '<div class="vision-empty">No visions in this category yet.</div>';
+  } else {
+    html += '<div class="vision-grid">';
+    shown.forEach(i => { html += visionCardHtml(i); });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  el.innerHTML = html;
+  syncVisionImgPreview();
+}
+
+function visionCardHtml(i) {
+  const cat = visionCat(i.category);
+  let h = '<div class="vision-card' + (i.achieved ? ' achieved' : '') + '">';
+  if (i.image) {
+    h += '<img class="vision-card-img" src="' + escAttr(i.image) + '" alt="' + escAttr(i.title) + '">';
+  } else {
+    h += '<div class="vision-card-img placeholder">' + cat.emoji + '</div>';
+  }
+  h += '<span class="vision-cat-chip">' + cat.emoji + ' ' + esc(cat.label) + '</span>';
+  if (i.achieved) h += '<span class="vision-manifested-ribbon">✓ Manifested</span>';
+  h += '<div class="vision-card-body">';
+  h += '<div class="vision-card-title">' + esc(i.title) + '</div>';
+  if ((i.affirmation || '').trim()) h += '<div class="vision-card-affirm">“' + esc(i.affirmation) + '”</div>';
+  h += '<div class="vision-card-actions">';
+  h += '<button class="secondary" onclick="toggleVisionAchieved(\'' + i.id + '\')">' + (i.achieved ? '↩ Reactivate' : '✓ Manifested') + '</button>';
+  h += '<button class="secondary" onclick="startVisionEdit(\'' + i.id + '\')">Edit</button>';
+  h += '<button class="danger" onclick="deleteVision(\'' + i.id + '\')">✕</button>';
+  h += '</div>';
+  h += '</div>';
+  h += '</div>';
+  return h;
+}
+
+function renderVisionForm() {
+  const editing = _visionEditId ? getVisionItems().find(i => i.id === _visionEditId) : null;
+  if (editing && !_visionPendingImg) _visionPendingImg = editing.image || '';
+
+  let html = '<div class="card">';
+  html += '<h3 style="margin-top:0;">' + (editing ? 'Edit Vision' : 'Add a Vision') + '</h3>';
+  html += '<div class="vision-form-grid">';
+
+  html += '<div class="full">';
+  html += '<label style="font-size:0.85em; color:var(--soft);">What do you want? (state it as already yours)</label>';
+  html += '<input type="text" id="visionTitle" placeholder="e.g. I live in a bright home by the sea" value="' + escAttr(editing ? editing.title : '') + '" style="width:100%;">';
+  html += '</div>';
+
+  html += '<div>';
+  html += '<label style="font-size:0.85em; color:var(--soft);">Category</label>';
+  html += '<select id="visionCat" style="width:100%;">';
+  VISION_CATS.forEach(c => {
+    const sel = editing && editing.category === c.id ? ' selected' : '';
+    html += '<option value="' + c.id + '"' + sel + '>' + c.emoji + ' ' + esc(c.label) + '</option>';
+  });
+  html += '</select>';
+  html += '</div>';
+
+  html += '<div>';
+  html += '<label style="font-size:0.85em; color:var(--soft);">Image</label>';
+  html += '<input type="file" id="visionImgFile" accept="image/*" onchange="onVisionImgFile(event)" style="width:100%; font-size:0.85em;">';
+  html += '<img id="visionImgPreview" class="vision-img-preview" alt="preview">';
+  html += '<button type="button" class="secondary" id="visionImgClearBtn" style="display:none; font-size:0.72em; padding:2px 8px; margin-top:6px;" onclick="clearVisionImg()">Remove image</button>';
+  html += '</div>';
+
+  html += '<div class="full">';
+  html += '<label style="font-size:0.85em; color:var(--soft);">Affirmation (present tense, felt as real)</label>';
+  html += '<textarea id="visionAffirm" placeholder="e.g. I am grateful for the abundance flowing into my life." style="width:100%; min-height:70px;">' + esc(editing ? (editing.affirmation || '') : '') + '</textarea>';
+  html += '</div>';
+
+  html += '</div>'; // grid
+
+  html += '<div class="button-row" style="margin-top:12px;">';
+  if (editing) {
+    html += '<button class="primary" onclick="saveVisionEdit()">Save Changes</button>';
+    html += '<button class="secondary" onclick="cancelVisionEdit()">Cancel</button>';
+  } else {
+    html += '<button class="primary" onclick="addVision()">➕ Add to Board</button>';
+  }
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function syncVisionImgPreview() {
+  const img = document.getElementById('visionImgPreview');
+  const clearBtn = document.getElementById('visionImgClearBtn');
+  if (!img) return;
+  if (_visionPendingImg) {
+    img.src = _visionPendingImg; img.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+  } else {
+    img.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+}
+
+// Read a chosen image and downscale it to keep localStorage small
+function onVisionImgFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const MAX = 700;
+      let { width, height } = im;
+      if (width > MAX || height > MAX) {
+        const scale = MAX / Math.max(width, height);
+        width = Math.round(width * scale); height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(im, 0, 0, width, height);
+      try { _visionPendingImg = canvas.toDataURL('image/jpeg', 0.82); }
+      catch { _visionPendingImg = reader.result; }
+      syncVisionImgPreview();
+    };
+    im.onerror = () => { _visionPendingImg = reader.result; syncVisionImgPreview(); };
+    im.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearVisionImg() {
+  _visionPendingImg = '';
+  const f = document.getElementById('visionImgFile');
+  if (f) f.value = '';
+  syncVisionImgPreview();
+}
+
+function setVisionFilter(f) { _visionFilter = f; renderVisionTab(); }
+
+function addVision() {
+  const title = (document.getElementById('visionTitle').value || '').trim();
+  if (!title) { alert('Describe your vision first — what do you want to attract?'); return; }
+  const category = document.getElementById('visionCat').value || 'other';
+  const affirmation = (document.getElementById('visionAffirm').value || '').trim();
+  const items = getVisionItems();
+  items.push({
+    id: visionGenId(), title, category, affirmation,
+    image: _visionPendingImg || '', achieved: false,
+    createdAt: new Date().toISOString()
+  });
+  try {
+    setVisionItems(items);
+  } catch (e) {
+    alert('Could not save — the image may be too large for local storage. Try a smaller image.');
+    return;
+  }
+  _visionPendingImg = '';
+  renderVisionTab();
+}
+
+function startVisionEdit(id) {
+  _visionEditId = id;
+  _visionPendingImg = '';
+  renderVisionTab();
+  const form = document.getElementById('visionTitle');
+  if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelVisionEdit() {
+  _visionEditId = null;
+  _visionPendingImg = '';
+  renderVisionTab();
+}
+
+function saveVisionEdit() {
+  const id = _visionEditId;
+  if (!id) return;
+  const title = (document.getElementById('visionTitle').value || '').trim();
+  if (!title) { alert('Title cannot be empty.'); return; }
+  const items = getVisionItems();
+  const it = items.find(x => x.id === id);
+  if (it) {
+    it.title = title;
+    it.category = document.getElementById('visionCat').value || 'other';
+    it.affirmation = (document.getElementById('visionAffirm').value || '').trim();
+    it.image = _visionPendingImg || '';
+    it.updatedAt = new Date().toISOString();
+  }
+  try {
+    setVisionItems(items);
+  } catch (e) {
+    alert('Could not save — the image may be too large for local storage. Try a smaller image.');
+    return;
+  }
+  _visionEditId = null;
+  _visionPendingImg = '';
+  renderVisionTab();
+}
+
+function toggleVisionAchieved(id) {
+  const items = getVisionItems();
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  it.achieved = !it.achieved;
+  it.achievedAt = it.achieved ? new Date().toISOString() : undefined;
+  setVisionItems(items);
+  renderVisionTab();
+}
+
+function deleteVision(id) {
+  if (!confirm('Remove this vision from your board?')) return;
+  setVisionItems(getVisionItems().filter(i => i.id !== id));
+  if (_visionEditId === id) { _visionEditId = null; _visionPendingImg = ''; }
+  renderVisionTab();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
