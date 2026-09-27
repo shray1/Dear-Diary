@@ -1645,6 +1645,175 @@
   .meal-inline-row label { flex: 0 1 auto; white-space: nowrap; }
   .meal-inline-row .meal-note-input { flex: 1 1 140px; }
 
+  /* ── Consolidated Food table & Water row (Today's Entry, Body & Rhythm) ── */
+  .food-block, .water-block {
+    padding: 14px 14px 13px;
+    background: linear-gradient(180deg, rgba(139,111,71,0.045), rgba(139,111,71,0.015));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .food-block-head, .water-block-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+    margin-bottom: 12px;
+  }
+  .food-block-icon, .water-block-icon { font-size: 1.15em; align-self: center; }
+  .food-block-title, .water-block-title { font-weight: bold; font-size: 1.02em; color: var(--ink); }
+  .food-block-sub, .water-block-sub { font-size: 0.82em; color: var(--soft); font-style: italic; }
+
+  /* Meals — one column per meal */
+  .meal-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .meal-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 8px 11px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: background 0.15s, border-color 0.15s;
+    min-width: 0;
+  }
+  .meal-col.checked   { background: #f0f5ed; border-color: var(--good); }
+  .meal-col.marked-no { background: #fdf0ec; border-color: #d98060; }
+  .meal-col-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1px;
+    width: 100%;
+  }
+  .meal-col-icon { font-size: 1.45em; line-height: 1.1; }
+  .meal-col-name { font-weight: bold; font-size: 0.9em; color: var(--ink); line-height: 1.2; }
+  .meal-col-time { font-size: 0.72em; color: var(--soft); font-style: italic; }
+  .meal-col-streak { margin-left: 0; margin-top: 3px; }
+  .meal-col-tog .ptog-wrap { margin-right: 0; margin-top: 0; justify-content: center; }
+  .meal-col .meal-cell-note {
+    max-width: none;
+    width: 100%;
+    text-align: center;
+  }
+  .meal-col .meal-rate-wrap { justify-content: center; gap: 8px; }
+
+  /* Drinking Water & Sumiran — one cell per occasion */
+  .water-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .water-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 6px 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    text-align: center;
+    transition: background 0.15s, border-color 0.15s;
+    min-width: 0;
+  }
+  .water-cell.checked   { background: #eef4fa; border-color: #7aa9d6; }
+  .water-cell.marked-no { background: #fdf0ec; border-color: #d98060; }
+  .water-cell-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #7aa9d6;
+    color: #fff;
+    font-size: 0.72em;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .water-cell.checked .water-cell-num { background: var(--good); }
+  .water-cell-label {
+    font-size: 0.8em;
+    color: var(--ink);
+    line-height: 1.25;
+    font-weight: bold;
+    min-height: 2.1em;
+    display: flex;
+    align-items: center;
+  }
+  .water-cell-streak { margin-left: 0; }
+  .water-cell .ptog-wrap { margin-right: 0; margin-top: 0; justify-content: center; }
+
+  @media (max-width: 600px) {
+    .meal-grid  { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .water-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .food-block, .water-block { padding: 12px 10px; }
+  }
+
+  /* ── Grouped single practices in one row (Prayers & Devotion; People & Connection) ── */
+  .practice-block {
+    padding: 14px 14px 13px;
+    background: linear-gradient(180deg, rgba(139,111,71,0.045), rgba(139,111,71,0.015));
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .practice-block-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 3px 10px;
+    margin-bottom: 12px;
+  }
+  .practice-block-icon { font-size: 1.15em; align-self: center; }
+  .practice-block-title { font-weight: bold; font-size: 1.02em; color: var(--ink); }
+  .practice-block-sub { font-size: 0.82em; color: var(--soft); font-style: italic; }
+  .practice-grid { display: grid; gap: 8px; }
+  .practice-grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .practice-grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .practice-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .practice-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 12px 8px 11px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: background 0.15s, border-color 0.15s;
+    min-width: 0;
+  }
+  .practice-cell.checked   { background: #f0f5ed; border-color: var(--good); }
+  .practice-cell.marked-no { background: #fdf0ec; border-color: #d98060; }
+  .practice-cell-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+    width: 100%;
+  }
+  .practice-cell-icon { font-size: 1.4em; line-height: 1.1; }
+  .practice-cell-name { font-weight: bold; font-size: 0.9em; color: var(--ink); line-height: 1.2; }
+  .practice-cell-time { font-size: 0.72em; color: var(--soft); font-style: italic; }
+  .practice-cell-streak { margin-left: 0; margin-top: 2px; }
+  .practice-cell-tog .ptog-wrap { margin-right: 0; margin-top: 0; justify-content: center; }
+  .practice-cell .star-rating { justify-content: center; flex-wrap: wrap; margin-top: 0; width: 100%; }
+  .practice-cell .subratings-wrap { width: 100%; align-items: center; }
+  .practice-cell .mpp-wrap { width: 100%; flex: none; }
+  .practice-cell .practice-cell-input { width: 100%; max-width: none; text-align: center; }
+
+  @media (max-width: 600px) {
+    .practice-grid.cols-4, .practice-grid.cols-3, .practice-grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .practice-block { padding: 12px 10px; }
+  }
+
   /* Multi-people-pick (Called a friend) */
   .mpp-wrap { flex: 1 1 200px; min-width: 0; }
   .mpp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
@@ -5024,18 +5193,43 @@ function buildChecklist(containerId, items, kind) {
   const el = document.getElementById(containerId);
   el.innerHTML = '';
   const isPeriodKind = (kind === 'weekly' || kind === 'monthly');
+  let mealTableRendered = false;   // consolidated 5-column meal table (Body & Rhythm)
+  let waterRowRendered  = false;   // consolidated 6-column Drinking Water & Sumiran row
+  const groupedRendered = {};      // one flag per PRACTICE_GROUPS entry (by key)
   items.forEach(item => {
     // Retired practices are no longer tracked — hidden from the entry form,
     // but their past records are preserved and shown in the Retired card in Stats.
     if (item.retired) return;
     // Mind & Self-Discipline items are rendered in their own slot-table card
     if (!isPeriodKind && item.mindSlot) return;
-    // Section header (daily checklist only)
+    // Section header (daily checklist only) — emitted before the consolidated
+    // widgets below so the "Body & Rhythm" divider still leads the section.
     if (!isPeriodKind && item.section) {
       const hdr = document.createElement('div');
       hdr.className = 'practice-section-header';
       hdr.textContent = item.section;
       el.appendChild(hdr);
+    }
+    // The 5 meals collapse into one table and the 6 Drinking Water & Sumiran
+    // practices into one 6-column row; related single practices collapse into
+    // titled side-by-side rows (see PRACTICE_GROUPS). Each consolidated widget
+    // is rendered once, in place of the first item it contains; later members
+    // are skipped. Every element id (pitem_/ptog_/mealNote_/stars_/wsf_/mpp_…)
+    // is preserved so save, load, scoring, streaks and reports keep working.
+    if (!isPeriodKind && item.mealKey) {
+      if (!mealTableRendered) { el.appendChild(buildMealTableCard()); mealTableRendered = true; }
+      return;
+    }
+    if (!isPeriodKind && /^waterSumiran\d+$/.test(item.id)) {
+      if (!waterRowRendered) { el.appendChild(buildWaterRowCard()); waterRowRendered = true; }
+      return;
+    }
+    if (!isPeriodKind) {
+      const grp = PRACTICE_GROUPS.find(g => g.ids.indexOf(item.id) !== -1);
+      if (grp) {
+        if (!groupedRendered[grp.key]) { el.appendChild(buildPracticeGroupCard(grp)); groupedRendered[grp.key] = true; }
+        return;
+      }
     }
     const div = document.createElement('div');
     div.className = 'check-item';
@@ -5125,64 +5319,7 @@ function buildChecklist(containerId, items, kind) {
         if (!isSunday(dStr)) div.style.display = 'none';
       }
       div.appendChild(togWrap);
-      if (item.mealKey) {
-        // Inline layout: [label] [what did you eat?] [👍 👎 — shown once a note is typed]
-        const mealKey = item.mealKey;
-        const rowWrap = document.createElement('div');
-        rowWrap.className = 'meal-inline-row';
-        rowWrap.appendChild(lab);
-        // Note input
-        const noteInp = document.createElement('input');
-        noteInp.type = 'text';
-        noteInp.className = 'meal-note-input';
-        noteInp.id = 'mealNote_' + mealKey;
-        noteInp.placeholder = 'What did you eat?';
-        rowWrap.appendChild(noteInp);
-        // Like / dislike buttons (hidden until a note is entered)
-        const rateWrap = document.createElement('div');
-        rateWrap.className = 'meal-rate-wrap';
-        rateWrap.id = 'mealRateWrap_' + mealKey;
-        const likeBtn = document.createElement('button');
-        likeBtn.type = 'button';
-        likeBtn.className = 'meal-rate-btn meal-rate-like';
-        likeBtn.id = 'mealLike_' + mealKey;
-        likeBtn.title = 'Liked it — healthy & tasty';
-        likeBtn.innerHTML = '<span class="thumb-emoji">👍</span>';
-        const dislikeBtn = document.createElement('button');
-        dislikeBtn.type = 'button';
-        dislikeBtn.className = 'meal-rate-btn meal-rate-dislike';
-        dislikeBtn.id = 'mealDislike_' + mealKey;
-        dislikeBtn.title = 'Didn\'t like it';
-        dislikeBtn.innerHTML = '<span class="thumb-emoji">👎</span>';
-        const popEmoji = btn => {
-          btn.classList.remove('thumb-pop');
-          void btn.offsetWidth;
-          btn.classList.add('thumb-pop');
-        };
-        likeBtn.addEventListener('click', () => {
-          const on = !likeBtn.classList.contains('active');
-          likeBtn.classList.toggle('active', on);
-          dislikeBtn.classList.remove('active');   // mutually exclusive
-          if (on) popEmoji(likeBtn);
-          debounce(autosave, 500)();
-        });
-        dislikeBtn.addEventListener('click', () => {
-          const on = !dislikeBtn.classList.contains('active');
-          dislikeBtn.classList.toggle('active', on);
-          likeBtn.classList.remove('active');      // mutually exclusive
-          if (on) popEmoji(dislikeBtn);
-          debounce(autosave, 500)();
-        });
-        rateWrap.appendChild(likeBtn);
-        rateWrap.appendChild(dislikeBtn);
-        rowWrap.appendChild(rateWrap);
-        // Reveal/hide the rate buttons based on whether a note exists
-        const syncRateVisibility = () => {
-          rateWrap.classList.toggle('has-note', noteInp.value.trim().length > 0);
-        };
-        noteInp.addEventListener('input', () => { syncRateVisibility(); debounce(autosave, 1500)(); });
-        div.appendChild(rowWrap);
-      } else if (item.noReason && !item.yesNote) {
+      if (item.noReason && !item.yesNote) {
         // Inline layout: [label text] ......... [reason input, shown only when No]
         const rowWrap = document.createElement('div');
         rowWrap.className = 'meal-inline-row';
@@ -5320,6 +5457,409 @@ function buildChecklist(containerId, items, kind) {
     }
     el.appendChild(div);
   });
+}
+
+/* ── Consolidated Food & Water widgets (Today's Entry, Body & Rhythm) ── */
+
+// Short, friendly meta for each meal column. Time text is pulled live from the
+// matching DAILY_ITEMS hint so the two never drift apart.
+const MEAL_COL_META = {
+  breakfast:    { name: 'Breakfast',      icon: '🍳' },
+  morningSnack: { name: 'Morning Snacks', icon: '🍎' },
+  lunch:        { name: 'Lunch',          icon: '🍽️' },
+  eveningSnack: { name: 'Evening Snacks', icon: '🍵' },
+  dinner:       { name: 'Dinner',         icon: '🍲' }
+};
+
+// Build a tri-state Yes/No toggle for practice `id`. Mirrors the toggle created
+// inline in buildChecklist so setPracticeState / readForm / populate all work.
+function buildTristateToggle(id) {
+  const togWrap = document.createElement('div');
+  togWrap.className = 'ptog-wrap';
+  const yesBtn = document.createElement('button');
+  yesBtn.type = 'button';
+  yesBtn.className = 'ptog-btn ptog-yes';
+  yesBtn.id = 'ptog_yes_' + id;
+  yesBtn.title = 'Yes — done';
+  yesBtn.textContent = '✓';
+  const noBtn = document.createElement('button');
+  noBtn.type = 'button';
+  noBtn.className = 'ptog-btn ptog-no';
+  noBtn.id = 'ptog_no_' + id;
+  noBtn.title = 'No — not done';
+  noBtn.textContent = '✗';
+  yesBtn.addEventListener('click', () => setPracticeState(id, yesBtn.classList.contains('active') ? null : 'yes'));
+  noBtn.addEventListener('click',  () => setPracticeState(id, noBtn.classList.contains('active')  ? null : 'no'));
+  togWrap.appendChild(yesBtn);
+  togWrap.appendChild(noBtn);
+  return togWrap;
+}
+
+// Strip a leading clock emoji (🕗 etc.) from a meal-time hint for a clean label.
+function cleanMealTime(hint) {
+  return (hint || '').replace(/^[\u{1F550}-\u{1F567}\u{1F55C}-\u{1F567}]?\s*/u, '').trim();
+}
+
+// The 5-meal table: one column per meal, each with a header (icon / name / time),
+// a Yes/No toggle, a "what did you eat?" note and 👍/👎 rating.
+function buildMealTableCard() {
+  const meals = DAILY_ITEMS.filter(i => i.mealKey && !i.retired);
+  const card = document.createElement('div');
+  card.className = 'food-block';
+
+  const head = document.createElement('div');
+  head.className = 'food-block-head';
+  head.innerHTML = '<span class="food-block-icon">🍽️</span>'
+                 + '<span class="food-block-title">Food Through the Day</span>'
+                 + '<span class="food-block-sub">Tick each meal, note what you ate, rate how it felt</span>';
+  card.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'meal-grid';
+
+  meals.forEach(item => {
+    const meta    = MEAL_COL_META[item.mealKey] || { name: item.label, icon: '🍴' };
+    const mealKey = item.mealKey;
+
+    const col = document.createElement('div');
+    col.className = 'meal-col';
+    col.id = 'pitem_' + item.id;   // setPracticeState + scrollToPractice target
+
+    // Header: icon, name, time, streak badge
+    const colHead = document.createElement('div');
+    colHead.className = 'meal-col-head';
+    const timeTxt = cleanMealTime(item.hint);
+    colHead.innerHTML = '<span class="meal-col-icon">' + meta.icon + '</span>'
+                      + '<span class="meal-col-name">' + meta.name + '</span>'
+                      + (timeTxt ? '<span class="meal-col-time">' + timeTxt + '</span>' : '');
+    const streakBadge = document.createElement('span');
+    streakBadge.className = 'streak-badge meal-col-streak';
+    streakBadge.id = 'streak_' + item.id;
+    streakBadge.style.display = 'none';
+    colHead.appendChild(streakBadge);
+    col.appendChild(colHead);
+
+    // Yes / No toggle
+    const togRow = document.createElement('div');
+    togRow.className = 'meal-col-tog';
+    togRow.appendChild(buildTristateToggle(item.id));
+    col.appendChild(togRow);
+
+    // "What did you eat?" note
+    const noteInp = document.createElement('input');
+    noteInp.type = 'text';
+    noteInp.className = 'meal-note-input meal-cell-note';
+    noteInp.id = 'mealNote_' + mealKey;
+    noteInp.placeholder = 'What did you eat?';
+    col.appendChild(noteInp);
+
+    // Like / dislike (revealed once a note is typed)
+    const rateWrap = document.createElement('div');
+    rateWrap.className = 'meal-rate-wrap';
+    rateWrap.id = 'mealRateWrap_' + mealKey;
+    const likeBtn = document.createElement('button');
+    likeBtn.type = 'button';
+    likeBtn.className = 'meal-rate-btn meal-rate-like';
+    likeBtn.id = 'mealLike_' + mealKey;
+    likeBtn.title = 'Liked it — healthy & tasty';
+    likeBtn.innerHTML = '<span class="thumb-emoji">👍</span>';
+    const dislikeBtn = document.createElement('button');
+    dislikeBtn.type = 'button';
+    dislikeBtn.className = 'meal-rate-btn meal-rate-dislike';
+    dislikeBtn.id = 'mealDislike_' + mealKey;
+    dislikeBtn.title = 'Didn\'t like it';
+    dislikeBtn.innerHTML = '<span class="thumb-emoji">👎</span>';
+    const popEmoji = btn => { btn.classList.remove('thumb-pop'); void btn.offsetWidth; btn.classList.add('thumb-pop'); };
+    likeBtn.addEventListener('click', () => {
+      const on = !likeBtn.classList.contains('active');
+      likeBtn.classList.toggle('active', on);
+      dislikeBtn.classList.remove('active');   // mutually exclusive
+      if (on) popEmoji(likeBtn);
+      debounce(autosave, 500)();
+    });
+    dislikeBtn.addEventListener('click', () => {
+      const on = !dislikeBtn.classList.contains('active');
+      dislikeBtn.classList.toggle('active', on);
+      likeBtn.classList.remove('active');      // mutually exclusive
+      if (on) popEmoji(dislikeBtn);
+      debounce(autosave, 500)();
+    });
+    rateWrap.appendChild(likeBtn);
+    rateWrap.appendChild(dislikeBtn);
+    col.appendChild(rateWrap);
+
+    const syncRateVisibility = () => {
+      rateWrap.classList.toggle('has-note', noteInp.value.trim().length > 0);
+    };
+    noteInp.addEventListener('input', () => { syncRateVisibility(); debounce(autosave, 1500)(); });
+
+    grid.appendChild(col);
+  });
+
+  card.appendChild(grid);
+  return card;
+}
+
+// The 6 Drinking Water & Sumiran practices as a single labelled row — one cell
+// per occasion (Guru's Grace → Family), each a Yes/No toggle.
+function buildWaterRowCard() {
+  const waters = DAILY_ITEMS.filter(i => /^waterSumiran\d+$/.test(i.id) && !i.retired);
+  const card = document.createElement('div');
+  card.className = 'water-block';
+
+  const head = document.createElement('div');
+  head.className = 'water-block-head';
+  head.innerHTML = '<span class="water-block-icon">💧</span>'
+                 + '<span class="water-block-title">Drinking Water &amp; Sumiran</span>'
+                 + '<span class="water-block-sub">Six mindful sips through the day</span>';
+  card.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'water-grid';
+
+  waters.forEach((item, idx) => {
+    // Intention word — the part after "for " in the label (falls back to full label)
+    const m = item.label.match(/for\s+(.+)$/i);
+    const intention = m ? m[1].trim() : item.label;
+
+    const cell = document.createElement('div');
+    cell.className = 'water-cell';
+    cell.id = 'pitem_' + item.id;   // setPracticeState + scrollToPractice target
+    cell.title = item.label;
+
+    const num = document.createElement('span');
+    num.className = 'water-cell-num';
+    num.textContent = idx + 1;
+
+    const lab = document.createElement('span');
+    lab.className = 'water-cell-label';
+    lab.textContent = intention;
+
+    const streakBadge = document.createElement('span');
+    streakBadge.className = 'streak-badge water-cell-streak';
+    streakBadge.id = 'streak_' + item.id;
+    streakBadge.style.display = 'none';
+
+    cell.appendChild(num);
+    cell.appendChild(lab);
+    cell.appendChild(streakBadge);
+    cell.appendChild(buildTristateToggle(item.id));
+    grid.appendChild(cell);
+  });
+
+  card.appendChild(grid);
+  return card;
+}
+
+/* ── Grouped single practices (side-by-side rows in Today's Entry) ── */
+
+// Which practices sit together in one row, and how each column is labelled.
+// Each group's card is anchored at the first of its members to appear in
+// DAILY_ITEMS, so the day still reads roughly top-to-bottom in time order.
+const PRACTICE_GROUPS = [
+  { key: 'morning', title: 'Morning Rise', icon: '🌄',
+    sub: 'How the day began — before sunrise, remembrance, respect',
+    ids: ['wakeSunrise', 'sumiranPapaji', 'greetSeniors'] },
+  { key: 'sunday', title: 'Sunday Grooming & Care', icon: '🧼',
+    sub: 'Weekly upkeep — kept for the Sunday it belongs to',
+    ids: ['trimNailsCut', 'takeSupplements'] },
+  { key: 'prayers', title: 'Prayers & Devotion', icon: '📿',
+    sub: 'Rate each prayer’s intensity; set the week’s Shabad on Monday',
+    ids: ['morningPrayer', 'eveningPrayer', 'reciteShabad'] },
+  { key: 'breaks', title: 'Movement Breaks', icon: '🚶',
+    sub: 'Get up, move & reset — don’t sit through the whole day',
+    ids: ['walkBreak1', 'walkBreak2', 'walkBreak3', 'walkBreak4'] },
+  { key: 'desk', title: 'Inbox & Curiosity', icon: '📰',
+    sub: 'Skim the news, clear the inbox before deep work',
+    ids: ['readHN', 'checkedEmails'] },
+  { key: 'work', title: 'Productive Work Hours', icon: '🎯',
+    sub: 'Three focused deep-work blocks through the day',
+    ids: ['officeWork1', 'officeWork2', 'officeWork3'] },
+  { key: 'connect', title: 'People & Connection', icon: '🫂',
+    sub: 'Reach out and stay close to the people who matter',
+    ids: ['callWifey', 'calledFriend', 'familyTime'] },
+  { key: 'night', title: 'Wind Down for the Night', icon: '🌙',
+    sub: 'Close the day well so tomorrow starts clean',
+    ids: ['noMilkBeforeSleep', 'brushNight', 'lightsOff11'] }
+];
+const PRACTICE_CELL_META = {
+  wakeSunrise:       { name: 'Before Sunrise',  icon: '🌄' },
+  sumiranPapaji:     { name: 'Sumiran · Papaji', icon: '🙏' },
+  greetSeniors:      { name: 'Greet Elders',    icon: '🙇' },
+  trimNailsCut:      { name: 'Trim & Nails',    icon: '✂️' },
+  takeSupplements:   { name: 'Supplements',     icon: '💊' },
+  morningPrayer:     { name: 'Morning Prayer',  icon: '🌅' },
+  eveningPrayer:     { name: 'Evening Prayer',  icon: '🌆' },
+  reciteShabad:      { name: 'Recite Shabad',   icon: '📿' },
+  walkBreak1:        { name: 'Break 1',         icon: '🚶' },
+  walkBreak2:        { name: 'Break 2',         icon: '🚶' },
+  walkBreak3:        { name: 'Break 3',         icon: '🚶' },
+  walkBreak4:        { name: 'Break 4',         icon: '🚶' },
+  readHN:            { name: 'HackerNews',      icon: '📰' },
+  checkedEmails:     { name: 'Emails',          icon: '📧' },
+  officeWork1:       { name: 'Work Hour 1',     icon: '🎯', time: '8:45–9:45 AM' },
+  officeWork2:       { name: 'Work Hour 2',     icon: '🎯', time: '11:45–12:45 PM' },
+  officeWork3:       { name: 'Work Hour 3',     icon: '🎯', time: '3:00–4:00 PM' },
+  callWifey:         { name: 'Call Wifey',      icon: '💕' },
+  calledFriend:      { name: 'Called a Friend', icon: '📞' },
+  familyTime:        { name: 'Family Time',     icon: '👨‍👩‍👧' },
+  noMilkBeforeSleep: { name: 'No Milk Late',    icon: '🥛' },
+  brushNight:        { name: 'Brush Teeth',     icon: '🪥' },
+  lightsOff11:       { name: 'Lights Off 11PM', icon: '🛏️' }
+};
+
+// Hide a whole grouped-practice card when every cell inside it is hidden
+// (e.g. the office-only rows on a home day, or Sunday care on a weekday) so an
+// empty titled card never lingers. Called after the day-type / Sunday toggles.
+function updateGroupedCardVisibility() {
+  document.querySelectorAll('#dailyChecklist .practice-block').forEach(block => {
+    const cells = block.querySelectorAll('.practice-cell');
+    if (cells.length === 0) { block.style.display = ''; return; }
+    let anyVisible = false;
+    cells.forEach(c => { if (c.style.display !== 'none') anyVisible = true; });
+    block.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+// One card holding a titled row of practice cells (see PRACTICE_GROUPS).
+function buildPracticeGroupCard(grp) {
+  const card = document.createElement('div');
+  card.className = 'practice-block';
+
+  const head = document.createElement('div');
+  head.className = 'practice-block-head';
+  head.innerHTML = '<span class="practice-block-icon">' + grp.icon + '</span>'
+                 + '<span class="practice-block-title">' + grp.title + '</span>'
+                 + (grp.sub ? '<span class="practice-block-sub">' + grp.sub + '</span>' : '');
+  card.appendChild(head);
+
+  const grid = document.createElement('div');
+  grid.className = 'practice-grid cols-' + grp.ids.length;
+  grp.ids.forEach(id => {
+    const item = DAILY_ITEM_MAP[id];
+    if (!item || item.retired) return;
+    grid.appendChild(buildPracticeCell(item));
+  });
+  card.appendChild(grid);
+  return card;
+}
+
+// One practice cell: header + Yes/No toggle + the item's own sub-widget
+// (star rating / week-shared field / people-picker / yes-note / no-reason).
+// Every id (pitem_/ptog_/stars_/wsf_/mpp_/yesNote_/noReason_) matches what
+// readForm() and the populate step expect, so save & load work unchanged.
+function buildPracticeCell(item) {
+  const meta = PRACTICE_CELL_META[item.id] || { name: item.label, icon: '•' };
+  const cell = document.createElement('div');
+  cell.className = 'practice-cell';
+  cell.id = 'pitem_' + item.id;   // setPracticeState + scrollToPractice target
+  if (item.hint) cell.title = item.hint;
+
+  // Day-type / Sunday visibility — mirrors buildChecklist so populate can toggle it
+  if (item.officeOnly) {
+    cell.classList.add('office-only-item');
+    const dt = document.getElementById('dayType');
+    if (dt && dt.value !== 'office') cell.style.display = 'none';
+  }
+  if (item.homeOnly) {
+    cell.classList.add('home-only-item');
+    const dt = document.getElementById('dayType');
+    if (dt && dt.value !== 'home') cell.style.display = 'none';
+  }
+  if (item.sundayOnly) {
+    cell.classList.add('sunday-only-item');
+    const dEl = document.getElementById('entryDate');
+    const dStr = (dEl && dEl.value) || todayISO();
+    if (!isSunday(dStr)) cell.style.display = 'none';
+  }
+
+  // Header — icon, name, optional time, streak badge
+  const head = document.createElement('div');
+  head.className = 'practice-cell-head';
+  head.innerHTML = '<span class="practice-cell-icon">' + meta.icon + '</span>'
+                 + '<span class="practice-cell-name">' + meta.name + '</span>'
+                 + (meta.time ? '<span class="practice-cell-time">' + meta.time + '</span>' : '');
+  const streakBadge = document.createElement('span');
+  streakBadge.className = 'streak-badge practice-cell-streak';
+  streakBadge.id = 'streak_' + item.id;
+  streakBadge.style.display = 'none';
+  head.appendChild(streakBadge);
+  cell.appendChild(head);
+
+  // Yes / No toggle
+  const togRow = document.createElement('div');
+  togRow.className = 'practice-cell-tog';
+  togRow.appendChild(buildTristateToggle(item.id));
+  cell.appendChild(togRow);
+
+  // Star rating (shown only when Yes — handled by setPracticeState)
+  if (item.stars) cell.appendChild(buildStarWidget(item.id));
+  if (item.subratings) {
+    const subWrap = document.createElement('div');
+    subWrap.className = 'subratings-wrap';
+    item.subratings.forEach(sub => {
+      subWrap.appendChild(buildStarWidget(item.id + '_' + sub.id, {
+        title: sub.title, starLabels: sub.starLabels, className: 'subrating-widget'
+      }));
+    });
+    cell.appendChild(subWrap);
+  }
+
+  // Multi-people picker (Called a friend) — shown only when Yes
+  if (item.multiPeoplePick) {
+    const pickWrap = document.createElement('div');
+    pickWrap.id = 'mpp_' + item.id;
+    pickWrap.className = 'mpp-wrap';
+    pickWrap.style.display = 'none';
+    pickWrap.innerHTML = '<div class="mpp-chips" id="mppChips_' + item.id + '"></div>'
+      + '<div style="position:relative;">'
+      + '<input type="text" class="mpp-search" id="mppSearch_' + item.id + '" placeholder="Type to search…" autocomplete="off">'
+      + '<div class="mpp-dropdown" id="mppDrop_' + item.id + '"></div>'
+      + '</div>';
+    cell.appendChild(pickWrap);
+    setTimeout(() => initMultiPeoplePick(item.id), 0);
+  }
+
+  // Week-shared field (Recite Shabad) — editable Monday, read-only other days
+  if (item.weekSharedField) {
+    const f = item.weekSharedField;
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'meal-note-input practice-cell-input';
+    inp.id = 'wsf_' + f.storeAs;
+    inp.dataset.storeAs = f.storeAs;
+    inp.placeholder = f.placeholder || '';
+    inp.addEventListener('input', debounce(autosave, 1500));
+    cell.appendChild(inp);
+  }
+
+  // Yes-note (shown only when Yes) and/or No-reason (shown only when No)
+  if (item.yesNote) {
+    const noteInp = document.createElement('input');
+    noteInp.type = 'text';
+    noteInp.className = 'meal-note-input practice-cell-input';
+    noteInp.id = 'yesNote_' + item.id;
+    noteInp.placeholder = item.yesNotePlaceholder || 'How did you make them happy?';
+    noteInp.style.display = 'none';
+    if (item.yesNoteDatalist) {
+      noteInp.setAttribute('list', item.yesNoteDatalist);
+      noteInp.setAttribute('autocomplete', 'off');
+    }
+    noteInp.addEventListener('input', debounce(autosave, 1500));
+    cell.appendChild(noteInp);
+  }
+  if (item.noReason) {
+    const reasonInp = document.createElement('input');
+    reasonInp.type = 'text';
+    reasonInp.className = 'meal-note-input practice-cell-input';
+    reasonInp.id = 'noReason_' + item.id;
+    reasonInp.placeholder = 'Why not?';
+    reasonInp.style.display = 'none';
+    reasonInp.addEventListener('input', debounce(autosave, 1500));
+    cell.appendChild(reasonInp);
+  }
+
+  return cell;
 }
 
 /* ── Mind & Self-Discipline slot table ── */
@@ -6115,6 +6655,8 @@ function writeForm(entry) {
   document.querySelectorAll('.sunday-only-item').forEach(el => {
     el.style.display = _isSunday ? '' : 'none';
   });
+  // Collapse any grouped card whose cells are now all hidden
+  updateGroupedCardVisibility();
   // "No" reason fields (restore value; visibility is handled by setPracticeState above)
   DAILY_ITEMS.filter(i => i.noReason).forEach(i => {
     const el = document.getElementById('noReason_' + i.id);
@@ -12563,6 +13105,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('.office-only-item').forEach(el => {
         el.style.display = val === 'office' ? '' : 'none';
       });
+      updateGroupedCardVisibility();
     });
   }
 });
